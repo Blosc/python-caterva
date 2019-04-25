@@ -12,6 +12,8 @@
 import numpy as np
 cimport numpy as np
 import cython
+
+from libc.stdlib cimport malloc, free
 from libcpp cimport bool
 from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer
 
@@ -148,7 +150,7 @@ cdef class CParams:
     cdef uint8_t filters[BLOSC_MAX_FILTERS]
     cdef uint8_t filters_meta[BLOSC_MAX_FILTERS]
 
-    def __cinit__(self, itemsize, compcode=0, clevel=5, use_dict=0, nthreads=1, blocksize=0, filter=1):
+    def __init__(self, itemsize, compcode=0, clevel=5, use_dict=0, nthreads=1, blocksize=0, filter=1):
         self.itemsize = itemsize
         self.compcode = compcode
         self.clevel = clevel
@@ -162,14 +164,14 @@ cdef class DParams:
     cdef int nthreads
     cdef void* schunk
 
-    def __cinit__(self, nthreads):
+    def __init__(self, nthreads=1):
         self.nthreads = nthreads
 
 
 cdef class Context:
     cdef caterva_ctx_t *_ctx
 
-    def __cinit__(self, CParams cparams, DParams dparams):
+    def __init__(self, CParams cparams, DParams dparams):
         cdef blosc2_cparams _cparams
         _cparams.typesize = cparams.itemsize  # TODO: typesize -> itemsize in c-blosc2
         _cparams.compcode = cparams.compcode
@@ -189,6 +191,52 @@ cdef class Context:
     def to_capsule(self):
         return PyCapsule_New(self._ctx, "caterva_ctx_t*", NULL)
 
-    def __str__(self):
-        return "Caterva context object"
 
+cdef class Array:
+    cdef caterva_ctx_t *_ctx
+    cdef caterva_array_t *_array
+    cdef object pshape
+
+    def __init__(self, ctx, pshape, frame=None):
+        self._ctx = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.to_capsule(), "caterva_ctx_t*")
+
+        ndim = len(pshape)
+        cdef int64_t *pshape_ = <int64_t*>malloc(ndim * sizeof(int64_t))
+        for i in range(ndim):
+            pshape_[i] = pshape[i]
+        cdef caterva_dims_t _pshape = caterva_new_dims(pshape_, ndim)
+        free(pshape_)
+        self.pshape = pshape
+
+        cdef blosc2_frame *_frame
+        if frame is None:
+            _frame = NULL
+        else:
+            # TODO: add support for frames
+            raise NotImplementedError
+
+        self._array = caterva_empty_array(self._ctx, _frame, &_pshape)
+
+
+    def to_capsule(self):
+        return PyCapsule_New(self._array, "caterva_array_t*", NULL)
+
+
+    def fill(self, shape, bytes value):
+        ndim = len(shape)
+        assert(ndim == len(self.pshape))
+        cdef int64_t *shape_ = <int64_t*>malloc(ndim * sizeof(int64_t))
+        for i in range(ndim):
+            shape_[i] = shape[i]
+        cdef caterva_dims_t _shape = caterva_new_dims(shape_, ndim)
+        #free(shape_)
+
+        cdef char *_value = value  # get the bytes out of a bytes object
+        cdef int retcode = caterva_fill(self._array, &_shape, <void*>_value)
+
+    @property
+    def cratio(self):
+        return self._array.sc.cbytes / self._array.sc.nbytes
+
+    def __dealloc__(self):
+        caterva_free_array(self._array)
