@@ -70,12 +70,6 @@ class LazyCommandClass(dict):
                 for ext in self.extensions:
                     ext.include_dirs.append(numpy_incl)
 
-                # This explicitly calls the superclass method rather than the
-                # usual super() invocation because distutils' build_class, of
-                # which Cython's build_ext is a subclass, is an old-style class
-                # in Python 2, which doesn't support `super`.
-                # TODO: remove these comments after checking that this works
-                # cython_build_ext.build_extensions(self)
                 super(cython_build_ext, self).build_extensions()
         return build_ext
 
