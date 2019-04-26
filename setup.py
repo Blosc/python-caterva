@@ -120,7 +120,8 @@ else:
                  if os.path.isdir(d)]
     inc_dirs += [d for d in glob('c-blosc2/internal-complibs/zstd*/*')
                  if os.path.isdir(d)]
-    def_macros += [('HAVE_LZ4', 1), ('HAVE_ZLIB', 1), ('HAVE_ZSTD', 1)]
+    def_macros += [('HAVE_LZ4', 1), ('HAVE_ZLIB', 1), ('HAVE_ZSTD', 1),
+                   ('HAVE_LIZARD', 1)]
 
     # Guess SSE2 or AVX2 capabilities
     # SSE2
@@ -222,6 +223,6 @@ increasing the I/O speed not only to disk, but potentially to memory too.
         test=tests_require
     ),
     packages=find_packages(),
-    package_data={'cat4py': ['container_ext.pxd']},
+    package_data={'cat4py': ['container_ext.pyx']},
     cmdclass=LazyCommandClass(),
 )
