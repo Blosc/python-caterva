@@ -52,9 +52,9 @@ cdef extern from "blosc.h":
         int32_t chunksize
         uint8_t filters[BLOSC_MAX_FILTERS]
         uint8_t filters_meta[BLOSC_MAX_FILTERS]
-        int32_t nchunks;
-        int64_t nbytes;
-        int64_t cbytes;
+        int32_t nchunks
+        int64_t nbytes
+        int64_t cbytes
         uint8_t* metadata_chunk
         uint8_t* userdata_chunk
         uint8_t** data
@@ -150,15 +150,17 @@ cdef class CParams:
     cdef uint8_t filters[BLOSC_MAX_FILTERS]
     cdef uint8_t filters_meta[BLOSC_MAX_FILTERS]
 
-    def __init__(self, itemsize, compcode=0, clevel=5, use_dict=0, nthreads=1, blocksize=0, filter=1):
+    def __init__(self, itemsize, compcode=0, clevel=5, use_dict=0, nthreads=1, blocksize=0, filters=1):
         self.itemsize = itemsize
         self.compcode = compcode
         self.clevel = clevel
         self.use_dict = use_dict
         self.nthreads = nthreads
         self.blocksize = blocksize
-        self.filters[BLOSC_MAX_FILTERS - 1] = filter
-
+        if filters is not list:
+            filters = [filters]
+        for i in range(len(filters)):
+            self.filters[BLOSC_MAX_FILTERS - 1 - i] = filters[len(filters) - 1 - i]
 
 cdef class DParams:
     cdef int nthreads
@@ -181,6 +183,8 @@ cdef class Context:
         _cparams.blocksize = cparams.blocksize
         for i in range(BLOSC_MAX_FILTERS):
             _cparams.filters[i] = cparams.filters[i]
+        for i in range(BLOSC_MAX_FILTERS):
+            _cparams.filters_meta[i] = 0
         cdef blosc2_dparams _dparams
         _dparams.nthreads = dparams.nthreads
         self._ctx = caterva_new_ctx(NULL, NULL, _cparams, _dparams)
@@ -196,6 +200,7 @@ cdef class Container:
     cdef caterva_ctx_t *_ctx
     cdef caterva_array_t *_array
     cdef object pshape
+    cdef object type
 
     def __init__(self, ctx, pshape, frame=None):
         self._ctx = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.to_capsule(), "caterva_ctx_t*")
@@ -229,14 +234,32 @@ cdef class Container:
         for i in range(ndim):
             shape_[i] = shape[i]
         cdef caterva_dims_t _shape = caterva_new_dims(shape_, ndim)
-        #free(shape_)
 
         cdef char *_value = value  # get the bytes out of a bytes object
         cdef int retcode = caterva_fill(self._array, &_shape, <void*>_value)
 
+
+    def to_numpy(self, dtype):
+        cdef caterva_dims_t shape_ = caterva_get_shape(self._array)
+        shape = []
+        for i in range(shape_.ndim):
+            shape.append(shape_.dims[i])
+        size = np.prod(shape)
+
+        a = np.zeros(size, dtype=dtype).reshape(shape)
+        caterva_to_buffer(self._array, np.PyArray_DATA(a))
+
+        return a
+
     @property
     def cratio(self):
-        return self._array.sc.cbytes / self._array.sc.nbytes
+        return self._array.sc.nbytes / self._array.sc.cbytes
+
+    @property
+    def shape(self):
+        cdef caterva_dims_t shape = caterva_get_shape(self._array)
+        return tuple([shape.dims[i] for i in range(shape.ndim)])
+
 
     def __dealloc__(self):
         caterva_free_array(self._array)
