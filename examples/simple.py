@@ -6,7 +6,7 @@ dparams = cat.DParams()
 ctx = cat.Context(cparams, dparams)
 print(ctx)
 
-a = cat.Array(ctx, (200, 300))
+a = cat.Container(ctx, (200, 300))
 print(a)
 
 # Fill the array with 6 * 4 partitions with int32 4's

@@ -192,7 +192,7 @@ cdef class Context:
         return PyCapsule_New(self._ctx, "caterva_ctx_t*", NULL)
 
 
-cdef class Array:
+cdef class Container:
     cdef caterva_ctx_t *_ctx
     cdef caterva_array_t *_array
     cdef object pshape
