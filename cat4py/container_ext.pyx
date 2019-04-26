@@ -157,10 +157,12 @@ cdef class CParams:
         self.use_dict = use_dict
         self.nthreads = nthreads
         self.blocksize = blocksize
-        if filters is not list:
-            filters = [filters]
-        for i in range(len(filters)):
-            self.filters[BLOSC_MAX_FILTERS - 1 - i] = filters[len(filters) - 1 - i]
+        # TODO: implement support for multiple filters
+        for i in range(BLOSC_MAX_FILTERS):
+            self.filters[i] = 0
+        for i in range(BLOSC_MAX_FILTERS):
+            self.filters_meta[i] = 0
+        self.filters[BLOSC_MAX_FILTERS - 1] = filters
 
 cdef class DParams:
     cdef int nthreads
@@ -184,7 +186,7 @@ cdef class Context:
         for i in range(BLOSC_MAX_FILTERS):
             _cparams.filters[i] = cparams.filters[i]
         for i in range(BLOSC_MAX_FILTERS):
-            _cparams.filters_meta[i] = 0
+            _cparams.filters_meta[i] = cparams.filters_meta[i]
         cdef blosc2_dparams _dparams
         _dparams.nthreads = dparams.nthreads
         self._ctx = caterva_new_ctx(NULL, NULL, _cparams, _dparams)
