@@ -150,7 +150,7 @@ cdef class CParams:
     cdef uint8_t filters[BLOSC_MAX_FILTERS]
     cdef uint8_t filters_meta[BLOSC_MAX_FILTERS]
 
-    def __init__(self, itemsize, compcode=0, clevel=5, use_dict=0, nthreads=1, blocksize=0, filters=1):
+    def __init__(self, itemsize=4, compcode=0, clevel=5, use_dict=0, nthreads=1, blocksize=0, filters=1):
         self.itemsize = itemsize
         self.compcode = compcode
         self.clevel = clevel
@@ -174,9 +174,14 @@ cdef class DParams:
 
 cdef class Context:
     cdef caterva_ctx_t *_ctx
+    cdef CParams cparams
+    cdef DParams dparams
 
     def __init__(self, CParams cparams, DParams dparams):
         cdef blosc2_cparams _cparams
+        if cparams is None:
+            cparams=CParams()
+        self.cparams = cparams
         _cparams.typesize = cparams.itemsize  # TODO: typesize -> itemsize in c-blosc2
         _cparams.compcode = cparams.compcode
         _cparams.clevel = cparams.clevel
@@ -188,6 +193,9 @@ cdef class Context:
         for i in range(BLOSC_MAX_FILTERS):
             _cparams.filters_meta[i] = cparams.filters_meta[i]
         cdef blosc2_dparams _dparams
+        if dparams is None:
+            dparams=DParams()
+        self.dparams = dparams
         _dparams.nthreads = dparams.nthreads
         self._ctx = caterva_new_ctx(NULL, NULL, _cparams, _dparams)
 
@@ -200,10 +208,12 @@ cdef class Context:
 
 cdef class Container:
     cdef Context ctx
+    cdef DParams dparams
+    cdef CParams cparams
     cdef caterva_array_t *_array
 
-    def __init__(self, ctx, pshape=None, frame=None):
-        self.ctx = ctx
+    def __init__(self, pshape=None, frame=None, cparams=None, dparams=None):
+        self.ctx = Context(cparams, dparams)
         cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(self.ctx.to_capsule(), "caterva_ctx_t*")
 
         cdef int64_t *pshape_
@@ -254,7 +264,7 @@ cdef class Container:
             stop_[i] = stop[i]
         cdef caterva_dims_t _stop = caterva_new_dims(stop_, ndim)
 
-        a = Container(self.ctx, self.pshape)
+        a = Container(pshape=self.pshape, cparams=self.ctx.cparams, dparams=self.ctx.dparams)
 
         caterva_get_slice(a._array, self._array, &_start, &_stop)
         return a

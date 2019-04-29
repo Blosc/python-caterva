@@ -4,12 +4,11 @@ import numpy as np
 
 cparams = cat.CParams(itemsize=4)  # we will be dealing with itemsizes of 4's
 dparams = cat.DParams()
-ctx = cat.Context(cparams, dparams)
 
 pshape = (5, 5)
 shape = (10, 10)
 # Create a cat container without partitions
-a = cat.Container(ctx, pshape=None)
+a = cat.Container()
 
 # Create a byte array
 buf = bytes(np.arange(int(np.prod(shape)), dtype=np.float32))

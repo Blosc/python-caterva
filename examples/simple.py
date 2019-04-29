@@ -2,14 +2,13 @@ import struct
 import cat4py as cat
 import numpy as np
 
-cparams = cat.CParams(itemsize=4)  # we will be dealing with itemsizes of 4's
+cparams = cat.CParams(itemsize=4, compcode=0)  # we will be dealing with itemsizes of 4's
 dparams = cat.DParams()
-ctx = cat.Context(cparams, dparams)
 
 # Create an array with partitions (backed with a C-Blosc2 super-chunk)
-a = cat.Container(ctx, pshape=(200, 300))
+a = cat.Container(pshape=(200, 300), cparams=cparams, dparams=dparams)
 # Create a plain-buffer array
-b = cat.Container(ctx, pshape=None)
+b = cat.Container(pshape=None, cparams=cparams, dparams=dparams)
 
 # Fill the arrays with 6 * 4 partitions with int32 4's
 a.fill((4 * 200, 6 * 300), struct.pack("f", 4.45))
