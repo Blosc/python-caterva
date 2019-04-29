@@ -208,11 +208,9 @@ cdef class Context:
 
 cdef class Container:
     cdef Context ctx
-    cdef DParams dparams
-    cdef CParams cparams
     cdef caterva_array_t *_array
 
-    def __init__(self, pshape=None, frame=None, cparams=None, dparams=None):
+    def __init__(self, pshape=None, filename=None, cparams=None, dparams=None):
         self.ctx = Context(cparams, dparams)
         cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(self.ctx.to_capsule(), "caterva_ctx_t*")
 
@@ -231,7 +229,7 @@ cdef class Container:
             _pshape = caterva_new_dims(pshape_, ndim)
             free(pshape_)
 
-            if frame is None:
+            if filename is None:
                 _frame = NULL
             else:
                 # TODO: add support for frames
@@ -300,6 +298,26 @@ cdef class Container:
         caterva_set_slice_buffer(self._array, <void *> <char *> item, &_start, &_stop)
 
 
+    def copy(self, pshape=None, cparams=None, dparams=None, filename=None):
+        print("start copy")
+        a = Container(pshape=pshape, cparams=cparams, dparams=dparams, filename=filename)
+        print("new container created")
+        cdef caterva_dims_t shape = caterva_new_dims(self._array.shape, self._array.ndim)
+        if self._array.storage == CATERVA_STORAGE_BLOSC:
+            if a._array.storage == CATERVA_STORAGE_BLOSC:
+                raise NotImplementedError
+            else:
+                caterva_update_shape(a._array, &shape)
+                a._array.buf = <uint8_t *> a._array.ctx.alloc(a._array.size * a._array.ctx.cparams.typesize)
+                caterva_to_buffer(self._array, a._array.buf)
+        else:
+            if a._array.storage == CATERVA_STORAGE_BLOSC:
+                caterva_from_buffer(a._array, &shape, self._array.buf)
+            else:
+                raise NotImplementedError
+        return a
+
+
     def to_capsule(self):
         return PyCapsule_New(self._array, "caterva_array_t*", NULL)
 
@@ -349,7 +367,6 @@ cdef class Container:
 
     def squeeze(self):
         caterva_squeeze(self._array)
-
 
     @property
     def cratio(self):

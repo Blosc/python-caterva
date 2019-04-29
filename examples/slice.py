@@ -37,3 +37,4 @@ a[1:6, 5:8] = bytes(np.full((5, 3), 0.156, np.float32))
 d = np.frombuffer(a.to_buffer(), dtype=np.float32).reshape(a.shape)
 
 print(d)
+
