@@ -15,14 +15,18 @@ b = cat.Container(ctx, pshape=None)
 a.fill((4 * 200, 6 * 300), struct.pack("f", 4.45))
 b.fill((4 * 200, 6 * 300), struct.pack("f", 4.45))
 
-print("Shape for the created arrays:", a.shape)
+print(f"Shape for the created arrays: {a.shape}")
+print("Block shape for the created arrays:")
+print(f"- Container a: {a.pshape}")
+print(f"- Container b: {b.pshape}")
+
 assert(a.shape == b.shape)
 print("Compression ratio for chunked array:", a.cratio)
 print("Compression ratio for plain buffer array:", b.cratio)
 
 # Convert back to a numpy array and compare results
-c = a.to_numpy(np.float32)
+c = np.frombuffer(a.to_buffer(), np.float32)
 print(c)
-d = b.to_numpy(np.float32)
-np.testing.assert_almost_equal(c, d)
+d = np.frombuffer(b.to_buffer(), np.float32)
 
+np.testing.assert_almost_equal(c, d)
