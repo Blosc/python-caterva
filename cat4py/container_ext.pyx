@@ -17,6 +17,7 @@ from libc.stdlib cimport malloc, free
 from libcpp cimport bool
 from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer
 
+import os.path
 
 cdef extern from "<stdint.h>":
     ctypedef   signed char  int8_t
@@ -82,6 +83,8 @@ cdef extern from "blosc.h":
 
     blosc2_dparams BLOSC_DPARAMS_DEFAULTS
 
+    blosc2_frame *blosc2_new_frame(char *fname)
+
 
 cdef extern from "caterva.h":
     ctypedef enum:
@@ -137,6 +140,7 @@ cdef extern from "caterva.h":
     int caterva_update_shape(caterva_array_t *src, caterva_dims_t *shape)
     caterva_dims_t caterva_get_shape(caterva_array_t *src)
     caterva_dims_t caterva_get_pshape(caterva_array_t *src)
+    int caterva_copy(caterva_array_t *dest, caterva_array_t *src)
 
 
 cdef class CParams:
@@ -177,7 +181,7 @@ cdef class Context:
     cdef CParams cparams
     cdef DParams dparams
 
-    def __init__(self, CParams cparams, DParams dparams):
+    def __init__(self, CParams cparams=None, DParams dparams=None):
         cdef blosc2_cparams _cparams
         if cparams is None:
             cparams=CParams()
@@ -218,8 +222,12 @@ cdef class Container:
         cdef caterva_dims_t _pshape
         cdef blosc2_frame *_frame
 
+
         if pshape is None:
-            self._array = caterva_empty_array(ctx_, NULL, NULL)
+            if filename is not None:
+                raise NotImplementedError
+            else:
+                self._array = caterva_empty_array(ctx_, NULL, NULL)
         else:
             ndim = len(pshape)
 
@@ -232,8 +240,11 @@ cdef class Container:
             if filename is None:
                 _frame = NULL
             else:
-                # TODO: add support for frames
-                raise NotImplementedError
+                if os.path.isfile(filename):
+                    raise FileExistsError
+                else:
+                    filename = filename.encode("utf-8") if isinstance(filename, str) else filename
+                    _frame = blosc2_new_frame(filename)
 
             self._array = caterva_empty_array(ctx_, _frame, &_pshape)
 
@@ -299,22 +310,8 @@ cdef class Container:
 
 
     def copy(self, pshape=None, cparams=None, dparams=None, filename=None):
-        print("start copy")
         a = Container(pshape=pshape, cparams=cparams, dparams=dparams, filename=filename)
-        print("new container created")
-        cdef caterva_dims_t shape = caterva_new_dims(self._array.shape, self._array.ndim)
-        if self._array.storage == CATERVA_STORAGE_BLOSC:
-            if a._array.storage == CATERVA_STORAGE_BLOSC:
-                raise NotImplementedError
-            else:
-                caterva_update_shape(a._array, &shape)
-                a._array.buf = <uint8_t *> a._array.ctx.alloc(a._array.size * a._array.ctx.cparams.typesize)
-                caterva_to_buffer(self._array, a._array.buf)
-        else:
-            if a._array.storage == CATERVA_STORAGE_BLOSC:
-                caterva_from_buffer(a._array, &shape, self._array.buf)
-            else:
-                raise NotImplementedError
+        caterva_copy(a._array, self._array)
         return a
 
 
@@ -388,4 +385,16 @@ cdef class Container:
         return tuple([pshape.dims[i] for i in range(pshape.ndim)])
 
     def __dealloc__(self):
-        caterva_free_array(self._array)
+        if self._array != NULL:
+            caterva_free_array(self._array)
+
+
+def from_file(filename):
+    ctx = Context()
+    cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.to_capsule(), "caterva_ctx_t*")
+    filename = filename.encode("utf-8") if isinstance(filename, str) else filename
+    cdef caterva_array_t *a_ = caterva_from_file(ctx_, filename)
+    a = Container()
+    a.ctx = ctx
+    a._array = a_
+    return a

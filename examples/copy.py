@@ -7,19 +7,37 @@ dparams = cat.DParams()
 
 pshape = (5, 5)
 shape = (10, 10)
-# Create a cat container without partitions
+
+# Create a cat container with partitions
 a = cat.Container(pshape=pshape)
-
-# Create a byte array
 buf = bytes(np.arange(int(np.prod(shape)), dtype=np.float32))
-
-# Fill th cat container array with the buffer
 a.from_buffer(shape, buf)
 
-b = a.copy()
+# Create a copy to a plain buffer
+b1 = a.copy()
+c = np.frombuffer(b1.to_buffer(), dtype=np.float32)
+print(f"schunk to plainbuffer")
+print(c)
 
-c = b[2:6, 3:5]
+# Create a copy to a schunk
+b2 = a.copy(pshape=(3, 3), cparams=cat.CParams(itemsize=4, compcode=0, filters=2))
+c = np.frombuffer(b2.to_buffer(), dtype=np.float32)
+print(f"schunk to schunk")
+print(c)
 
-d = np.frombuffer(c.to_buffer(), dtype=np.float32)
+# Create a cat container without partitions
+a = cat.Container()
+buf = bytes(np.arange(int(np.prod(shape)), dtype=np.float32))
+a.from_buffer(shape, buf)
 
-print(d)
+# Create a copy to a plain buffer
+b1 = a.copy()
+c = np.frombuffer(b1.to_buffer(), dtype=np.float32)
+print(f"schunk to plainbuffer")
+print(c)
+
+# Create a copy to a schunk
+b2 = a.copy(pshape=(5, 5), cparams=cat.CParams(itemsize=4, compcode=1))
+c = np.frombuffer(b2.to_buffer(), dtype=np.float32)
+print(f"schunk to schunk")
+print(c)

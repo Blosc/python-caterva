@@ -6,5 +6,5 @@
 # LICENSE file in the root directory of this source tree)
 #######################################################################
 
-from .container_ext import CParams, DParams, Container  # the order of the import is important: extensions first
+from .container_ext import CParams, DParams, Container, from_file  # the order of the import is important: extensions first
 from .version import version as __version__
