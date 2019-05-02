@@ -24,8 +24,8 @@ print("Compression ratio for chunked array:", a.cratio)
 print("Compression ratio for plain buffer array:", b.cratio)
 
 # Convert back to a numpy array and compare results
-c = np.frombuffer(a.to_buffer(), np.float32)
+c = np.frombuffer(a.tobuffer(), np.float32)
 print(c)
-d = np.frombuffer(b.to_buffer(), np.float32)
+d = np.frombuffer(b.tobuffer(), np.float32)
 
 np.testing.assert_almost_equal(c, d)

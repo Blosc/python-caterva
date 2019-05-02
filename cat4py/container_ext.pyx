@@ -206,7 +206,7 @@ cdef class Context:
     def __dealloc__(self):
         caterva_free_ctx(self._ctx)
 
-    def to_capsule(self):
+    def tocapsule(self):
         return PyCapsule_New(self._ctx, "caterva_ctx_t*", NULL)
 
 
@@ -216,8 +216,7 @@ cdef class Container:
 
     def __init__(self, pshape=None, filename=None, cparams=None, dparams=None):
         self.ctx = Context(cparams, dparams)
-        cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(self.ctx.to_capsule(), "caterva_ctx_t*")
-
+        cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(self.ctx.tocapsule(), "caterva_ctx_t*")
         cdef int64_t *pshape_
         cdef caterva_dims_t _pshape
         cdef blosc2_frame *_frame
@@ -315,7 +314,7 @@ cdef class Container:
         return a
 
 
-    def to_capsule(self):
+    def tocapsule(self):
         return PyCapsule_New(self._array, "caterva_array_t*", NULL)
 
 
@@ -334,7 +333,7 @@ cdef class Container:
         cdef int retcode = caterva_fill(self._array, &_shape, <void *> <char *> value)
 
 
-    def to_buffer(self):
+    def tobuffer(self):
         cdef caterva_dims_t shape_ = caterva_get_shape(self._array)
         shape = []
         for i in range(shape_.ndim):
@@ -347,7 +346,7 @@ cdef class Container:
         return a
 
 
-    def from_buffer(self, shape, buf):
+    def frombuffer(self, shape, buf):
         ndim = len(shape)
 
         if self.pshape is not None:
@@ -361,6 +360,14 @@ cdef class Container:
 
         cdef int retcode = caterva_from_buffer(self._array, &_shape, <void*> <char *> buf)
 
+    def updateshape(self, shape):
+        ndim = len(shape)
+        cdef int64_t *shape_ = <int64_t*>malloc(ndim * sizeof(int64_t))
+        for i in range(ndim):
+            shape_[i] = shape[i]
+        cdef caterva_dims_t _shape = caterva_new_dims(shape_, ndim)
+        free(shape_)
+        caterva_update_shape(self._array, &_shape)
 
     def squeeze(self):
         caterva_squeeze(self._array)
@@ -389,12 +396,15 @@ cdef class Container:
             caterva_free_array(self._array)
 
 
-def from_file(filename):
+def fromfile(filename):
     ctx = Context()
-    cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.to_capsule(), "caterva_ctx_t*")
+    cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.tocapsule(), "caterva_ctx_t*")
     filename = filename.encode("utf-8") if isinstance(filename, str) else filename
+    if not os.path.isfile(filename):
+        raise FileExistsError
     cdef caterva_array_t *a_ = caterva_from_file(ctx_, filename)
     a = Container()
     a.ctx = ctx
     a._array = a_
     return a
+

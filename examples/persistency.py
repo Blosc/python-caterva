@@ -10,10 +10,9 @@ filename = "persistency-container.cat"
 
 
 # Create a cat container with partitions
-a = cat.Container(pshape=pshape, filename=filename)
-buf = bytes(np.arange(int(np.prod(shape)), dtype=np.float32))
-a.from_buffer(shape, buf)
+data = np.arange(int(np.prod(shape)), dtype=np.float32).reshape(shape)
 
-b = cat.from_file(filename)
-c = np.frombuffer(b.to_buffer(), dtype=np.float32)
+a = cat.fromnumpy(data)
+
+c = cat.tonumpy(a, dtype=np.float32)
 print(c)

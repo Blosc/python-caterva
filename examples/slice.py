@@ -14,19 +14,19 @@ a = cat.Container()
 buf = bytes(np.arange(int(np.prod(shape)), dtype=np.float32))
 
 # Fill th cat container array with the buffer
-a.from_buffer(shape, buf)
+a.frombuffer(shape, buf)
 
 # Get slice from cat container
 b = a[3, 6:10]
 # Convert cat container to a numpy array
-c = np.frombuffer(b.to_buffer(), dtype=np.float32).reshape(b.shape)
+c = np.frombuffer(b.tobuffer(), dtype=np.float32).reshape(b.shape)
 print(c)
 
 #Squeeze b container
 b.squeeze()
 
 # Convert cat container to a numpy array
-c = np.frombuffer(b.to_buffer(), dtype=np.float32).reshape(b.shape)
+c = np.frombuffer(b.tobuffer(), dtype=np.float32).reshape(b.shape)
 print(c)
 
 # Set a value in cat container
@@ -34,7 +34,7 @@ a[:, 3] = bytes(np.full((10, 1), 3.14, np.float32))
 a[1:6, 5:8] = bytes(np.full((5, 3), 0.156, np.float32))
 
 # Convert cat container to a numpy array
-d = np.frombuffer(a.to_buffer(), dtype=np.float32).reshape(a.shape)
+d = np.frombuffer(a.tobuffer(), dtype=np.float32).reshape(a.shape)
 
 print(d)
 
