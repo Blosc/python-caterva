@@ -18,11 +18,12 @@ a.frombuffer(shape, buf)
 
 # Get slice from cat container
 b = a[3, 6:10]
+
 # Convert cat container to a numpy array
 c = np.frombuffer(b.tobuffer(), dtype=np.float32).reshape(b.shape)
 print(c)
 
-#Squeeze b container
+# Squeeze b container
 b.squeeze()
 
 # Convert cat container to a numpy array
