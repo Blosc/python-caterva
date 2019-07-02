@@ -1,0 +1,11 @@
+build/
+.hypothesis/
+cat4py/.hypothesis/
+cat4py/*.c
+cat4py/*.so
+cat4py/version.py
+cat4py/tests/*.cat
+.idea/
+examples/*.cat
+__pycache__/
+cat4py/__pycache__/
