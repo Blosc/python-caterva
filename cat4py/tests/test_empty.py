@@ -1,6 +1,5 @@
 import cat4py as cat
 import pytest
-import numpy as np
 
 
 kargs = ['itemsize', 'compcode', 'clevel', 'use_dict', 'cnthreads', 'dnthreads', 'blocksize', 'filters']
