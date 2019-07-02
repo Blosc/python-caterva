@@ -9,3 +9,4 @@ cat4py/tests/*.cat
 examples/*.cat
 __pycache__/
 cat4py/__pycache__/
+.pytest_cache/
