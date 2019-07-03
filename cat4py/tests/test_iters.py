@@ -28,3 +28,7 @@ def test_iters(shape, pshape1, pshape2, dtype):
 
     for (block_r, info_r), (block_w, info_w) in lzip(a.iter_read(blockshape, dtype), b.iter_write(shape, dtype)):
         block_w[:] = block_r
+
+    buffer2 = b.to_numpy(dtype)
+
+    np.testing.assert_almost_equal(buffer, buffer2)

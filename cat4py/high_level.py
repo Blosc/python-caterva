@@ -37,3 +37,4 @@ class Container(_Container):
 def from_file(filename):
     arr = Container()
     _from_file(arr, filename)
+    return arr

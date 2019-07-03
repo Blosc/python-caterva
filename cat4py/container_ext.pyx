@@ -512,7 +512,7 @@ def _from_file(_Container arr, filename):
     cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.tocapsule(), "caterva_ctx_t*")
     filename = filename.encode("utf-8") if isinstance(filename, str) else filename
     if not os.path.isfile(filename):
-        raise FileExistsError
+        raise FileNotFoundError
     cdef caterva_array_t *a_ = caterva_from_file(ctx_, filename)
     arr.ctx = ctx
     arr._array = a_
