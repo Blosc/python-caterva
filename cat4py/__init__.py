@@ -6,5 +6,5 @@
 # LICENSE file in the root directory of this source tree)
 #######################################################################
 
-from .high_level import *
+from .high_level import Container, from_file
 from .version import version as __version__

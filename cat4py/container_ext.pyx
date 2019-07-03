@@ -381,41 +381,6 @@ cdef class _Container:
             self._array = caterva_empty_array(ctx_, _frame, &_pshape)
 
 
-    def __setitem__(self, key, item):
-        cdef caterva_dims_t _start
-        cdef caterva_dims_t _stop
-
-        ndim = self._array.ndim
-        if ndim == 1:
-            key = [key]
-
-        key = list(key)
-
-        for i, sl in enumerate(key):
-            if type(sl) is not slice:
-                key[i] = slice(sl, sl+1, None)
-
-        start = [s.start if s.start is not None else 0 for s in key]
-        stop = [s.stop if s.stop is not None else sh for s, sh in zip(key, self.shape)]
-
-
-        if not self._array.filled or self._array.storage == CATERVA_STORAGE_BLOSC:
-            raise NotImplementedError
-
-        start_ = <int64_t*> malloc(ndim * sizeof(int64_t))
-        for i in range(ndim):
-            start_[i] = start[i]
-        _start = caterva_new_dims(start_, ndim)
-
-        stop_ = <int64_t*> malloc(ndim * sizeof(int64_t))
-        for i in range(ndim):
-            stop_[i] = stop[i]
-        _stop = caterva_new_dims(stop_, ndim)
-
-        item = bytes(item)
-        caterva_set_slice_buffer(self._array, <void *> <char *> item, &_start, &_stop)
-
-
     def iter_read(self, blockshape, dtype):
         return ReadIter(self, blockshape, dtype)
 
@@ -423,44 +388,8 @@ cdef class _Container:
     def iter_write(self, shape, dtype):
         return WriteIter(self, shape, dtype)
 
-
-    def copy(self, pshape=None, filename=None):
-        a = _Container(pshape=pshape, filename=filename, **self.kargs)
-        caterva_copy(a._array, self._array)
-        return a
-
-
     def tocapsule(self):
         return PyCapsule_New(self._array, "caterva_array_t*", NULL)
-
-
-    def to_buffer(self):
-        cdef caterva_dims_t shape_ = caterva_get_shape(self._array)
-        shape = []
-        for i in range(shape_.ndim):
-            shape.append(shape_.dims[i])
-        size = np.prod(shape) * self._array.ctx.cparams.typesize
-
-        a = bytes(size)
-
-        caterva_to_buffer(self._array, <void *> <char *> a)
-        return a
-
-
-    def from_buffer(self, shape, buf):
-        ndim = len(shape)
-
-        if self.pshape is not None:
-            assert(ndim == len(self.pshape))
-
-        cdef int64_t *shape_ = <int64_t*>malloc(ndim * sizeof(int64_t))
-        for i in range(ndim):
-            shape_[i] = shape[i]
-        cdef caterva_dims_t _shape = caterva_new_dims(shape_, ndim)
-        free(shape_)
-
-        cdef int retcode = caterva_from_buffer(self._array, &_shape, <void*> <char *> buf)
-
 
     def slicebuffer(self, key):
         ndim = self._array.ndim
@@ -503,7 +432,6 @@ cdef class _Container:
         caterva_get_slice_buffer(<char *> buffer, self._array, &_start, &_stop, &_pshape)
 
         return buffer
-
 
     def updateshape(self, shape):
         ndim = len(shape)
@@ -578,21 +506,24 @@ cdef class _Container:
     @property
     def filled(self):
         return self._array.filled
+
+
     def __dealloc__(self):
         if self._array != NULL:
             caterva_free_array(self._array)
 
-def fromfile(filename):
+
+
+def _from_file(_Container arr, filename):
     ctx = Context()
     cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.tocapsule(), "caterva_ctx_t*")
     filename = filename.encode("utf-8") if isinstance(filename, str) else filename
     if not os.path.isfile(filename):
         raise FileExistsError
     cdef caterva_array_t *a_ = caterva_from_file(ctx_, filename)
-    a = _Container()
-    a.ctx = ctx
-    a._array = a_
-    return a
+    arr.ctx = ctx
+    arr._array = a_
+
 
 def _getitem(_Container src, _Container dest, key):
 
@@ -621,5 +552,67 @@ def _getitem(_Container src, _Container dest, key):
 
     err = caterva_get_slice(dest._array, src._array, &_start, &_stop)
 
-    print(dest.size)
 
+def _setitem(_Container arr, key, item):
+    if not arr._array.filled or arr._array.storage == CATERVA_STORAGE_BLOSC:
+        raise NotImplementedError
+
+    cdef caterva_dims_t _start
+    cdef caterva_dims_t _stop
+
+    ndim = arr._array.ndim
+    if ndim == 1:
+        key = [key]
+
+    key = list(key)
+
+    for i, sl in enumerate(key):
+        if type(sl) is not slice:
+            key[i] = slice(sl, sl+1, None)
+
+    start = [s.start if s.start is not None else 0 for s in key]
+    stop = [s.stop if s.stop is not None else sh for s, sh in zip(key, arr.shape)]
+
+    start_ = <int64_t*> malloc(ndim * sizeof(int64_t))
+    for i in range(ndim):
+        start_[i] = start[i]
+    _start = caterva_new_dims(start_, ndim)
+
+    stop_ = <int64_t*> malloc(ndim * sizeof(int64_t))
+    for i in range(ndim):
+        stop_[i] = stop[i]
+    _stop = caterva_new_dims(stop_, ndim)
+
+    item = bytes(item)
+    caterva_set_slice_buffer(arr._array, <void *> <char *> item, &_start, &_stop)
+
+
+def _copy(_Container src, _Container dest):
+    caterva_copy(dest._array, src._array)
+
+
+def _to_buffer(_Container arr):
+    cdef caterva_dims_t shape_ = caterva_get_shape(arr._array)
+    shape = []
+    for i in range(shape_.ndim):
+        shape.append(shape_.dims[i])
+    size = np.prod(shape) * arr._array.ctx.cparams.typesize
+
+    buffer = bytes(size)
+
+    caterva_to_buffer(arr._array, <void *> <char *> buffer)
+    return buffer
+
+def _from_buffer(_Container arr, shape, buf):
+    ndim = len(shape)
+
+    if arr.pshape is not None:
+        assert(ndim == len(arr.pshape))
+
+    cdef int64_t *shape_ = <int64_t*>malloc(ndim * sizeof(int64_t))
+    for i in range(ndim):
+        shape_[i] = shape[i]
+    cdef caterva_dims_t _shape = caterva_new_dims(shape_, ndim)
+    free(shape_)
+
+    cdef int retcode = caterva_from_buffer(arr._array, &_shape, <void*> <char *> buf)
