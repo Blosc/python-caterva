@@ -393,15 +393,8 @@ cdef class _Container:
 
     def slicebuffer(self, key):
         ndim = self._array.ndim
-        if ndim == 1:
-            key = [key]
 
         key = list(key)
-
-        dtype = None
-        if isinstance(key[-1], type):
-            key = key[:-1]
-            dtype = key[-1]
 
         for i, sl in enumerate(key):
             if type(sl) is not slice:

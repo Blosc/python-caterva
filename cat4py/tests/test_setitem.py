@@ -9,7 +9,7 @@ import numpy as np
                              ([20, 134, 13], None, (slice(3, 7), slice (50, 100), slice(2, 7)), np.float64),
                              ([12, 13, 14, 15, 16], None, (slice(1, 3), slice(2, 5), slice(0, 12), slice(3, 6), slice(2, 7)), np.float32)
                          ])
-def test_getitem(shape, pshape, slices, dtype):
+def test_setitem(shape, pshape, slices, dtype):
 
     itemsize = np.dtype(dtype).itemsize
 
