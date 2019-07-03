@@ -6,6 +6,5 @@
 # LICENSE file in the root directory of this source tree)
 #######################################################################
 
-from .container_ext import fromfile # the order of the import is important: extensions first
 from .high_level import *
 from .version import version as __version__

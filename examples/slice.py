@@ -2,39 +2,24 @@ import struct
 import cat4py as cat
 import numpy as np
 
-cparams = cat.CParams(itemsize=8)
 
 pshape = (5, 5)
 shape = (10, 10)
-# Create a cat container without partitions
-a = cat._Container(cparams=cparams)
 
-# Create a byte array
-buf = bytes(np.arange(int(np.prod(shape)), dtype=np.float64))
+dtype = np.float32
 
-# Fill th cat container array with the buffer
-a.from_buffer(shape, buf)
+itemsize = np.dtype(dtype).itemsize
 
-# Get slice from cat container
-b = a[3, 6:10]
+a = cat.Container(pshape, itemsize=itemsize)
 
-# Convert cat container to a numpy array
-c = np.frombuffer(b.to_buffer(), dtype=np.float64).reshape(b.shape)
-print(c)
+size = int(np.prod(shape))
 
-# Squeeze b container
-b.squeeze()
+buffer = np.arange(size, dtype=dtype).reshape(shape)
 
-# Convert cat container to a numpy array
-c = np.frombuffer(b.to_buffer(), dtype=np.float64).reshape(b.shape)
-print(c)
+a.from_numpy(buffer)
 
-# Set a value in cat container
-a[:, 3] = np.full((10, 1), 3.14, np.float64)
-a[1:6, 5:8] = np.full((5, 3), 0.156, np.float64)
+buffer = buffer[2:5, 2:5]
 
-# Convert cat container to a numpy array
-d = np.frombuffer(a.to_buffer(), dtype=np.float64).reshape(a.shape)
+c = a[2:5, 2:5]
 
-print(d)
-
+print(c.size)

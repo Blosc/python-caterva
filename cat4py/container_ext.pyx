@@ -381,36 +381,6 @@ cdef class _Container:
             self._array = caterva_empty_array(ctx_, _frame, &_pshape)
 
 
-    def __getitem__(self, key):
-        ndim = self._array.ndim
-        if ndim == 1:
-            key = [key]
-
-        key = list(key)
-
-        for i, sl in enumerate(key):
-            if type(sl) is not slice:
-                key[i] = slice(sl, sl+1, None)
-
-        start = [s.start if s.start is not None else 0 for s in key]
-        stop = [s.stop if s.stop is not None else sh for s, sh in zip(key, self.shape)]
-
-        start_ = <int64_t*> malloc(ndim * sizeof(int64_t))
-        for i in range(ndim):
-            start_[i] = start[i]
-        cdef caterva_dims_t _start = caterva_new_dims(start_, ndim)
-
-        stop_ = <int64_t*> malloc(ndim * sizeof(int64_t))
-        for i in range(ndim):
-            stop_[i] = stop[i]
-        cdef caterva_dims_t _stop = caterva_new_dims(stop_, ndim)
-
-        a = _Container(pshape=self.pshape, **self.kargs)
-
-        caterva_get_slice(a._array, self._array, &_start, &_stop)
-        return a
-
-
     def __setitem__(self, key, item):
         cdef caterva_dims_t _start
         cdef caterva_dims_t _stop
@@ -623,3 +593,33 @@ def fromfile(filename):
     a.ctx = ctx
     a._array = a_
     return a
+
+def _getitem(_Container src, _Container dest, key):
+
+    ndim = src._array.ndim
+    if ndim == 1:
+        key = [key]
+
+    key = list(key)
+
+    for i, sl in enumerate(key):
+        if type(sl) is not slice:
+            key[i] = slice(sl, sl+1, None)
+
+    start = [s.start if s.start is not None else 0 for s in key]
+    stop = [s.stop if s.stop is not None else sh for s, sh in zip(key, src.shape)]
+
+    start_ = <int64_t*> malloc(ndim * sizeof(int64_t))
+    for i in range(ndim):
+        start_[i] = start[i]
+    cdef caterva_dims_t _start = caterva_new_dims(start_, ndim)
+
+    stop_ = <int64_t*> malloc(ndim * sizeof(int64_t))
+    for i in range(ndim):
+        stop_[i] = stop[i]
+    cdef caterva_dims_t _stop = caterva_new_dims(stop_, ndim)
+
+    err = caterva_get_slice(dest._array, src._array, &_start, &_stop)
+
+    print(dest.size)
+
