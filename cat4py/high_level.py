@@ -9,9 +9,8 @@ class Container(_Container):
         super(Container, self).__init__(pshape, filename, **kargs)
 
     def __getitem__(self, key):
-        arr = Container(pshape=None, **self.kargs)
-        _getitem(self, arr, key)
-        return arr
+        buff = _getitem(self, key)
+        return buff
 
     def __setitem__(self, key, item):
         _setitem(self, key, item)

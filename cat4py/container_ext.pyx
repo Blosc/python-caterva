@@ -518,7 +518,7 @@ def _from_file(_Container arr, filename):
     arr._array = a_
 
 
-def _getitem(_Container src, _Container dest, key):
+def _getitem(_Container src, key):
 
     ndim = src._array.ndim
     if ndim == 1:
@@ -537,13 +537,25 @@ def _getitem(_Container src, _Container dest, key):
     for i in range(ndim):
         start_[i] = start[i]
     cdef caterva_dims_t _start = caterva_new_dims(start_, ndim)
+    free(start_)
 
     stop_ = <int64_t*> malloc(ndim * sizeof(int64_t))
     for i in range(ndim):
         stop_[i] = stop[i]
     cdef caterva_dims_t _stop = caterva_new_dims(stop_, ndim)
+    free(stop_)
 
-    err = caterva_get_slice(dest._array, src._array, &_start, &_stop)
+    pshape_ = <int64_t*> malloc(ndim * sizeof(int64_t))
+    for i in range(ndim):
+        pshape_[i] = stop[i] - start[i]
+    cdef caterva_dims_t _pshape = caterva_new_dims(pshape_, ndim)
+    free(pshape_)
+
+    size = np.prod([stop[i] - start[i] for i in range(ndim)])
+    bsize = size * src.itemsize
+    buffer = bytes(bsize)
+    err = caterva_get_slice_buffer(<char *> buffer, src._array, &_start, &_stop, &_pshape)
+    return buffer
 
 
 def _setitem(_Container arr, key, item):

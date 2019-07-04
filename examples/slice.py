@@ -5,21 +5,24 @@ import numpy as np
 
 pshape = (5, 5)
 shape = (10, 10)
+slices = (slice(2, 4), slice(1, 4))
 
 dtype = np.float32
 
 itemsize = np.dtype(dtype).itemsize
 
-a = cat.Container(pshape, itemsize=itemsize)
+arr = cat.Container(pshape=pshape, itemsize=itemsize)
 
 size = int(np.prod(shape))
 
-buffer = np.arange(size, dtype=dtype).reshape(shape)
+arr_np = np.arange(size, dtype=dtype).reshape(shape)
 
-a.from_numpy(buffer)
+arr.from_numpy(arr_np)
 
-buffer = buffer[2:5, 2:5]
+np_sl = arr_np[slices]
 
-c = a[2:5, 2:5]
+buf_sl = arr[slices]
 
-print(c.size)
+arr_sl = np.frombuffer(buf_sl, dtype=dtype).reshape(np_sl.shape)
+
+np.testing.assert_almost_equal(arr_sl, np_sl)
