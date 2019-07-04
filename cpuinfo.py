@@ -2333,13 +2333,13 @@ def main():
 	try:
 		_check_arch()
 	except Exception as err:
-		sys.stderr.write(str(err) + "\n")
+		sys.stderr.iterwrite(str(err) + "\n")
 		sys.exit(1)
 
 	info = _get_cpu_info_internal()
 
 	if not info:
-		sys.stderr.write("Failed to find cpu info\n")
+		sys.stderr.iterwrite("Failed to find cpu info\n")
 		sys.exit(1)
 
 	if args.json:
