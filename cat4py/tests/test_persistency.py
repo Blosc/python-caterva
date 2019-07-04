@@ -14,18 +14,16 @@ def test_persistency(shape, pshape, filename, dtype):
 
     itemsize = np.dtype(dtype).itemsize
 
-    a = cat.Container(pshape=pshape, filename=filename, itemsize=itemsize)
-
     size = int(np.prod(shape))
 
-    buffer = np.arange(size, dtype=dtype).reshape(shape)
+    nparray = np.arange(size, dtype=dtype).reshape(shape)
 
-    a.from_numpy(buffer)
+    a = cat.from_numpy(nparray, pshape, filename, itemsize=itemsize)
 
     b = cat.from_file(filename)
 
-    buffer2 = b.to_numpy(dtype)
+    nparray2 = b.to_numpy(dtype)
 
-    np.testing.assert_almost_equal(buffer, buffer2)
+    np.testing.assert_almost_equal(nparray, nparray2)
 
     os.remove(filename)

@@ -11,13 +11,11 @@ import numpy as np
                          ])
 def test_copy(shape, pshape1, pshape2, itemsize):
 
-    a = cat.Container(pshape=pshape1, itemsize=itemsize)
-
     size = int(np.prod(shape))
 
     buffer = bytes(size * itemsize)
 
-    a.from_buffer(shape, buffer)
+    a = cat.from_buffer(buffer, shape, pshape1, itemsize=itemsize)
 
     b = a.copy(pshape=pshape2)
 

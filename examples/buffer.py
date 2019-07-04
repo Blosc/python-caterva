@@ -13,10 +13,7 @@ buffer = bytes(np.prod(shape) * itemsize)
 # Create a caterva array from a buffer
 a = cat.from_buffer(buffer, shape, pshape, itemsize=itemsize)
 
-# Create a copy of a caterva array
-b = a.copy()
-
 # Convert a caterva array to a buffer
-buffer2 = b.to_buffer()
+buffer2 = a.to_buffer()
 
 assert buffer == buffer2

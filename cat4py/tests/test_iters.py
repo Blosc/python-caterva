@@ -16,19 +16,14 @@ def test_iters(shape, pshape1, pshape2, dtype):
 
     itemsize = np.dtype(dtype).itemsize
 
-    a = cat.Container(pshape=pshape1, itemsize=itemsize)
-
     size = int(np.prod(shape))
+    nparray = np.arange(size, dtype=dtype).reshape(shape)
+    a = cat.from_numpy(nparray, pshape1, itemsize=itemsize)
 
-    buffer = np.arange(size, dtype=dtype).reshape(shape)
-
-    a.from_numpy(buffer)
-
-    b = cat.Container(pshape2, itemsize=itemsize)
-
-    for (block_r, info_r), (block_w, info_w) in lzip(a.iter_read(blockshape, dtype), b.iter_write(shape, dtype)):
+    b = cat.empty(shape, pshape2, itemsize=itemsize)
+    for (block_r, info_r), (block_w, info_w) in lzip(a.iter_read(blockshape, dtype), b.iter_write(dtype)):
         block_w[:] = block_r
 
-    buffer2 = b.to_numpy(dtype)
+    nparray2 = b.to_numpy(dtype)
 
-    np.testing.assert_almost_equal(buffer, buffer2)
+    np.testing.assert_almost_equal(nparray, nparray2)

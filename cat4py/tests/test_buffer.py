@@ -11,13 +11,11 @@ import numpy as np
                          ])
 def test_buffer(shape, pshape, itemsize):
 
-    a = cat.Container(pshape=pshape, itemsize=itemsize)
-
     size = int(np.prod(shape))
 
     buffer = bytes(size * itemsize)
 
-    a.from_buffer(shape, buffer)
+    a = cat.from_buffer(buffer, shape, pshape, itemsize=itemsize)
 
     buffer2 = a.to_buffer()
 

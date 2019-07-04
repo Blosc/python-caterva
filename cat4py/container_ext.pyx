@@ -233,10 +233,8 @@ cdef class WriteIter:
     cdef buffer
     cdef dtype
 
-    def __init__(self, arr, shape, dtype):
+    def __init__(self, arr, dtype):
         self.arr = arr
-        if not self.arr._array.filled:
-            self.arr.updateshape(shape)
         self.dtype = dtype
 
     def __iter__(self):
@@ -385,8 +383,8 @@ cdef class _Container:
         return ReadIter(self, blockshape, dtype)
 
 
-    def iter_write(self, shape, dtype):
-        return WriteIter(self, shape, dtype)
+    def iter_write(self, dtype):
+        return WriteIter(self, dtype)
 
     def tocapsule(self):
         return PyCapsule_New(self._array, "caterva_array_t*", NULL)

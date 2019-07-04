@@ -13,14 +13,12 @@ def test_numpy(shape, pshape, dtype):
 
     itemsize = np.dtype(dtype).itemsize
 
-    a = cat.Container(pshape=pshape, itemsize=itemsize)
-
     size = int(np.prod(shape))
 
-    buffer = np.arange(size, dtype=dtype).reshape(shape)
+    nparray = np.arange(size, dtype=dtype).reshape(shape)
 
-    a.from_numpy(buffer)
+    a = cat.from_numpy(nparray, pshape, itemsize=itemsize)
 
-    buffer2 = a.to_numpy(dtype)
+    nparray2 = a.to_numpy(dtype)
 
-    np.testing.assert_almost_equal(buffer, buffer2)
+    np.testing.assert_almost_equal(nparray, nparray2)

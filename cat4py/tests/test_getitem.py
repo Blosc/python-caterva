@@ -13,18 +13,16 @@ def test_getitem(shape, pshape, slices, dtype):
 
     itemsize = np.dtype(dtype).itemsize
 
-    arr = cat.Container(pshape=pshape, itemsize=itemsize)
-
     size = int(np.prod(shape))
 
-    arr_np = np.arange(size, dtype=dtype).reshape(shape)
+    nparray = np.arange(size, dtype=dtype).reshape(shape)
 
-    arr.from_numpy(arr_np)
+    a = cat.from_numpy(nparray, pshape, itemsize=itemsize)
 
-    np_sl = arr_np[slices]
+    nparray_slice = nparray[slices]
 
-    buf_sl = arr[slices]
+    buffer_slice = a[slices]
 
-    arr_sl = np.frombuffer(buf_sl, dtype=dtype).reshape(np_sl.shape)
+    a_slice = np.frombuffer(buffer_slice, dtype=dtype).reshape(nparray_slice.shape)
 
-    np.testing.assert_almost_equal(arr_sl, np_sl)
+    np.testing.assert_almost_equal(a_slice, nparray_slice)

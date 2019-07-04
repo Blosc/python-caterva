@@ -1,18 +1,28 @@
 import cat4py as cat
 import numpy as np
-
-cparams = cat.CParams(itemsize=4)  # we will be dealing with itemsizes of 4's
-dparams = cat.DParams()
-
-pshape = (5, 5)
-shape = (10, 10)
-filename = "persistency-container.cat"
+import os
 
 
-# Create a cat container with partitions
-data = np.arange(int(np.prod(shape)), dtype=np.float32).reshape(shape)
+pshape = (5, 7)
+shape = (13, 20)
+filename = "persistency-array.cat"
 
-a = cat.fromnumpy(data)
+dtype = np.complex128
+itemsize = np.dtype(dtype).itemsize
 
-c = cat.tonumpy(a, dtype=np.float32)
-print(c)
+# Create a numpy array
+nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
+
+# Create a caterva array from a numpy array (on disk)
+a = cat.from_numpy(nparray, pshape, filename, itemsize=itemsize)
+
+# Read a caterva array from disk
+b = cat.from_file(filename)
+
+# Convert a caterva array to a numpy array
+nparray2 = b.to_numpy(dtype=dtype)
+
+np.testing.assert_almost_equal(nparray, nparray2)
+
+# Remove file on disk
+os.remove(filename)
