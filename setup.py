@@ -216,7 +216,8 @@ increasing the I/O speed not only to disk, but potentially to memory too.
         'cython>=0.29',
         'numpy>=1.16',
         'setuptools>=40.0',
-        'setuptools_scm>=3.2.0'
+        'setuptools_scm>=3.2.0',
+        'pytest>=3.4.2'
     ],
     tests_require=tests_require,
     extras_require=dict(
