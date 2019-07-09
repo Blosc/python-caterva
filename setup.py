@@ -110,7 +110,8 @@ if BLOSC2_DIR != '':
 else:
     # Compiling everything from sources
     sources += [f for f in glob('c-blosc2/blosc/*.c')
-                if 'avx2' not in f and 'sse2' not in f and 'neon' not in f]
+                if 'avx2' not in f and 'sse2' not in f and
+                   'neon' not in f and 'altivec' not in f]
     sources += glob('c-blosc2/internal-complibs/lz4*/*.c')
     #sources += glob('c-blosc2/internal-complibs/miniz*/*.c')
     sources += glob('c-blosc2/internal-complibs/zstd*/*/*.c')
