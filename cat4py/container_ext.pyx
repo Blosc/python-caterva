@@ -113,10 +113,10 @@ cdef extern from "caterva.h":
         blosc2_schunk *sc
         uint8_t *buf
         int64_t shape[CATERVA_MAXDIM]
-        int64_t pshape[CATERVA_MAXDIM]
+        int32_t pshape[CATERVA_MAXDIM]
         int64_t eshape[CATERVA_MAXDIM]
         int64_t size
-        int64_t psize
+        int32_t psize
         int64_t esize
         int8_t ndim
         bool empty;
