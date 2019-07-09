@@ -121,7 +121,7 @@ cdef extern from "caterva.h":
         int8_t ndim
         bool empty;
         bool filled;
-        int64_t nblocks;
+        int64_t nparts;
 
     caterva_ctx_t *caterva_new_ctx(void *(*all)(size_t), void (*free)(void *),
                                    blosc2_cparams cparams, blosc2_dparams dparams)
@@ -255,7 +255,7 @@ cdef class WriteIter:
         start_ = [0 for _ in range(self.arr._array.ndim)]
         inc = 1
         for i in range(self.arr._array.ndim - 1, -1, -1):
-            start_[i] = self.arr._array.nblocks % (aux[i] * inc) // inc
+            start_[i] = self.arr._array.nparts % (aux[i] * inc) // inc
             start_[i] *= self.arr._array.pshape[i]
             inc *= aux[i]
 
@@ -279,7 +279,7 @@ cdef class ReadIter:
     cdef _Container arr
     cdef blockshape
     cdef dtype
-    cdef nblocks
+    cdef nparts
 
     def __init__(self, arr, blockshape, dtype):
         if not arr.filled:
@@ -288,7 +288,7 @@ cdef class ReadIter:
         self.arr = arr
         self.blockshape = blockshape
         self.dtype = dtype
-        self.nblocks = 0
+        self.nparts = 0
 
     def __iter__(self):
         return self
@@ -305,13 +305,13 @@ cdef class ReadIter:
 
         aux = [eshape[i] // self.blockshape[i] for i in range(ndim)]
 
-        if self.nblocks >= np.prod(aux):
+        if self.nparts >= np.prod(aux):
             raise StopIteration
 
         start_ = [0 for _ in range(ndim)]
         inc = 1
         for i in range(ndim - 1, -1, -1):
-            start_[i] = self.nblocks % (aux[i] * inc) // inc
+            start_[i] = self.nparts % (aux[i] * inc) // inc
             start_[i] *= self.blockshape[i]
             inc *= aux[i]
 
@@ -325,7 +325,7 @@ cdef class ReadIter:
         sh = [s.stop - s.start for s in sl]
         IterInfo = namedtuple("IterInfo", "slice, shape, size")
         info = IterInfo(slice=sl, shape=sh, size=np.prod(sh))
-        self.nblocks += 1
+        self.nparts += 1
 
         buf = self.arr.slicebuffer(info.slice)
         a = np.frombuffer(buf, dtype=self.dtype).reshape(info.shape)
