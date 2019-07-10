@@ -29,5 +29,5 @@ $ CFLAGS=-O0 python setup.py build_ext -i
 ### Run example
 
 ```sh
-$ PYTHONPATH=. python examples/simple.py
+$ PYTHONPATH=. python examples/ex_persistency.py
 ```
