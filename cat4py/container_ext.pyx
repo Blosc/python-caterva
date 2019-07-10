@@ -35,12 +35,15 @@ cdef extern from "blosc.h":
     ctypedef enum:
         BLOSC_MAX_FILTERS
         BLOSC2_MAX_METALAYERS
+        BLOSC2_PREFILTER_INPUTS_MAX
 
     ctypedef struct blosc2_frame_metalayer
 
     ctypedef struct blosc2_frame
 
     ctypedef struct blosc2_context
+
+    ctypedef int* blosc2_prefilter_fn
 
     ctypedef struct blosc2_schunk:
         uint8_t version
@@ -65,6 +68,15 @@ cdef extern from "blosc.h":
         blosc2_context* dctx
         uint8_t* reserved
 
+    ctypedef struct blosc2_prefilter_params:
+        int ninputs
+        uint8_t* inputs[BLOSC2_PREFILTER_INPUTS_MAX]
+        int32_t input_typesizes[BLOSC2_PREFILTER_INPUTS_MAX]
+        void *user_data
+        uint8_t *out
+        int32_t out_size
+        int32_t out_typesize
+
     ctypedef struct blosc2_cparams:
         uint8_t compcode
         uint8_t clevel
@@ -75,6 +87,8 @@ cdef extern from "blosc.h":
         void* schunk
         uint8_t filters[BLOSC_MAX_FILTERS]
         uint8_t filters_meta[BLOSC_MAX_FILTERS]
+        blosc2_prefilter_fn prefilter
+        blosc2_prefilter_params *pparams
 
     blosc2_cparams BLOSC_CPARAMS_DEFAULTS
 
@@ -155,7 +169,8 @@ defaults = {'itemsize': 4,
             'cnthreads': 1,
             'dnthreads': 1,
             'blocksize': 0,
-            'filters': [1]}
+            'filters': [1],
+            }
 
 
 cdef class CParams:
@@ -168,6 +183,8 @@ cdef class CParams:
     cdef void* schunk
     cdef uint8_t filters[BLOSC_MAX_FILTERS]
     cdef uint8_t filters_meta[BLOSC_MAX_FILTERS]
+    cdef blosc2_prefilter_fn prefilter
+    cdef blosc2_prefilter_params* pparams
 
     def __init__(self, **kargs):
         self.itemsize = kargs.get('itemsize', defaults['itemsize'])
@@ -176,6 +193,8 @@ cdef class CParams:
         self.use_dict = kargs.get('use_dict', defaults['use_dict'])
         self.nthreads = kargs.get('cnthreads', defaults['cnthreads'])
         self.blocksize = kargs.get('blocksize', defaults['blocksize'])
+        self.prefilter = NULL  # TODO: implement support for prefilters
+        self.pparams = NULL    # TODO: implement support for prefilters
         # TODO: implement support for multiple filters
         for i in range(BLOSC_MAX_FILTERS):
             self.filters[i] = 0
@@ -210,6 +229,8 @@ cdef class Context:
         _cparams.use_dict = cparams.use_dict
         _cparams.nthreads = cparams.nthreads
         _cparams.blocksize = cparams.blocksize
+        _cparams.prefilter = cparams.prefilter
+        _cparams.pparams = cparams.pparams
         for i in range(BLOSC_MAX_FILTERS):
             _cparams.filters[i] = cparams.filters[i]
         for i in range(BLOSC_MAX_FILTERS):
