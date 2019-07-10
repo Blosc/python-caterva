@@ -81,7 +81,7 @@ LFLAGS = os.environ.get('LFLAGS', '').split()
 BLOSC2_DIR = os.environ.get('BLOSC2_DIR', '')
 
 # Sources & libraries
-inc_dirs = ['cat4py']
+inc_dirs = []
 lib_dirs = []
 libs = []
 def_macros = []
