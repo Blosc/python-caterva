@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/blosc/caterva/_apis/build/status/Blosc.cat4py?branchName=master)](https://dev.azure.com/blosc/caterva/_build/latest?definitionId=1&branchName=master)
+
 # cat4py
 
 Python wrapper for Caterva.  Still on development.
