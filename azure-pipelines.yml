@@ -38,5 +38,5 @@ steps:
 
 - script: |
     pip install pytest pytest-azurepipelines
-    pytest -v
+    PYTHONPATH=. pytest -v
   displayName: 'pytest'
