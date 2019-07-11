@@ -39,7 +39,8 @@ jobs:
       pip install pytest pytest-azurepipelines
       PYTHONPATH=. pytest tests
     displayName: 'pytest'
-      
+
+
 - job: 'Windows'
   pool:
     vmImage: 'vs2017-win2016'
