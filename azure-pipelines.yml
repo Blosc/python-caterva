@@ -99,7 +99,7 @@ jobs:
       testRunTitle: 'Python $(python.version)'
     condition: succeededOrFailed()
 
-  - script: |
+  - bash: |
       bash <(curl https://codecov.io/bash) -t $CODECOV_TOKEN -f coverage.xml
     displayName: 'codecov'
 
