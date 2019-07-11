@@ -1,5 +1,7 @@
 [![Build Status](https://dev.azure.com/blosc/caterva/_apis/build/status/Blosc.cat4py?branchName=master)](https://dev.azure.com/blosc/caterva/_build/latest?definitionId=1&branchName=master)
 [![codecov](https://codecov.io/gh/Blosc/cat4py/branch/master/graph/badge.svg)](https://codecov.io/gh/Blosc/cat4py)
+<!--- ![](https://img.shields.io/azure-devops/coverage/blosc/caterva/1.svg)--->
+
 # cat4py
 
 Python wrapper for Caterva.  Still on development.
