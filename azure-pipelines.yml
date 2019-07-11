@@ -37,7 +37,7 @@ jobs:
 
   - script: |
       pip install pytest pytest-azurepipelines pytest-cov
-      PYTHONPATH=. python -m pytest --junitxml=junit/test-results.xml --cov=cat4py/high_level.py --cov-report=xml --cov-report=html cat4py/tests
+      PYTHONPATH=. python -m pytest --junitxml=junit/test-results.xml --cov=cat4py/high_level --cov-report=xml --cov-report=html cat4py/tests
     displayName: 'pytest'
     
   - task: PublishTestResults@2
