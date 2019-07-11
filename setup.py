@@ -18,6 +18,8 @@ import os
 from glob import glob
 import sys
 
+import numpy
+
 from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
 from pkg_resources import resource_filename
@@ -76,12 +78,13 @@ class LazyCommandClass(dict):
 
 # Global variables
 CFLAGS = os.environ.get('CFLAGS', '').split()
+print("CFLAGS->", CFLAGS)
 LFLAGS = os.environ.get('LFLAGS', '').split()
 # Allow setting the Blosc2 dir if installed in the system
 BLOSC2_DIR = os.environ.get('BLOSC2_DIR', '')
 
 # Sources & libraries
-inc_dirs = []
+inc_dirs = [numpy.get_include()]
 lib_dirs = []
 libs = []
 def_macros = []
@@ -103,11 +106,13 @@ for arg in args:
         sys.argv.remove(arg)
 
 if BLOSC2_DIR != '':
+    print("BLOSC_DIR!")
     # Using the Blosc library
     lib_dirs += [os.path.join(BLOSC2_DIR, 'lib')]
     inc_dirs += [os.path.join(BLOSC2_DIR, 'include')]
     libs += ['blosc']
 else:
+    print("NO BLOSC_DIR!")
     # Compiling everything from sources
     sources += [f for f in glob('c-blosc2/blosc/*.c')
                 if 'avx2' not in f and 'sse2' not in f and
@@ -157,6 +162,8 @@ tests_require = []
 if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (3, 7):
     CFLAGS.extend(["-fprofile-arcs", "-ftest-coverage"])
     LFLAGS.append("-lgcov")
+
+print("CFLAGS2->", CFLAGS)
 
 setup(
     name="cat4py",
@@ -228,5 +235,5 @@ increasing the I/O speed not only to disk, but potentially to memory too.
     ),
     packages=find_packages(),
     package_data={'cat4py': ['container_ext.pyx']},
-    cmdclass=LazyCommandClass(),
+    #cmdclass=LazyCommandClass(),
 )
