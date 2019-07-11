@@ -21,4 +21,5 @@ def test_numpy(shape, pshape, dtype):
 
     nparray2 = a.to_numpy(dtype)
 
-    np.testing.assert_almost_equal(nparray, nparray2)
+    # np.testing.assert_almost_equal(nparray, nparray2)
+    assert 1 == 0
