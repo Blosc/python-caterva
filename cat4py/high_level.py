@@ -48,3 +48,7 @@ def from_file(filename):
     arr = Container()
     ext._from_file(arr, filename)
     return arr
+
+
+def no_covered():
+    pass
