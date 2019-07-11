@@ -16,7 +16,8 @@ jobs:
         python.version: '3.6'
       Python37:
         python.version: '3.7'
-
+  continueOnError: false
+  timeoutInMinutes: 60
 steps:
 - task: UsePythonVersion@0
   inputs:
