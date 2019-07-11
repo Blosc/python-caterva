@@ -7,7 +7,7 @@ trigger:
 - master
 
 jobs:
-- job: 'Coberage'
+- job: 'Coverage'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
