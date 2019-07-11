@@ -6,18 +6,15 @@
 trigger:
 - master
 
-jobs:
-- job: 'Default'
-  pool:
-    vmImage: 'ubuntu-latest'
-  strategy:
-    matrix:
-      Python36:
-        python.version: '3.6'
-      Python37:
-        python.version: '3.7'
-  continueOnError: false
-  timeoutInMinutes: 60
+pool:
+  vmImage: 'ubuntu-latest'
+strategy:
+  matrix:
+    Python36:
+      python.version: '3.6'
+    Python37:
+      python.version: '3.7'
+
 steps:
 - task: UsePythonVersion@0
   inputs:
