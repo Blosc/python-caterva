@@ -7,7 +7,7 @@ trigger:
 - master
 
 jobs:
-- job: 'Ubuntu'
+- job: 'Linux'
   pool:
     vmImage: 'ubuntu-latest'
   strategy:
@@ -16,6 +16,7 @@ jobs:
         python.version: '3.6'
       Python37:
         python.version: '3.7'
+      maxParallel: 2
 
   steps:
   - task: UsePythonVersion@0
@@ -48,6 +49,7 @@ jobs:
         python.version: '3.6'
       Python37:
         python.version: '3.7'
+      maxParallel: 2
 
   steps:
   - task: UsePythonVersion@0
@@ -71,6 +73,39 @@ jobs:
     displayName: 'Compile package'
 
   - bash: |
+      pip install pytest pytest-azurepipelines
+      PYTHONPATH=. pytest -v
+    displayName: 'pytest'
+
+- job: 'macOS'
+  pool:
+    vmImage: 'macos-latest'
+  strategy:
+    matrix:
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+      maxParallel: 2
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - script: |
+      python -m pip install --retries 3 -U pip setuptools setuptools-scm
+      pip install --retries 3 -r requirements.txt
+    displayName: 'Install dependencies'
+
+  - script: |
+      git submodule init
+      git submodule update
+      CFLAGS="" python setup.py build_ext -i
+    displayName: 'Compile package'
+
+  - script: |
       pip install pytest pytest-azurepipelines
       PYTHONPATH=. pytest -v
     displayName: 'pytest'
