@@ -23,10 +23,6 @@ jobs:
       versionSpec: '$(python.version)'
     displayName: 'Use Python $(python.version)'
 
-  - powershell: |
-      Write-Host "##vso[task.setvariable variable=PATH;]${env:PYTHON};${env:PYTHON}\Scripts;${env:PATH}";
-    displayName: 'Add Python paths to PATH'
-
   - script: |
       python -m pip install --retries 3 -U pip setuptools setuptools-scm
       pip install --retries 3 -r requirements.txt
@@ -39,6 +35,42 @@ jobs:
     displayName: 'Compile package'
 
   - script: |
+      pip install pytest pytest-azurepipelines
+      PYTHONPATH=. pytest -v
+    displayName: 'pytest'
+
+- job: 'Windows'
+  pool:
+    vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '$(python.version)'
+    displayName: 'Use Python $(python.version)'
+
+  - powershell: |
+      Write-Host "##vso[task.setvariable variable=PATH;]${env:PYTHON};${env:PYTHON}\Scripts;${env:PATH}";
+    displayName: 'Add Python paths to PATH'
+
+  - bash: |
+      python -m pip install --retries 3 -U pip setuptools setuptools-scm
+      pip install --retries 3 -r requirements.txt
+    displayName: 'Install dependencies'
+
+  - bash: |
+      git submodule init
+      git submodule update
+      CFLAGS="" python setup.py build_ext -i
+    displayName: 'Compile package'
+
+  - bash: |
       pip install pytest pytest-azurepipelines
       PYTHONPATH=. pytest -v
     displayName: 'pytest'
