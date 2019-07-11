@@ -16,7 +16,7 @@ jobs:
         python.version: '3.6'
       Python37:
         python.version: '3.7'
-      maxParallel: 2
+    maxParallel: 2
 
   steps:
   - task: UsePythonVersion@0
@@ -49,7 +49,7 @@ jobs:
         python.version: '3.6'
       Python37:
         python.version: '3.7'
-      maxParallel: 2
+    maxParallel: 2
 
   steps:
   - task: UsePythonVersion@0
@@ -86,7 +86,7 @@ jobs:
         python.version: '3.6'
       Python37:
         python.version: '3.7'
-      maxParallel: 2
+    maxParallel: 2
 
   steps:
   - task: UsePythonVersion@0
