@@ -22,12 +22,18 @@ $ git submodule update --recursive --remote
 $ CFLAGS='' python setup.py build_ext -i
 ```
 
-**Please note**: The Anaconda python interpreter messes with CFLAGS if it is not set by the user.  If the CFLAGS is not passed, Anaconda python will inject their own paths, so it will find a possible `/Users/faltet/miniconda3/include/blosc.h`, which is not compatible with the blosc.h header for Blosc2.  I suppose the only solution long term will be to use `blosc2.h` and `libblosc2.so`.  Meanwhile, use CFLAGS explicitly so as to not mess with Anaconda python own business. 
+**Please note**: If the CFLAGS environment variable is not passed, Anaconda Python will inject their own paths there. As a resulta, it will find a possible `$HOME/miniconda3/include/blosc.h` header, which is not compatible with the `blosc.h` header for Blosc2.  The solution long term will be to use `blosc2.h` and `libblosc2.so` for the Blosc2 libray.  Meanwhile, use CFLAGS explicitly so as to not clash with Anaconda Python business. 
 
-Compiling the extension implies re-compiling C-Blosc2 and Caterva sources everytime, so a trick for accelerating the process is to direct the compiler to not optimize the code:
+Compiling the extension implies re-compiling C-Blosc2 and Caterva sources everytime, so a trick for accelerating the process during the development process is to direct the compiler to not optimize the code:
 
 ```sh
 $ CFLAGS=-O0 python setup.py build_ext -i
+```
+
+### Run tests
+
+```sh
+$ PYTHONPATH=. pytest
 ```
 
 ### Run example
