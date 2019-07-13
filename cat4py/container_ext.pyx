@@ -38,11 +38,10 @@ cdef extern from "blosc.h":
         BLOSC2_PREFILTER_INPUTS_MAX
 
     ctypedef struct blosc2_frame_metalayer
-
     ctypedef struct blosc2_frame
-
+    blosc2_frame *blosc2_new_frame(char *fname)
+    
     ctypedef struct blosc2_context
-
     ctypedef int* blosc2_prefilter_fn
 
     ctypedef struct blosc2_schunk:
@@ -90,15 +89,12 @@ cdef extern from "blosc.h":
         blosc2_prefilter_fn prefilter
         blosc2_prefilter_params *pparams
 
-    blosc2_cparams BLOSC_CPARAMS_DEFAULTS
-
     ctypedef struct blosc2_dparams:
         int nthreads
         void* schunk
 
+    blosc2_cparams BLOSC_CPARAMS_DEFAULTS     
     blosc2_dparams BLOSC_DPARAMS_DEFAULTS
-
-    blosc2_frame *blosc2_new_frame(char *fname)
 
 
 cdef extern from "caterva.h":
