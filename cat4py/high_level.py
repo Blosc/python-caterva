@@ -15,8 +15,8 @@ class Container(ext._Container):
     def __setitem__(self, key, item):
         ext._setitem(self, key, item)
 
-    def copy(self, pshape=None, filename=None):
-        arr = Container(pshape=pshape, filename=filename, **self.kargs)
+    def copy(self, pshape=None, filename=None, **kargs):
+        arr = Container(pshape, filename, **kargs)
         ext._copy(self, arr)
         return arr
 
