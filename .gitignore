@@ -8,3 +8,4 @@ cat4py/version.py
 __pycache__/
 cat4py/__pycache__/
 .pytest_cache/
+_skbuild

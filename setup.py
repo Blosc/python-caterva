@@ -8,73 +8,23 @@
 
 from __future__ import absolute_import
 from sys import version_info as v
-
-# Check this Python version is supported
-if any([(3,) < v < (3, 5)]):
-    raise Exception(
-        "Unsupported Python version %d.%d. Requires Python >= 3.5 " % v[:2])
-
 import os
-from glob import glob
-import sys
-
-import numpy
-
-from setuptools import setup, Extension, find_packages
-from Cython.Build import cythonize
-from pkg_resources import resource_filename
+# from setuptools import find_packages
+from skbuild import setup
 
 # For guessing the capabilities of the CPU for C-Blosc2
 try:
     # Currently just Intel and some ARM archs are supported by cpuinfo module
     import cpuinfo
     cpu_info = cpuinfo.get_cpu_info()
-except:
+except ImportError:
+    cpuinfo = None
     cpu_info = {'flags': []}
 
-
-class LazyCommandClass(dict):
-    """
-    Lazy command class that defers operations requiring Cython and numpy until
-    they've actually been downloaded and installed by setup_requires.
-    """
-    def __contains__(self, key):
-        return (
-            key == 'build_ext'
-            or super(LazyCommandClass, self).__contains__(key)
-        )
-
-    def __setitem__(self, key, value):
-        if key == 'build_ext':
-            raise AssertionError("build_ext overridden!")
-        super(LazyCommandClass, self).__setitem__(key, value)
-
-    def __getitem__(self, key):
-        if key != 'build_ext':
-            return super(LazyCommandClass, self).__getitem__(key)
-
-        from Cython.Distutils import build_ext as cython_build_ext
-
-        class build_ext(cython_build_ext):
-            """
-            Custom build_ext command that lazily adds numpy's include_dir to
-            extensions.
-            """
-            def build_extensions(self):
-                """
-                Lazily append numpy's include directory to Extension includes.
-
-                This is done here rather than at module scope because setup.py
-                may be run before numpy has been installed, in which case
-                importing numpy and calling `numpy.get_include()` will fail.
-                """
-                numpy_incl = resource_filename('numpy', 'core/include')
-                for ext in self.extensions:
-                    ext.include_dirs.append(numpy_incl)
-
-                super(cython_build_ext, self).build_extensions()
-        return build_ext
-
+# Check whether this Python version is supported
+if any([(3,) < v < (3, 6)]):
+    raise Exception(
+        "Unsupported Python version %d.%d. Requires Python >= 3.6 " % v[:2])
 
 # Global variables
 CFLAGS = os.environ.get('CFLAGS', '').split()
@@ -82,81 +32,7 @@ print("CFLAGS->", CFLAGS)
 LFLAGS = os.environ.get('LFLAGS', '').split()
 # Allow setting the Blosc2 dir if installed in the system
 BLOSC2_DIR = os.environ.get('BLOSC2_DIR', '')
-
-# Sources & libraries
-inc_dirs = [numpy.get_include()]
-lib_dirs = []
-libs = []
-def_macros = []
-sources = ['cat4py/container_ext.pyx']
-
-optional_libs = []
-
-# Handle --blosc2=[PATH] --lflags=[FLAGS] --cflags=[FLAGS]
-args = sys.argv[:]
-for arg in args:
-    if arg.find('--blosc2=') == 0:
-        BLOSC2_DIR = os.path.expanduser(arg.split('=')[1])
-        sys.argv.remove(arg)
-    if arg.find('--lflags=') == 0:
-        LFLAGS = arg.split('=')[1].split()
-        sys.argv.remove(arg)
-    if arg.find('--cflags=') == 0:
-        CFLAGS = arg.split('=')[1].split()
-        sys.argv.remove(arg)
-
-if BLOSC2_DIR != '':
-    print("BLOSC_DIR!")
-    # Using the Blosc library
-    lib_dirs += [os.path.join(BLOSC2_DIR, 'lib')]
-    inc_dirs += [os.path.join(BLOSC2_DIR, 'include')]
-    libs += ['blosc']
-else:
-    print("NO BLOSC_DIR!")
-    # Compiling everything from sources
-    sources += [f for f in glob('c-blosc2/blosc/*.c')
-                if 'avx2' not in f and 'sse2' not in f and
-                   'neon' not in f and 'altivec' not in f]
-    sources += glob('c-blosc2/internal-complibs/lz4*/*.c')
-    #sources += glob('c-blosc2/internal-complibs/miniz*/*.c')
-    sources += glob('c-blosc2/internal-complibs/zstd*/*/*.c')
-    # sources += glob('c-blosc2/internal-complibs/lizard*/*/*.c')
-    inc_dirs += [os.path.join('c-blosc2', 'blosc')]
-    inc_dirs += [d for d in glob('c-blosc2/internal-complibs/*')
-                 if os.path.isdir(d)]
-    inc_dirs += [d for d in glob('c-blosc2/internal-complibs/zstd*/*')
-                 if os.path.isdir(d)]
-    # TODO: when including miniz, we get a `_compress2` symbol not found error
-    # def_macros += [('HAVE_LZ4', 1), ('HAVE_ZLIB', 1), ('HAVE_ZSTD', 1)]
-    def_macros += [('HAVE_LZ4', 1), ('HAVE_ZSTD', 1)]
-    # ('HAVE_LIZARD', 1)]  # TODO: xxhash collide between ztsd and lizard
-
-    # Guess SSE2 or AVX2 capabilities
-    # SSE2
-    if 'DISABLE_CAT4PY_SSE2' not in os.environ and 'sse2' in cpu_info['flags']:
-        print('SSE2 detected')
-        CFLAGS.append('-DSHUFFLE_SSE2_ENABLED')
-        sources += [f for f in glob('c-blosc2/blosc/*.c') if 'sse2' in f]
-        if os.name == 'posix':
-            CFLAGS.append('-msse2')
-        elif os.name == 'nt':
-            def_macros += [('__SSE2__', 1)]
-
-    # AVX2
-    if 'DISABLE_CAT4PY_AVX2' not in os.environ and 'avx2' in cpu_info['flags']:
-        print('AVX2 detected')
-        CFLAGS.append('-DSHUFFLE_AVX2_ENABLED')
-        sources += [f for f in glob('c-blosc2/blosc/*.c') if 'avx2' in f]
-        if os.name == 'posix':
-            CFLAGS.append('-mavx2')
-        elif os.name == 'nt':
-            def_macros += [('__AVX2__', 1)]
-
-# Add Caterva sources
-sources += [f for f in glob('Caterva/caterva/*.c')]
-inc_dirs += [os.path.join('Caterva', 'caterva')]
-
-tests_require = []
+print("BLOSC2_DIR: '%s'" % BLOSC2_DIR)
 
 # compile and link code instrumented for coverage analysis
 if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (3, 7):
@@ -164,6 +40,11 @@ if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (3, 7):
     LFLAGS.append("-lgcov")
 
 print("CFLAGS2->", CFLAGS)
+
+
+def cmake_bool(cond):
+    return 'ON' if cond else 'OFF'
+
 
 setup(
     name="cat4py",
@@ -207,33 +88,17 @@ increasing the I/O speed not only to disk, but potentially to memory too.
     url='https://github.com/Blosc/cat4py',
     license='BSD',
     platforms=['any'],
-    ext_modules=cythonize([
-        Extension(
-            'cat4py.container_ext',
-            include_dirs=inc_dirs,
-            define_macros=def_macros,
-            sources=sources,
-            library_dirs=lib_dirs,
-            libraries=libs,
-            extra_link_args=LFLAGS,
-            extra_compile_args=CFLAGS
-        )
-    ]),
     install_requires=['numpy>=1.16'],
-    setup_requires=[
-        'cython>=0.29',
-        'numpy>=1.16',
-        'setuptools>=40.0',
-        'setuptools_scm>=3.2.0',
-        'pytest>=3.4.2'
+    cmake_args=[
+        '-DBLOSC_DIR:PATH=%s' % os.environ.get('BLOSC_DIR', ''),
+        '-DDEACTIVATE_SSE2:BOOL=%s' % cmake_bool('DISABLE_BLOSC_SSE2' in os.environ),
+        '-DDEACTIVATE_AVX2:BOOL=%s' % cmake_bool('DISABLE_BLOSC_AVX2' in os.environ),
+        '-DDEACTIVATE_LZ4:BOOL=%s' % cmake_bool(not int(os.environ.get('INCLUDE_LZ4', '1'))),
+        # Snappy is disabled by default
+        '-DDEACTIVATE_SNAPPY:BOOL=%s' % cmake_bool(not int(os.environ.get('INCLUDE_SNAPPY', '0'))),
+        '-DDEACTIVATE_ZLIB:BOOL=%s' % cmake_bool(not int(os.environ.get('INCLUDE_ZLIB', '1'))),
+        '-DDEACTIVATE_ZSTD:BOOL=%s' % cmake_bool(not int(os.environ.get('INCLUDE_ZSTD', '1'))),
     ],
-    tests_require=tests_require,
-    extras_require=dict(
-        optional=[
-        ],
-        test=tests_require
-    ),
-    packages=find_packages(),
+    # packages=find_packages(),
     package_data={'cat4py': ['container_ext.pyx']},
-    #cmdclass=LazyCommandClass(),
 )
