@@ -21,6 +21,12 @@ a = cat.from_numpy(nparray, pshape, itemsize=itemsize)
 # Create an empty caterva array (on disk)
 b = cat.empty(shape, pshape, filename, itemsize=itemsize)
 
+print(b.has_metalayer("numpy"))
+print(b.add_metalayer("numpy", b"hola"))
+print(b.has_metalayer("numpy"))
+print(b.get_metalayer("numpy"))
+
+
 # Fill an empty caterva array using a block iterator
 for block, info in b.iter_write(dtype):
     block[:] = nparray[info.slice]

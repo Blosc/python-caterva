@@ -96,10 +96,10 @@ cdef extern from "blosc2.h":
     blosc2_cparams BLOSC_CPARAMS_DEFAULTS     
     blosc2_dparams BLOSC_DPARAMS_DEFAULTS
 
-    blosc2_frame_has_metalayer(blosc2_frame* frame, char* name)
-    blosc2_frame_add_metalayer(blosc2_frame* frame, char* name, uint8_t* content, uint32_t content_len)
-    blosc2_frame_update_metalayer(blosc2_frame* frame, char* name, uint8_t* content, uint32_t content_len)
-    blosc2_frame_get_metalayer(blosc2_frame* frame, char* name, uint8_t **content, uint32_t *content_len)
+    int blosc2_frame_has_metalayer(blosc2_frame* frame, char* name)
+    int blosc2_frame_add_metalayer(blosc2_frame* frame, char* name, uint8_t* content, uint32_t content_len)
+    int blosc2_frame_update_metalayer(blosc2_frame* frame, char* name, uint8_t* content, uint32_t content_len)
+    int blosc2_frame_get_metalayer(blosc2_frame* frame, char* name, uint8_t **content, uint32_t *content_len)
 
 cdef extern from "caterva.h":
     ctypedef enum:
@@ -639,3 +639,34 @@ def _from_buffer(_Container arr, shape, buf):
     free(shape_)
 
     cdef int retcode = caterva_from_buffer(arr._array, &_shape, <void*> <char *> buf)
+
+def _has_metalayer(_Container arr, name):
+    if  arr._array.storage != CATERVA_STORAGE_BLOSC:
+        return NotImplementedError
+    if arr._array.sc.frame == NULL:
+        return NotImplementedError
+    name = name.encode("utf-8") if isinstance(name, str) else name
+    n = blosc2_frame_has_metalayer(arr._array.sc.frame, name)
+    return False if n < 0 else True
+
+def _add_metalayer(_Container arr, name, content):
+    if  arr._array.storage != CATERVA_STORAGE_BLOSC:
+        return NotImplementedError
+    if arr._array.sc.frame == NULL:
+        return NotImplementedError
+    name = name.encode("utf-8") if isinstance(name, str) else name
+    n = blosc2_frame_add_metalayer(arr._array.sc.frame, name, content, len(content))
+    return n
+
+
+def _get_metalayer(_Container arr, name):
+    if  arr._array.storage != CATERVA_STORAGE_BLOSC:
+        return NotImplementedError
+    if arr._array.sc.frame == NULL:
+        return NotImplementedError
+    name = name.encode("utf-8") if isinstance(name, str) else name
+    cdef uint8_t *content
+    cdef uint32_t content_len
+    n = blosc2_frame_get_metalayer(arr._array.sc.frame, name, &content, &content_len)
+    _content = <char *> content
+    return _content

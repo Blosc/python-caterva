@@ -26,6 +26,15 @@ class Container(ext._Container):
     def to_numpy(self, dtype):
         return np.frombuffer(self.to_buffer(), dtype=dtype).reshape(self.shape)
 
+    def has_metalayer(self, name):
+        return ext._has_metalayer(self, name)
+
+    def add_metalayer(self, name, content):
+        return ext._add_metalayer(self, name, content)
+
+    def get_metalayer(self, name):
+        return ext._get_metalayer(self, name)
+
 
 def empty(shape, pshape=None, filename=None, **kargs):
     arr = Container(pshape, filename, **kargs)
