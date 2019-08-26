@@ -3,11 +3,11 @@ import numpy as np
 import os
 from itertools import zip_longest as lzip
 
-pshape = (6, 7)
-shape = (13, 20)
+pshape = (5, 5)
+shape = (10, 10)
 filename = "iters-array.cat"
 
-blockshape = (3, 2)
+blockshape = (5, 5)
 
 dtype = np.complex128
 itemsize = np.dtype(dtype).itemsize
@@ -26,10 +26,11 @@ print(b.add_metalayer("numpy", b"hola"))
 print(b.has_metalayer("numpy"))
 print(b.get_metalayer("numpy"))
 
-
 # Fill an empty caterva array using a block iterator
 for block, info in b.iter_write(dtype):
+    print(info.slice)
     block[:] = nparray[info.slice]
+
 
 # Assert both caterva arrays
 for (block1, info1), (block2, info2) in lzip(a.iter_read(blockshape, dtype), b.iter_read(blockshape, dtype)):

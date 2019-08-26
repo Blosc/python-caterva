@@ -1,5 +1,6 @@
 from . import container_ext as ext
 import numpy as np
+import msgpack
 
 
 class Container(ext._Container):
@@ -29,11 +30,13 @@ class Container(ext._Container):
     def has_metalayer(self, name):
         return ext._has_metalayer(self, name)
 
-    def add_metalayer(self, name, content):
+    def add_metalayer(self, name, dict):
+        content = msgpack.packb(dict)
         return ext._add_metalayer(self, name, content)
 
     def get_metalayer(self, name):
-        return ext._get_metalayer(self, name)
+        content = ext._get_metalayer(self, name)
+        return msgpack.unpackb(content)
 
 
 def empty(shape, pshape=None, filename=None, **kargs):

@@ -56,16 +56,15 @@ cdef extern from "blosc2.h":
         int32_t chunksize
         uint8_t filters[BLOSC2_MAX_FILTERS]
         uint8_t filters_meta[BLOSC2_MAX_FILTERS]
-        int32_t nchunks
-        int64_t nbytes
-        int64_t cbytes
-        uint8_t* metadata_chunk
-        uint8_t* userdata_chunk
-        uint8_t** data
-        blosc2_frame* frame
-        blosc2_context* cctx
-        blosc2_context* dctx
-        uint8_t* reserved
+        int32_t nchunks;
+        int64_t nbytes;
+        int64_t cbytes;
+        uint8_t** data;
+        blosc2_frame* frame;
+        blosc2_context* cctx;
+        blosc2_context* dctx;
+        uint8_t* reserved;
+
 
     ctypedef struct blosc2_prefilter_params:
         int ninputs
@@ -121,6 +120,10 @@ cdef extern from "caterva.h":
 
     ctypedef caterva_dims_t CATERVA_DIMS_DEFAULTS
 
+    ctypedef struct part_cache_s:
+        uint8_t *data
+        int32_t nchunk
+
     ctypedef struct caterva_array_t:
         caterva_ctx_t *ctx
         caterva_storage_t storage
@@ -133,9 +136,10 @@ cdef extern from "caterva.h":
         int32_t psize
         int64_t esize
         int8_t ndim
-        bool empty;
-        bool filled;
-        int64_t nparts;
+        bool empty
+        bool filled
+        int64_t nparts
+        part_cache_s part_cache
 
     caterva_ctx_t *caterva_new_ctx(void *(*all)(size_t), void (*free)(void *),
                                    blosc2_cparams cparams, blosc2_dparams dparams)
