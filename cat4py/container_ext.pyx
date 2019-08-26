@@ -673,4 +673,14 @@ def _get_metalayer(_Container arr, name):
     cdef uint32_t content_len
     n = blosc2_frame_get_metalayer(arr._array.sc.frame, name, &content, &content_len)
     _content = <char *> content
-    return _content
+    return _content[:content_len]
+
+
+def _update_metalayer(_Container arr, name, content):
+     if arr._array.storage != CATERVA_STORAGE_BLOSC:
+         return NotImplementedError
+     if arr._array.sc.frame == NULL:
+         return NotImplementedError
+     name = name.encode("utf-8") if isinstance(name, str) else name
+     n = blosc2_frame_update_metalayer(arr._array.sc.frame, name, content, len(content))
+     return n

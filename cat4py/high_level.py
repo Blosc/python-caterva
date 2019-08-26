@@ -38,6 +38,10 @@ class Container(ext._Container):
         content = ext._get_metalayer(self, name)
         return msgpack.unpackb(content)
 
+    def update_metalayer(self, name, dict):
+        content = msgpack.packb(dict)
+        return ext._update_metalayer(self, name, content)
+
 
 def empty(shape, pshape=None, filename=None, **kargs):
     arr = Container(pshape, filename, **kargs)
@@ -59,4 +63,6 @@ def from_numpy(nparray, pshape=None, filename=None, **kargs):
 def from_file(filename):
     arr = Container()
     ext._from_file(arr, filename)
+    # if arr.has_metalayer("numpy"):
+    #     arr.__class__ = Array
     return arr

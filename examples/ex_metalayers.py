@@ -5,7 +5,7 @@ from itertools import zip_longest as lzip
 
 pshape = (5, 5)
 shape = (10, 10)
-filename = "iters-array.cat"
+filename = "meta-array.cat"
 
 blockshape = (5, 5)
 
@@ -25,9 +25,19 @@ b = cat.empty(shape, pshape, filename, itemsize=itemsize)
 for block, info in b.iter_write(dtype):
     block[:] = nparray[info.slice]
 
-# Assert both caterva arrays
-for (block1, info1), (block2, info2) in lzip(a.iter_read(blockshape, dtype), b.iter_read(blockshape, dtype)):
-    np.testing.assert_almost_equal(block1, block2)
+assert(b.has_metalayer("specs") is False)
+
+data = {b"name": b"array_1", b"id": 12345678}
+b.add_metalayer("specs", data)
+
+assert(b.has_metalayer("specs") is True)
+
+assert(b.get_metalayer("specs") == data)
+
+data = {b"name": b"array_2", b"id": 12345678}
+b.update_metalayer("specs", data)
+
+assert(b.get_metalayer("specs") == data)
 
 # Remove file on disk
 os.remove(filename)
