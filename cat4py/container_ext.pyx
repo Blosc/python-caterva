@@ -484,10 +484,6 @@ cdef class _Container:
         return self._array.ctx.cparams.typesize
 
     @property
-    def compcode(self):
-        return self._array.ctx.cparams.compcode
-
-    @property
     def clevel(self):
         return self._array.ctx.cparams.clevel
 
