@@ -225,7 +225,8 @@ increasing the I/O speed not only to disk, but potentially to memory too.
         'numpy>=1.16',
         'setuptools>=40.0',
         'setuptools_scm>=3.2.0',
-        'pytest>=3.4.2'
+        'pytest>=3.4.2',
+        'msgpack>=0.6.1'
     ],
     tests_require=tests_require,
     extras_require=dict(
