@@ -12,6 +12,7 @@
 import numpy as np
 cimport numpy as np
 import cython
+import msgpack
 
 from libc.stdlib cimport malloc, free
 from libcpp cimport bool
@@ -363,7 +364,6 @@ cdef class _Container:
     cdef kargs
 
     def __init__(self, pshape=None, filename=None, **kargs):
-
         cparams = CParams(**kargs)
 
         dparams = DParams(**kargs)
@@ -399,6 +399,13 @@ cdef class _Container:
                 else:
                     filename = filename.encode("utf-8") if isinstance(filename, str) else filename
                     _frame = blosc2_new_frame(filename)
+
+                    if "metalayers" in kargs:
+                        metalayers = kargs["metalayers"]
+                        for name, content in metalayers.items():
+                            name = name.encode("utf-8") if isinstance(name, str) else name
+                            content = msgpack.packb(content)
+                            blosc2_frame_add_metalayer(_frame, name, content, len(content))
 
             self._array = caterva_empty_array(ctx_, _frame, &_pshape)
 
@@ -648,15 +655,6 @@ def _has_metalayer(_Container arr, name):
     name = name.encode("utf-8") if isinstance(name, str) else name
     n = blosc2_frame_has_metalayer(arr._array.sc.frame, name)
     return False if n < 0 else True
-
-def _add_metalayer(_Container arr, name, content):
-    if  arr._array.storage != CATERVA_STORAGE_BLOSC:
-        return NotImplementedError
-    if arr._array.sc.frame == NULL:
-        return NotImplementedError
-    name = name.encode("utf-8") if isinstance(name, str) else name
-    n = blosc2_frame_add_metalayer(arr._array.sc.frame, name, content, len(content))
-    return n
 
 
 def _get_metalayer(_Container arr, name):

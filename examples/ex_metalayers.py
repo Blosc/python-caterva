@@ -19,25 +19,15 @@ nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 a = cat.from_numpy(nparray, pshape, itemsize=itemsize)
 
 # Create an empty caterva array (on disk)
-b = cat.empty(shape, pshape, filename, itemsize=itemsize)
+b = cat.empty(shape, pshape, filename, itemsize=itemsize, metalayers={"numpy": {"dtype": "int32"}})
+
+assert(b.has_metalayer("numpy") is True)
+
+assert(b.get_metalayer("numpy") == {b"dtype": b"int32"})
 
 # Fill an empty caterva array using a block iterator
 for block, info in b.iter_write(dtype):
     block[:] = nparray[info.slice]
-
-assert(b.has_metalayer("specs") is False)
-
-data = {b"name": b"array_1", b"id": 12345678}
-b.add_metalayer("specs", data)
-
-assert(b.has_metalayer("specs") is True)
-
-assert(b.get_metalayer("specs") == data)
-
-data = {b"name": b"array_2", b"id": 12345678}
-b.update_metalayer("specs", data)
-
-assert(b.get_metalayer("specs") == data)
 
 # Remove file on disk
 os.remove(filename)

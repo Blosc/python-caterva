@@ -30,11 +30,9 @@ class Container(ext._Container):
     def has_metalayer(self, name):
         return ext._has_metalayer(self, name)
 
-    def add_metalayer(self, name, dict):
-        content = msgpack.packb(dict)
-        return ext._add_metalayer(self, name, content)
-
     def get_metalayer(self, name):
+        if self.has_metalayer(name) is False:
+            return None
         content = ext._get_metalayer(self, name)
         return msgpack.unpackb(content)
 
