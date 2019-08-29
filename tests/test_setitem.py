@@ -23,7 +23,7 @@ def test_setitem(shape, pshape, slices, dtype):
 
     nparray[slices] = np.ones(slice_shape, dtype=dtype)
 
-    a[slices] = np.ones(slice_shape, dtype=dtype)
+    a[slices] = bytes(np.ones(slice_shape, dtype=dtype))
 
     nparray2 = a.to_numpy(dtype=dtype)
 

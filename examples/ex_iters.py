@@ -22,12 +22,12 @@ a = cat.from_numpy(nparray, pshape, itemsize=itemsize)
 b = cat.empty(shape, pshape, filename, itemsize=itemsize)
 
 # Fill an empty caterva array using a block iterator
-for block, info in b.iter_write(dtype):
-    block[:] = nparray[info.slice]
+for block, info in b.iter_write():
+    block[:] = bytes(nparray[info.slice])
 
 # Assert both caterva arrays
-for (block1, info1), (block2, info2) in lzip(a.iter_read(blockshape, dtype), b.iter_read(blockshape, dtype)):
-    np.testing.assert_almost_equal(block1, block2)
+for (block1, info1), (block2, info2) in lzip(a.iter_read(blockshape), b.iter_read(blockshape)):
+    assert block1, block2
 
 # Remove file on disk
 os.remove(filename)

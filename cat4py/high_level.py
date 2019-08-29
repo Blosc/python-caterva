@@ -3,6 +3,16 @@ import numpy as np
 import msgpack
 
 
+class ReadIter(ext._ReadIter):
+    def __init__(self, arr, blockshape):
+        super(ReadIter, self).__init__(arr, blockshape)
+
+
+class WriteIter(ext._WriteIter):
+    def __init__(self, arr):
+        super(WriteIter, self).__init__(arr)
+
+
 class Container(ext._Container):
 
     def __init__(self, pshape=None, filename=None, **kargs):
@@ -15,6 +25,12 @@ class Container(ext._Container):
 
     def __setitem__(self, key, item):
         ext._setitem(self, key, item)
+
+    def iter_read(self, blockshape):
+        return ReadIter(self, blockshape)
+
+    def iter_write(self):
+        return WriteIter(self)
 
     def copy(self, pshape=None, filename=None, **kargs):
         arr = Container(pshape, filename, **kargs)

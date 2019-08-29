@@ -6,5 +6,5 @@
 # LICENSE file in the root directory of this source tree)
 #######################################################################
 
-from .high_level import Container, empty, from_buffer, from_numpy, from_file
+from .high_level import Container, WriteIter, ReadIter, empty, from_buffer, from_numpy, from_file
 from .version import version as __version__

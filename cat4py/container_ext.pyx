@@ -253,22 +253,25 @@ cdef class Context:
         return PyCapsule_New(self._ctx, "caterva_ctx_t*", NULL)
 
 
-cdef class WriteIter:
+cdef class _WriteIter:
     cdef _Container arr
     cdef buffer
     cdef dtype
+    cdef buffer_shape
 
-    def __init__(self, arr, dtype):
+    def __init__(self, arr):
         self.arr = arr
-        self.dtype = dtype
+        dtypes = {1: np.int8, 2: np.int16, 4: np.int32, 8: np.int64, 16: np.complex128}
+        self.dtype = np.dtype(dtypes[arr.itemsize])
 
     def __iter__(self):
+        self.buffer_shape = None
         self.buffer = None
         return self
 
     def __next__(self):
         if self.buffer is not None:
-            item = self.buffer
+            item = np.frombuffer(self.buffer, self.dtype).reshape(self.buffer_shape)
             item = np.pad(item, [(0, self.arr._array.pshape[i] - item.shape[i]) for i in range(self.arr.ndim)], mode='constant', constant_values=0)
             item = bytes(item)
             caterva_append(self.arr._array, <char *> item, self.arr._array.psize * np.dtype(self.dtype).itemsize)
@@ -292,27 +295,27 @@ cdef class WriteIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(self.arr._array.ndim)])
         shape = [s.stop - s.start for s in sl]
+        self.buffer_shape = shape
         IterInfo = namedtuple("IterInfo", "slice, shape, size")
         info = IterInfo(slice=sl, shape=shape, size=np.prod(shape))
 
-        a = np.empty(info.shape, dtype=self.dtype)
+        a = bytearray(np.empty(info.shape, dtype=self.dtype))
         self.buffer = a
         return a, info
 
 
-cdef class ReadIter:
+cdef class _ReadIter:
     cdef _Container arr
     cdef blockshape
     cdef dtype
     cdef nparts
 
-    def __init__(self, arr, blockshape, dtype):
+    def __init__(self, arr, blockshape):
         if not arr.filled:
             print("Container is not filled")
             raise AttributeError
         self.arr = arr
         self.blockshape = blockshape
-        self.dtype = dtype
         self.nparts = 0
 
     def __iter__(self):
@@ -353,9 +356,8 @@ cdef class ReadIter:
         self.nparts += 1
 
         buf = self.arr.slicebuffer(info.slice)
-        a = np.frombuffer(buf, dtype=self.dtype).reshape(info.shape)
 
-        return a, info
+        return buf, info
 
 
 cdef class _Container:
@@ -410,13 +412,6 @@ cdef class _Container:
 
             self._array = caterva_empty_array(ctx_, _frame, &_pshape)
 
-
-    def iter_read(self, blockshape, dtype):
-        return ReadIter(self, blockshape, dtype)
-
-
-    def iter_write(self, dtype):
-        return WriteIter(self, dtype)
 
     def tocapsule(self):
         return PyCapsule_New(self._array, "caterva_array_t*", NULL)
@@ -614,7 +609,6 @@ def _setitem(_Container arr, key, item):
         stop_[i] = stop[i]
     _stop = caterva_new_dims(stop_, ndim)
 
-    item = bytes(item)
     caterva_set_slice_buffer(arr._array, <void *> <char *> item, &_start, &_stop)
 
 

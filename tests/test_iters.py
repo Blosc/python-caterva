@@ -21,7 +21,7 @@ def test_iters(shape, pshape1, pshape2, dtype):
     a = cat.from_numpy(nparray, pshape1, itemsize=itemsize)
 
     b = cat.empty(shape, pshape2, itemsize=itemsize)
-    for (block_r, info_r), (block_w, info_w) in lzip(a.iter_read(blockshape, dtype), b.iter_write(dtype)):
+    for (block_r, info_r), (block_w, info_w) in lzip(a.iter_read(blockshape), b.iter_write()):
         block_w[:] = block_r
 
     nparray2 = b.to_numpy(dtype)
