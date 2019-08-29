@@ -93,13 +93,14 @@ cdef extern from "blosc2.h":
         int nthreads
         void* schunk
 
-    blosc2_cparams BLOSC_CPARAMS_DEFAULTS     
-    blosc2_dparams BLOSC_DPARAMS_DEFAULTS
+    blosc2_cparams BLOSC2_CPARAMS_DEFAULTS
+    blosc2_dparams BLOSC2_DPARAMS_DEFAULTS
 
-    int blosc2_frame_has_metalayer(blosc2_frame* frame, char* name)
-    int blosc2_frame_add_metalayer(blosc2_frame* frame, char* name, uint8_t* content, uint32_t content_len)
-    int blosc2_frame_update_metalayer(blosc2_frame* frame, char* name, uint8_t* content, uint32_t content_len)
-    int blosc2_frame_get_metalayer(blosc2_frame* frame, char* name, uint8_t **content, uint32_t *content_len)
+    int blosc2_has_metalayer(blosc2_schunk *schunk, char *name)
+    int blosc2_add_metalayer(blosc2_schunk *schunk, char *name, uint8_t *content, uint32_t content_len)
+    int blosc2_update_metalayer(blosc2_schunk *schunk, char *name, uint8_t *content, uint32_t content_len)
+    int blosc2_get_metalayer(blosc2_schunk *schunk, char *name, uint8_t **content, uint32_t *content_len)
+
 
 cdef extern from "caterva.h":
     ctypedef enum:
@@ -403,14 +404,14 @@ cdef class _Container:
                     filename = filename.encode("utf-8") if isinstance(filename, str) else filename
                     _frame = blosc2_new_frame(filename)
 
-                    if "metalayers" in kargs:
-                        metalayers = kargs["metalayers"]
-                        for name, content in metalayers.items():
-                            name = name.encode("utf-8") if isinstance(name, str) else name
-                            content = msgpack.packb(content)
-                            blosc2_frame_add_metalayer(_frame, name, content, len(content))
-
             self._array = caterva_empty_array(ctx_, _frame, &_pshape)
+            if _frame != NULL:
+                if "metalayers" in kargs:
+                    metalayers = kargs["metalayers"]
+                    for name, content in metalayers.items():
+                        name = name.encode("utf-8") if isinstance(name, str) else name
+                        content = msgpack.packb(content)
+                        blosc2_add_metalayer(self._array.sc, name, content, len(content))
 
 
     def tocapsule(self):
@@ -643,33 +644,37 @@ def _from_buffer(_Container arr, shape, buf):
     cdef int retcode = caterva_from_buffer(arr._array, &_shape, <void*> <char *> buf)
 
 def _has_metalayer(_Container arr, name):
-    if  arr._array.storage != CATERVA_STORAGE_BLOSC:
+    if  arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
         return NotImplementedError
-    if arr._array.sc.frame == NULL:
-        return NotImplementedError
+
     name = name.encode("utf-8") if isinstance(name, str) else name
-    n = blosc2_frame_has_metalayer(arr._array.sc.frame, name)
+    n = blosc2_has_metalayer(arr._array.sc, name)
     return False if n < 0 else True
 
 
 def _get_metalayer(_Container arr, name):
-    if  arr._array.storage != CATERVA_STORAGE_BLOSC:
+    if  arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
         return NotImplementedError
-    if arr._array.sc.frame == NULL:
-        return NotImplementedError
+
+
     name = name.encode("utf-8") if isinstance(name, str) else name
     cdef uint8_t *content
     cdef uint32_t content_len
-    n = blosc2_frame_get_metalayer(arr._array.sc.frame, name, &content, &content_len)
+    n = blosc2_get_metalayer(arr._array.sc, name, &content, &content_len)
     _content = <char *> content
     return _content[:content_len]
 
 
 def _update_metalayer(_Container arr, name, content):
-     if arr._array.storage != CATERVA_STORAGE_BLOSC:
+     if arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
          return NotImplementedError
-     if arr._array.sc.frame == NULL:
-         return NotImplementedError
+
+     cdef uint8_t *_content
+     cdef uint32_t _content_len
+     n = blosc2_get_metalayer(arr._array.sc, name, &_content, &_content_len)
+     if _content_len != len(content):
+         return AttributeError
+
      name = name.encode("utf-8") if isinstance(name, str) else name
-     n = blosc2_frame_update_metalayer(arr._array.sc.frame, name, content, len(content))
+     n = blosc2_update_metalayer(arr._array.sc, name, content, len(content))
      return n
