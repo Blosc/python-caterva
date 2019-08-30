@@ -26,6 +26,8 @@ def test_persistency(shape, pshape, filename, dtype):
 
     assert (b.has_metalayer("numpy") is True)
 
+    assert (b.get_metalayer("error") is None)
+
     assert (b.get_metalayer("numpy") == {b"dtype": bytes(str(np.dtype(dtype)), "utf-8")})
 
     assert (b.has_metalayer("test") is True)
