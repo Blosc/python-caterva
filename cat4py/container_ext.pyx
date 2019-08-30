@@ -12,6 +12,7 @@
 import numpy as np
 cimport numpy as np
 import cython
+import msgpack
 
 from libc.stdlib cimport malloc, free
 from libcpp cimport bool
@@ -31,9 +32,9 @@ cdef extern from "<stdint.h>":
     ctypedef unsigned long long uint64_t
 
 
-cdef extern from "blosc.h":
+cdef extern from "blosc2.h":
     ctypedef enum:
-        BLOSC_MAX_FILTERS
+        BLOSC2_MAX_FILTERS
         BLOSC2_MAX_METALAYERS
         BLOSC2_PREFILTER_INPUTS_MAX
 
@@ -54,18 +55,17 @@ cdef extern from "blosc.h":
         int32_t typesize
         int32_t blocksize
         int32_t chunksize
-        uint8_t filters[BLOSC_MAX_FILTERS]
-        uint8_t filters_meta[BLOSC_MAX_FILTERS]
-        int32_t nchunks
-        int64_t nbytes
-        int64_t cbytes
-        uint8_t* metadata_chunk
-        uint8_t* userdata_chunk
-        uint8_t** data
-        blosc2_frame* frame
-        blosc2_context* cctx
-        blosc2_context* dctx
-        uint8_t* reserved
+        uint8_t filters[BLOSC2_MAX_FILTERS]
+        uint8_t filters_meta[BLOSC2_MAX_FILTERS]
+        int32_t nchunks;
+        int64_t nbytes;
+        int64_t cbytes;
+        uint8_t** data;
+        blosc2_frame* frame;
+        blosc2_context* cctx;
+        blosc2_context* dctx;
+        uint8_t* reserved;
+
 
     ctypedef struct blosc2_prefilter_params:
         int ninputs
@@ -84,8 +84,8 @@ cdef extern from "blosc.h":
         int16_t nthreads
         int32_t blocksize
         void* schunk
-        uint8_t filters[BLOSC_MAX_FILTERS]
-        uint8_t filters_meta[BLOSC_MAX_FILTERS]
+        uint8_t filters[BLOSC2_MAX_FILTERS]
+        uint8_t filters_meta[BLOSC2_MAX_FILTERS]
         blosc2_prefilter_fn prefilter
         blosc2_prefilter_params *pparams
 
@@ -93,8 +93,16 @@ cdef extern from "blosc.h":
         int nthreads
         void* schunk
 
-    blosc2_cparams BLOSC_CPARAMS_DEFAULTS     
-    blosc2_dparams BLOSC_DPARAMS_DEFAULTS
+    blosc2_cparams BLOSC2_CPARAMS_DEFAULTS
+    blosc2_dparams BLOSC2_DPARAMS_DEFAULTS
+
+    int blosc2_has_metalayer(blosc2_schunk *schunk, char *name)
+    int blosc2_add_metalayer(blosc2_schunk *schunk, char *name, uint8_t *content, uint32_t content_len)
+    int blosc2_update_metalayer(blosc2_schunk *schunk, char *name, uint8_t *content, uint32_t content_len)
+    int blosc2_get_metalayer(blosc2_schunk *schunk, char *name, uint8_t **content, uint32_t *content_len)
+
+    int blosc2_update_usermeta(blosc2_schunk *schunk, uint8_t *content, int32_t content_len, blosc2_cparams cparams)
+    int blosc2_get_usermeta(blosc2_schunk* schunk, uint8_t** content)
 
 
 cdef extern from "caterva.h":
@@ -117,6 +125,10 @@ cdef extern from "caterva.h":
 
     ctypedef caterva_dims_t CATERVA_DIMS_DEFAULTS
 
+    ctypedef struct part_cache_s:
+        uint8_t *data
+        int32_t nchunk
+
     ctypedef struct caterva_array_t:
         caterva_ctx_t *ctx
         caterva_storage_t storage
@@ -129,9 +141,10 @@ cdef extern from "caterva.h":
         int32_t psize
         int64_t esize
         int8_t ndim
-        bool empty;
-        bool filled;
-        int64_t nparts;
+        bool empty
+        bool filled
+        int64_t nparts
+        part_cache_s part_cache
 
     caterva_ctx_t *caterva_new_ctx(void *(*all)(size_t), void (*free)(void *),
                                    blosc2_cparams cparams, blosc2_dparams dparams)
@@ -141,7 +154,6 @@ cdef extern from "caterva.h":
     int caterva_free_array(caterva_array_t *carr)
     caterva_array_t *caterva_from_file(caterva_ctx_t *ctx, const char *filename)
     int caterva_from_buffer(caterva_array_t *dest, caterva_dims_t *shape, void *src)
-    int caterva_fill(caterva_array_t *dest, caterva_dims_t *shape, void *value)
     int caterva_to_buffer(caterva_array_t *src, void *dest)
     int caterva_get_slice(caterva_array_t *dest, caterva_array_t *src, caterva_dims_t *start, caterva_dims_t *stop)
     int caterva_repart(caterva_array_t *dest, caterva_array_t *src)
@@ -177,8 +189,8 @@ cdef class CParams:
     cdef int16_t nthreads
     cdef int32_t blocksize
     cdef void* schunk
-    cdef uint8_t filters[BLOSC_MAX_FILTERS]
-    cdef uint8_t filters_meta[BLOSC_MAX_FILTERS]
+    cdef uint8_t filters[BLOSC2_MAX_FILTERS]
+    cdef uint8_t filters_meta[BLOSC2_MAX_FILTERS]
     cdef blosc2_prefilter_fn prefilter
     cdef blosc2_prefilter_params* pparams
 
@@ -192,14 +204,14 @@ cdef class CParams:
         self.prefilter = NULL  # TODO: implement support for prefilters
         self.pparams = NULL    # TODO: implement support for prefilters
         # TODO: implement support for multiple filters
-        for i in range(BLOSC_MAX_FILTERS):
+        for i in range(BLOSC2_MAX_FILTERS):
             self.filters[i] = 0
-        for i in range(BLOSC_MAX_FILTERS):
+        for i in range(BLOSC2_MAX_FILTERS):
             self.filters_meta[i] = 0
 
         filters = kargs.get('filters', defaults['filters'])
-        for i in range(BLOSC_MAX_FILTERS - len(filters), BLOSC_MAX_FILTERS):
-            self.filters[i] = filters[i - BLOSC_MAX_FILTERS + len(filters)]
+        for i in range(BLOSC2_MAX_FILTERS - len(filters), BLOSC2_MAX_FILTERS):
+            self.filters[i] = filters[i - BLOSC2_MAX_FILTERS + len(filters)]
 
 cdef class DParams:
     cdef int nthreads
@@ -227,9 +239,9 @@ cdef class Context:
         _cparams.blocksize = cparams.blocksize
         _cparams.prefilter = cparams.prefilter
         _cparams.pparams = cparams.pparams
-        for i in range(BLOSC_MAX_FILTERS):
+        for i in range(BLOSC2_MAX_FILTERS):
             _cparams.filters[i] = cparams.filters[i]
-        for i in range(BLOSC_MAX_FILTERS):
+        for i in range(BLOSC2_MAX_FILTERS):
             _cparams.filters_meta[i] = cparams.filters_meta[i]
         cdef blosc2_dparams _dparams
         if dparams is None:
@@ -245,25 +257,28 @@ cdef class Context:
         return PyCapsule_New(self._ctx, "caterva_ctx_t*", NULL)
 
 
-cdef class WriteIter:
+cdef class _WriteIter:
     cdef _Container arr
     cdef buffer
     cdef dtype
+    cdef buffer_shape
 
-    def __init__(self, arr, dtype):
+    def __init__(self, arr):
         self.arr = arr
-        self.dtype = dtype
+        dtypes = {1: np.int8, 2: np.int16, 4: np.int32, 8: np.int64, 16: np.complex128}
+        self.dtype = np.dtype(dtypes[arr.itemsize])
 
     def __iter__(self):
+        self.buffer_shape = None
         self.buffer = None
         return self
 
     def __next__(self):
         if self.buffer is not None:
-            item = self.buffer
+            item = np.frombuffer(self.buffer, self.dtype).reshape(self.buffer_shape)
             item = np.pad(item, [(0, self.arr._array.pshape[i] - item.shape[i]) for i in range(self.arr.ndim)], mode='constant', constant_values=0)
             item = bytes(item)
-            caterva_append(self.arr._array, <char *> item, self.arr._array.psize)
+            caterva_append(self.arr._array, <char *> item, self.arr._array.psize * np.dtype(self.dtype).itemsize)
 
         if self.arr._array.filled:
             raise StopIteration
@@ -284,27 +299,27 @@ cdef class WriteIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(self.arr._array.ndim)])
         shape = [s.stop - s.start for s in sl]
+        self.buffer_shape = shape
         IterInfo = namedtuple("IterInfo", "slice, shape, size")
         info = IterInfo(slice=sl, shape=shape, size=np.prod(shape))
 
-        a = np.empty(info.shape, dtype=self.dtype)
+        a = bytearray(np.empty(info.shape, dtype=self.dtype))
         self.buffer = a
         return a, info
 
 
-cdef class ReadIter:
+cdef class _ReadIter:
     cdef _Container arr
     cdef blockshape
     cdef dtype
     cdef nparts
 
-    def __init__(self, arr, blockshape, dtype):
+    def __init__(self, arr, blockshape):
         if not arr.filled:
             print("Container is not filled")
             raise AttributeError
         self.arr = arr
         self.blockshape = blockshape
-        self.dtype = dtype
         self.nparts = 0
 
     def __iter__(self):
@@ -345,18 +360,19 @@ cdef class ReadIter:
         self.nparts += 1
 
         buf = self.arr.slicebuffer(info.slice)
-        a = np.frombuffer(buf, dtype=self.dtype).reshape(info.shape)
 
-        return a, info
+        return buf, info
 
 
 cdef class _Container:
     cdef Context ctx
     cdef caterva_array_t *_array
     cdef kargs
+    cdef usermeta_len
 
     def __init__(self, pshape=None, filename=None, **kargs):
 
+        self.usermeta_len = 0
         cparams = CParams(**kargs)
 
         dparams = DParams(**kargs)
@@ -394,14 +410,14 @@ cdef class _Container:
                     _frame = blosc2_new_frame(filename)
 
             self._array = caterva_empty_array(ctx_, _frame, &_pshape)
+            if _frame != NULL:
+                if "metalayers" in kargs:
+                    metalayers = kargs["metalayers"]
+                    for name, content in metalayers.items():
+                        name = name.encode("utf-8") if isinstance(name, str) else name
+                        content = msgpack.packb(content)
+                        blosc2_add_metalayer(self._array.sc, name, content, len(content))
 
-
-    def iter_read(self, blockshape, dtype):
-        return ReadIter(self, blockshape, dtype)
-
-
-    def iter_write(self, dtype):
-        return WriteIter(self, dtype)
 
     def tocapsule(self):
         return PyCapsule_New(self._array, "caterva_array_t*", NULL)
@@ -477,10 +493,6 @@ cdef class _Container:
         return self._array.ctx.cparams.typesize
 
     @property
-    def compcode(self):
-        return self._array.ctx.cparams.compcode
-
-    @property
     def clevel(self):
         return self._array.ctx.cparams.clevel
 
@@ -490,7 +502,7 @@ cdef class _Container:
 
     @property
     def filters(self):
-        return [self._array.ctx.cparams.filters[i] for i in range(5)]
+        return [self._array.ctx.cparams.filters[i] for i in range(BLOSC2_MAX_FILTERS)]
 
     @property
     def size(self):
@@ -603,7 +615,6 @@ def _setitem(_Container arr, key, item):
         stop_[i] = stop[i]
     _stop = caterva_new_dims(stop_, ndim)
 
-    item = bytes(item)
     caterva_set_slice_buffer(arr._array, <void *> <char *> item, &_start, &_stop)
 
 
@@ -636,3 +647,52 @@ def _from_buffer(_Container arr, shape, buf):
     free(shape_)
 
     cdef int retcode = caterva_from_buffer(arr._array, &_shape, <void*> <char *> buf)
+
+def _has_metalayer(_Container arr, name):
+    if  arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
+        return NotImplementedError
+
+    name = name.encode("utf-8") if isinstance(name, str) else name
+    n = blosc2_has_metalayer(arr._array.sc, name)
+    return False if n < 0 else True
+
+
+def _get_metalayer(_Container arr, name):
+    if  arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
+        return NotImplementedError
+
+
+    name = name.encode("utf-8") if isinstance(name, str) else name
+    cdef uint8_t *content
+    cdef uint32_t content_len
+    n = blosc2_get_metalayer(arr._array.sc, name, &content, &content_len)
+    _content = <char *> content
+    return _content[:content_len]
+
+
+def _update_metalayer(_Container arr, name, content):
+     if arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
+         return NotImplementedError
+
+     name = name.encode("utf-8") if isinstance(name, str) else name
+
+     cdef uint8_t *_content
+     cdef uint32_t _content_len
+     n = blosc2_get_metalayer(arr._array.sc, name, &_content, &_content_len)
+     if _content_len != len(content):
+         return AttributeError
+
+     n = blosc2_update_metalayer(arr._array.sc, name, content, len(content))
+     return n
+
+
+def _update_usermeta(_Container arr, content):
+    n = blosc2_update_usermeta(arr._array.sc, content, len(content), BLOSC2_CPARAMS_DEFAULTS)
+    arr.usermeta_len = len(content)
+    return n
+
+def _get_usermeta(_Container arr):
+    cdef uint8_t *content
+    n = blosc2_get_usermeta(arr._array.sc, &content)
+    _content = <char *> content
+    return _content[:arr.usermeta_len]

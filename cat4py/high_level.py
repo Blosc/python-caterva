@@ -1,5 +1,16 @@
 from . import container_ext as ext
 import numpy as np
+import msgpack
+
+
+class ReadIter(ext._ReadIter):
+    def __init__(self, arr, blockshape):
+        super(ReadIter, self).__init__(arr, blockshape)
+
+
+class WriteIter(ext._WriteIter):
+    def __init__(self, arr):
+        super(WriteIter, self).__init__(arr)
 
 
 class Container(ext._Container):
@@ -15,6 +26,12 @@ class Container(ext._Container):
     def __setitem__(self, key, item):
         ext._setitem(self, key, item)
 
+    def iter_read(self, blockshape):
+        return ReadIter(self, blockshape)
+
+    def iter_write(self):
+        return WriteIter(self)
+
     def copy(self, pshape=None, filename=None, **kargs):
         arr = Container(pshape, filename, **kargs)
         ext._copy(self, arr)
@@ -25,6 +42,27 @@ class Container(ext._Container):
 
     def to_numpy(self, dtype):
         return np.frombuffer(self.to_buffer(), dtype=dtype).reshape(self.shape)
+
+    def has_metalayer(self, name):
+        return ext._has_metalayer(self, name)
+
+    def get_metalayer(self, name):
+        if self.has_metalayer(name) is False:
+            return None
+        content = ext._get_metalayer(self, name)
+        return msgpack.unpackb(content)
+
+    def update_metalayer(self, name, content):
+        content = msgpack.packb(content)
+        return ext._update_metalayer(self, name, content)
+
+    def get_user_metalayer(self):
+        content = ext._get_usermeta(self)
+        return msgpack.unpackb(content)
+
+    def update_user_metalayer(self, content):
+        content = msgpack.packb(content)
+        return ext._update_usermeta(self, content)
 
 
 def empty(shape, pshape=None, filename=None, **kargs):
@@ -47,4 +85,6 @@ def from_numpy(nparray, pshape=None, filename=None, **kargs):
 def from_file(filename):
     arr = Container()
     ext._from_file(arr, filename)
+    # if arr.has_metalayer("numpy"):
+    #     arr.__class__ = Array
     return arr

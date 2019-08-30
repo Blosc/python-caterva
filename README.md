@@ -22,7 +22,7 @@ $ git submodule update --recursive --remote
 $ CFLAGS='' python setup.py build_ext -i
 ```
 
-**Please note**: If the CFLAGS environment variable is not passed, Anaconda Python will inject their own paths there. As a resulta, it will find a possible `$HOME/miniconda3/include/blosc.h` header, which is not compatible with the `blosc.h` header for Blosc2.  The solution long term will be to use `blosc2.h` and `libblosc2.so` for the Blosc2 libray.  Meanwhile, use CFLAGS explicitly so as to not clash with Anaconda Python business. 
+**Please note**: If the CFLAGS environment variable is not passed, Anaconda Python (maybe other distributions too) will inject their own paths there. As a result, it will find possible incompatible headers/libs for Blosc, LZ4 or Zstd.  I understand packagers trying to re-use shared libraries in their setups, but this can create issues when normal users try to compile extensions by themselves.
 
 Compiling the extension implies re-compiling C-Blosc2 and Caterva sources everytime, so a trick for accelerating the process during the development process is to direct the compiler to not optimize the code:
 

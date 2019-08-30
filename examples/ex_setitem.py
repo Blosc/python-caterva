@@ -16,7 +16,7 @@ a = cat.from_numpy(nparray, itemsize=itemsize)
 
 # Set a slice
 slices_shape = [s.stop - s.start for s in slices]
-a[slices] = np.zeros(slices_shape, dtype=dtype)
+a[slices] = bytes(np.zeros(slices_shape, dtype=dtype))
 nparray[slices] = np.zeros(slices_shape, dtype=dtype)
 
 # Convert a caterva array to a buffer

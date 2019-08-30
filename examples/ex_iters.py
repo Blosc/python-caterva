@@ -3,11 +3,11 @@ import numpy as np
 import os
 from itertools import zip_longest as lzip
 
-pshape = (6, 7)
-shape = (13, 20)
+pshape = (5, 5)
+shape = (10, 10)
 filename = "iters-array.cat"
 
-blockshape = (3, 2)
+blockshape = (5, 5)
 
 dtype = np.complex128
 itemsize = np.dtype(dtype).itemsize
@@ -22,12 +22,11 @@ a = cat.from_numpy(nparray, pshape, itemsize=itemsize)
 b = cat.empty(shape, pshape, filename, itemsize=itemsize)
 
 # Fill an empty caterva array using a block iterator
-for block, info in b.iter_write(dtype):
-    block[:] = nparray[info.slice]
+for block, info in b.iter_write():
+    block[:] = bytes(nparray[info.slice])
 
 # Assert both caterva arrays
-for (block1, info1), (block2, info2) in lzip(a.iter_read(blockshape, dtype), b.iter_read(blockshape, dtype)):
-    np.testing.assert_almost_equal(block1, block2)
+for (block1, info1), (block2, info2) in lzip(a.iter_read(blockshape), b.iter_read(blockshape)):
+    assert block1, block2
 
-# Remove file on disk
-os.remove(filename)
+print("File is available at:", os.path.abspath(filename))
