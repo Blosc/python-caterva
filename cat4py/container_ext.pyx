@@ -101,6 +101,9 @@ cdef extern from "blosc2.h":
     int blosc2_update_metalayer(blosc2_schunk *schunk, char *name, uint8_t *content, uint32_t content_len)
     int blosc2_get_metalayer(blosc2_schunk *schunk, char *name, uint8_t **content, uint32_t *content_len)
 
+    int blosc2_update_usermeta(blosc2_schunk *schunk, uint8_t *content, int32_t content_len, blosc2_cparams cparams)
+    int blosc2_get_usermeta(blosc2_schunk* schunk, uint8_t** content)
+
 
 cdef extern from "caterva.h":
     ctypedef enum:
@@ -365,9 +368,11 @@ cdef class _Container:
     cdef Context ctx
     cdef caterva_array_t *_array
     cdef kargs
+    cdef usermeta_len
 
     def __init__(self, pshape=None, filename=None, **kargs):
 
+        self.usermeta_len = 0
         cparams = CParams(**kargs)
 
         dparams = DParams(**kargs)
@@ -669,12 +674,25 @@ def _update_metalayer(_Container arr, name, content):
      if arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
          return NotImplementedError
 
+     name = name.encode("utf-8") if isinstance(name, str) else name
+
      cdef uint8_t *_content
      cdef uint32_t _content_len
      n = blosc2_get_metalayer(arr._array.sc, name, &_content, &_content_len)
      if _content_len != len(content):
          return AttributeError
 
-     name = name.encode("utf-8") if isinstance(name, str) else name
      n = blosc2_update_metalayer(arr._array.sc, name, content, len(content))
      return n
+
+
+def _update_usermeta(_Container arr, content):
+    n = blosc2_update_usermeta(arr._array.sc, content, len(content), BLOSC2_CPARAMS_DEFAULTS)
+    arr.usermeta_len = len(content)
+    return n
+
+def _get_usermeta(_Container arr):
+    cdef uint8_t *content
+    n = blosc2_get_usermeta(arr._array.sc, &content)
+    _content = <char *> content
+    return _content[:arr.usermeta_len]

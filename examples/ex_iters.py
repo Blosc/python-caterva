@@ -29,5 +29,4 @@ for block, info in b.iter_write():
 for (block1, info1), (block2, info2) in lzip(a.iter_read(blockshape), b.iter_read(blockshape)):
     assert block1, block2
 
-# Remove file on disk
-os.remove(filename)
+print("File is available at:", os.path.abspath(filename))
