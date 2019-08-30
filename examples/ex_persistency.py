@@ -24,5 +24,4 @@ nparray2 = b.to_numpy(dtype=dtype)
 
 np.testing.assert_almost_equal(nparray, nparray2)
 
-# Remove file on disk
-os.remove(filename)
+print("File is available at:", os.path.abspath(filename))
