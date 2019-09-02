@@ -3,17 +3,21 @@ import numpy as np
 import os
 from time import time
 
-# Dimensions for big matrix
+
+# Dimensions, type and persistency properties for the arrays
 shape = (500, 1000)
 pshape = (100, 100)
-
-# filename = "bench_getitem.cat"
-filename = None
-if filename is not None and os.path.exists(filename):
-    # Remove file on disk
-    os.remove(filename)
-
 dtype = np.float64
+persistent = False
+
+if persistent:
+    filename = "bench_getitem.cat"
+    if os.path.exists(filename):
+        # Remove file on disk
+        os.remove(filename)
+else:
+    filename = None
+
 itemsize = np.dtype(dtype).itemsize
 
 # Create an empty caterva array (on disk)
@@ -48,5 +52,5 @@ t1 = time()
 print("Time for reading with getitem: %.3fs" % (t1 - t0))
 
 
-if filename is not None:
+if persistent:
     print("File is available at:", os.path.abspath(filename))
