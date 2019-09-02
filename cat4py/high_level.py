@@ -24,7 +24,7 @@ class Container(ext._Container):
              key = (key,)
         key = tuple(k if isinstance(k, slice) else slice(k, k + 1) for k in key)
         if len(key) < self.ndim:
-            key += tuple(slice(None) for i in range(self.ndim - 1))
+            key += tuple(slice(None) for i in range(self.ndim - len(key)))
         buff = ext._getitem(self, key)
         return buff
 
