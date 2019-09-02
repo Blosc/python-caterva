@@ -6,7 +6,7 @@ from itertools import zip_longest as lzip
 pshape = (5, 5)
 shape = (10, 10)
 filename = "ex_metalayers.cat"
-if (os.path.exists(filename)):
+if os.path.exists(filename):
     # Remove file on disk
     os.remove(filename)
 

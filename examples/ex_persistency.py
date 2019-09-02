@@ -6,7 +6,7 @@ import os
 pshape = (5, 7)
 shape = (13, 20)
 filename = "ex_persistency.cat"
-if (os.path.exists(filename)):
+if os.path.exists(filename):
     # Remove file on disk
     os.remove(filename)
 
