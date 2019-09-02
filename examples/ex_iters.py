@@ -6,6 +6,9 @@ from itertools import zip_longest as lzip
 pshape = (5, 5)
 shape = (10, 10)
 filename = "iters-array.cat"
+if (os.path.exists(filename)):
+    # Remove file on disk
+    os.remove(filename)
 
 blockshape = (5, 5)
 
@@ -27,6 +30,6 @@ for block, info in b.iter_write():
 
 # Assert both caterva arrays
 for (block1, info1), (block2, info2) in lzip(a.iter_read(blockshape), b.iter_read(blockshape)):
-    assert block1, block2
+    assert block1 == block2
 
 print("File is available at:", os.path.abspath(filename))

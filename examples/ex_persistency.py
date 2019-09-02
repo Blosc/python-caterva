@@ -6,6 +6,9 @@ import os
 pshape = (5, 7)
 shape = (13, 20)
 filename = "persistency-array.cat"
+if (os.path.exists(filename)):
+    # Remove file on disk
+    os.remove(filename)
 
 dtype = np.complex128
 itemsize = np.dtype(dtype).itemsize
