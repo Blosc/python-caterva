@@ -548,15 +548,6 @@ def _from_file(_Container arr, filename):
 def _getitem(_Container src, key):
 
     ndim = src._array.ndim
-    if ndim == 1:
-        key = [key]
-
-    key = list(key)
-
-    for i, sl in enumerate(key):
-        if type(sl) is not slice:
-            key[i] = slice(sl, sl+1, None)
-
     start = [s.start if s.start is not None else 0 for s in key]
     stop = [s.stop if s.stop is not None else sh for s, sh in zip(key, src.shape)]
 

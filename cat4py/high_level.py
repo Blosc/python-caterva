@@ -20,6 +20,11 @@ class Container(ext._Container):
         super(Container, self).__init__(pshape, filename, **kargs)
 
     def __getitem__(self, key):
+        if not isinstance(key, (tuple, list)):
+             key = (key,)
+        key = tuple(k if isinstance(k, slice) else slice(k, k + 1) for k in key)
+        if len(key) < self.ndim:
+            key += tuple(slice(None) for i in range(self.ndim - 1))
         buff = ext._getitem(self, key)
         return buff
 
