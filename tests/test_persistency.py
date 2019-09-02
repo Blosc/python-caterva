@@ -13,15 +13,14 @@ import os
 def test_persistency(shape, pshape, filename, dtype):
 
     itemsize = np.dtype(dtype).itemsize
-
     size = int(np.prod(shape))
 
+    if os.path.exists(filename):
+        os.remove(filename)
+
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-
     a = cat.from_numpy(nparray, pshape, filename, itemsize=itemsize)
-
     b = cat.from_file(filename)
-
     nparray2 = b.to_numpy(dtype)
 
     np.testing.assert_almost_equal(nparray, nparray2)

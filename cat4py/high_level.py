@@ -52,9 +52,17 @@ class Container(ext._Container):
         content = ext._get_metalayer(self, name)
         return msgpack.unpackb(content)
 
-    def update_metalayer(self, name, dict):
-        content = msgpack.packb(dict)
+    def update_metalayer(self, name, content):
+        content = msgpack.packb(content)
         return ext._update_metalayer(self, name, content)
+
+    def get_user_metalayer(self):
+        content = ext._get_usermeta(self)
+        return msgpack.unpackb(content)
+
+    def update_user_metalayer(self, content):
+        content = msgpack.packb(content)
+        return ext._update_usermeta(self, content)
 
 
 def empty(shape, pshape=None, filename=None, **kargs):

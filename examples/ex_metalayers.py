@@ -12,7 +12,7 @@ if (os.path.exists(filename)):
 
 blockshape = (5, 5)
 
-dtype = np.float64
+dtype = np.int32
 itemsize = np.dtype(dtype).itemsize
 
 # Create a numpy array
@@ -22,11 +22,21 @@ nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 a = cat.from_numpy(nparray, pshape, itemsize=itemsize)
 
 # Create an empty caterva array (on disk)
-b = cat.empty(shape, pshape, filename, itemsize=itemsize, metalayers={"numpy": {"dtype": "int32"}})
+
+b = cat.empty(shape, pshape, filename, itemsize=itemsize, metalayers={"numpy": {b"dtype": str(np.dtype(dtype))},
+                                                                      "test": {b"lorem": 1234}})
 
 assert(b.has_metalayer("numpy") is True)
 
-assert(b.get_metalayer("numpy") == {b"dtype": b"int32"})
+assert(b.get_metalayer("numpy") == {b"dtype": bytes(str(np.dtype(dtype)), "utf-8")})
+
+assert(b.has_metalayer("test") is True)
+
+assert(b.get_metalayer("test") == {b"lorem": 1234})
+
+assert(b.update_metalayer("test", {b"lorem": 4321}) >= 0)
+
+assert(b.get_metalayer("test") == {b"lorem": 4321})
 
 # Fill an empty caterva array using a block iterator
 for block, info in b.iter_write():
@@ -35,5 +45,11 @@ for block, info in b.iter_write():
 # Assert both caterva arrays
 for (block1, info1), (block2, info2) in lzip(a.iter_read(blockshape), b.iter_read(blockshape)):
     assert block1 == block2
+
+assert(b.update_user_metalayer({b"author": b"cat4py example", b"description": b"lorem ipsum"}) >= 0)
+assert(b.get_user_metalayer() == {b"author": b"cat4py example", b"description": b"lorem ipsum"})
+
+assert(b.update_user_metalayer({b"author": b"cat4py example"}) >= 0)
+assert(b.get_user_metalayer() == {b"author": b"cat4py example"})
 
 print("File is available at:", os.path.abspath(filename))
