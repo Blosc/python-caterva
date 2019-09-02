@@ -6,10 +6,13 @@ from itertools import zip_longest as lzip
 pshape = (5, 5)
 shape = (10, 10)
 filename = "meta-array.cat"
+if (os.path.exists(filename)):
+    # Remove file on disk
+    os.remove(filename)
 
 blockshape = (5, 5)
 
-dtype = np.complex128
+dtype = np.float64
 itemsize = np.dtype(dtype).itemsize
 
 # Create a numpy array
@@ -26,8 +29,11 @@ assert(b.has_metalayer("numpy") is True)
 assert(b.get_metalayer("numpy") == {b"dtype": b"int32"})
 
 # Fill an empty caterva array using a block iterator
-for block, info in b.iter_write(dtype):
-    block[:] = nparray[info.slice]
+for block, info in b.iter_write():
+    block[:] = bytes(nparray[info.slice])
 
-# Remove file on disk
-os.remove(filename)
+# Assert both caterva arrays
+for (block1, info1), (block2, info2) in lzip(a.iter_read(blockshape), b.iter_read(blockshape)):
+    assert block1 == block2
+
+print("File is available at:", os.path.abspath(filename))
