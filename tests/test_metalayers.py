@@ -42,13 +42,13 @@ def test_persistency(shape, pshape, filename, dtype):
     for block, info in b.iter_write():
         block[:] = bytes(nparray[info.slice])
 
-    assert (b.update_user_metalayer({b"author": b"cat4py example", b"description": b"lorem ipsum"}) >= 0)
+    assert (b.update_usermeta({b"author": b"cat4py example", b"description": b"lorem ipsum"}) >= 0)
 
-    assert (b.get_user_metalayer() == {b"author": b"cat4py example", b"description": b"lorem ipsum"})
+    assert (b.get_usermeta() == {b"author": b"cat4py example", b"description": b"lorem ipsum"})
 
-    assert (b.update_user_metalayer({b"author": b"cat4py example"}) >= 0)
+    assert (b.update_usermeta({b"author": b"cat4py example"}) >= 0)
 
-    assert (b.get_user_metalayer() == {b"author": b"cat4py example"})
+    assert (b.get_usermeta() == {b"author": b"cat4py example"})
 
     # Remove file on disk
     os.remove(filename)

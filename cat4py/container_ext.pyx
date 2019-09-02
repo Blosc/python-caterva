@@ -41,7 +41,7 @@ cdef extern from "blosc2.h":
     ctypedef struct blosc2_frame_metalayer
     ctypedef struct blosc2_frame
     blosc2_frame *blosc2_new_frame(char *fname)
-    
+
     ctypedef struct blosc2_context
     ctypedef int* blosc2_prefilter_fn
 
@@ -690,6 +690,7 @@ def _update_usermeta(_Container arr, content):
     n = blosc2_update_usermeta(arr._array.sc, content, len(content), BLOSC2_CPARAMS_DEFAULTS)
     arr.usermeta_len = len(content)
     return n
+
 
 def _get_usermeta(_Container arr):
     cdef uint8_t *content

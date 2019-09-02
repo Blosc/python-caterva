@@ -56,11 +56,11 @@ class Container(ext._Container):
         content = msgpack.packb(content)
         return ext._update_metalayer(self, name, content)
 
-    def get_user_metalayer(self):
+    def get_usermeta(self):
         content = ext._get_usermeta(self)
         return msgpack.unpackb(content)
 
-    def update_user_metalayer(self, content):
+    def update_usermeta(self, content):
         content = msgpack.packb(content)
         return ext._update_usermeta(self, content)
 

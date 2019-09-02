@@ -5,7 +5,7 @@ from itertools import zip_longest as lzip
 
 pshape = (5, 5)
 shape = (10, 10)
-filename = "iters-array.cat"
+filename = "ex_iters.cat"
 if (os.path.exists(filename)):
     # Remove file on disk
     os.remove(filename)
