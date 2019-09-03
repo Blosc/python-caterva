@@ -216,8 +216,8 @@ cdef class CParams:
             self.filters[i] = filters[i - BLOSC2_MAX_FILTERS + len(filters)]
 
         filters_meta = kargs.get('filters_meta', defaults['filters_meta'])
-        for i in range(BLOSC2_MAX_FILTERS - len(filters), BLOSC2_MAX_FILTERS):
-            self.filters_meta[i] = filters_meta[i - BLOSC2_MAX_FILTERS + len(filters)]
+        for i in range(BLOSC2_MAX_FILTERS - len(filters_meta), BLOSC2_MAX_FILTERS):
+            self.filters_meta[i] = filters_meta[i - BLOSC2_MAX_FILTERS + len(filters_meta)]
 
 
 cdef class DParams:
