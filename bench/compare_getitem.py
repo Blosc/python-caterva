@@ -1,3 +1,8 @@
+# Benchmark for comparing speeds of getitem of hyperplanes on a
+# multidimensional array and using different backends:
+# Caterva, zarr and HDF5
+# In brief, each approach has its own strengths and weaknesses.
+
 import cat4py as cat
 import zarr
 import numcodecs
@@ -12,7 +17,7 @@ from time import time
 shape = (50, 5000, 100)
 pshape = (10, 50, 20)
 dtype = np.float64
-persistent = False
+persistent = False   # set this to True to benchmark the persistent storage for the backends
 
 # Compression properties
 cname = "lz4"
