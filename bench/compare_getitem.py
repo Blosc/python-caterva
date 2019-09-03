@@ -16,9 +16,9 @@ persistent = False
 
 # Compression properties
 cname = "lz4"
-compcode = 1 # keep in sync with above
+compcode = cat.LZ4  # keep in sync with above
 clevel = 5
-filter = numcodecs.Blosc.SHUFFLE
+filter = cat.SHUFFLE
 
 fname_cat = None
 fname_zarr = None
@@ -61,7 +61,7 @@ print("Time for filling array (caterva, from_buffer): %.3fs" % (t1 - t0))
 
 # Create and fill a zarr array
 t0 = time()
-compressor = numcodecs.Blosc(cname=cname, clevel=clevel, shuffle=numcodecs.Blosc.SHUFFLE)
+compressor = numcodecs.Blosc(cname=cname, clevel=clevel, shuffle=filter)
 if persistent:
     z = zarr.open(fname_zarr, mode='w', shape=shape, chunks=pshape, dtype=dtype, compressor=compressor)
 else:
