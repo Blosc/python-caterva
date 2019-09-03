@@ -178,6 +178,7 @@ defaults = {'itemsize': 4,
             'dnthreads': 1,
             'blocksize': 0,
             'filters': [1],
+            'filters_meta': [0],
             }
 
 
@@ -203,7 +204,8 @@ cdef class CParams:
         self.blocksize = kargs.get('blocksize', defaults['blocksize'])
         self.prefilter = NULL  # TODO: implement support for prefilters
         self.pparams = NULL    # TODO: implement support for prefilters
-        # TODO: implement support for multiple filters
+
+        # Filter pipeline
         for i in range(BLOSC2_MAX_FILTERS):
             self.filters[i] = 0
         for i in range(BLOSC2_MAX_FILTERS):
@@ -212,6 +214,11 @@ cdef class CParams:
         filters = kargs.get('filters', defaults['filters'])
         for i in range(BLOSC2_MAX_FILTERS - len(filters), BLOSC2_MAX_FILTERS):
             self.filters[i] = filters[i - BLOSC2_MAX_FILTERS + len(filters)]
+
+        filters_meta = kargs.get('filters_meta', defaults['filters_meta'])
+        for i in range(BLOSC2_MAX_FILTERS - len(filters), BLOSC2_MAX_FILTERS):
+            self.filters_meta[i] = filters_meta[i - BLOSC2_MAX_FILTERS + len(filters)]
+
 
 cdef class DParams:
     cdef int nthreads

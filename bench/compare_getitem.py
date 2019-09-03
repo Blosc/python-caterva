@@ -9,10 +9,10 @@ from time import time
 
 
 # Dimensions, type and persistency properties for the arrays
-shape = (500, 1000)
-pshape = (100, 100)
+shape = (500, 10000)
+pshape = (50, 1000)
 dtype = np.float64
-persistent = True
+persistent = False
 
 # Compression properties
 cname = "lz4"
