@@ -17,7 +17,7 @@ from time import time
 shape = (50, 5000, 100)
 pshape = (10, 50, 20)
 dtype = np.float64
-persistent = False   # set this to True to benchmark the persistent storage for the backends
+persistent = True   # set this to True to benchmark the persistent storage for the backends
 
 # Compression properties
 cname = "lz4"
