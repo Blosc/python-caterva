@@ -11,7 +11,6 @@
 
 import numpy as np
 cimport numpy as np
-import cython
 import msgpack
 
 from libc.stdlib cimport malloc, free
@@ -65,7 +64,6 @@ cdef extern from "blosc2.h":
         blosc2_context* cctx;
         blosc2_context* dctx;
         uint8_t* reserved;
-
 
     ctypedef struct blosc2_prefilter_params:
         int ninputs
@@ -334,7 +332,7 @@ cdef class _ReadIter:
 
     def __next__(self):
         ndim = self.arr.ndim
-        shape = self.arr.shape
+        shape = tuple(self.arr.shape)
         eshape = [0 for i in range(ndim)]
         for i in range(ndim):
             if shape[i] % self.blockshape[i] == 0:
@@ -377,21 +375,70 @@ cdef class _Container:
     cdef kargs
     cdef usermeta_len
 
-    def __init__(self, pshape=None, filename=None, **kargs):
+    @property
+    def shape(self):
+        cdef caterva_dims_t shape = caterva_get_shape(self._array)
+        return tuple([shape.dims[i] for i in range(shape.ndim)])
 
-        self.usermeta_len = 0
-        cparams = CParams(**kargs)
+    @property
+    def pshape(self):
+        if self._array.storage == CATERVA_STORAGE_PLAINBUFFER:
+            return None
+        cdef caterva_dims_t pshape = caterva_get_pshape(self._array)
+        return tuple([pshape.dims[i] for i in range(pshape.ndim)])
 
-        dparams = DParams(**kargs)
+    @property
+    def cratio(self):
+        if self._array.storage is not CATERVA_STORAGE_BLOSC:
+            return 1
+        return self._array.sc.nbytes / self._array.sc.cbytes
 
+    @property
+    def itemsize(self):
+        return self._array.ctx.cparams.typesize
+
+    @property
+    def clevel(self):
+        return self._array.ctx.cparams.clevel
+
+    @property
+    def compcode(self):
+        return self._array.ctx.cparams.compcode
+
+    @property
+    def filters(self):
+        return [self._array.ctx.cparams.filters[i] for i in range(BLOSC2_MAX_FILTERS)]
+
+    @property
+    def size(self):
+        return self._array.size
+
+    @property
+    def psize(self):
+        return self._array.psize
+
+    @property
+    def npart(self):
+        return int(self._array.esize / self._array.psize)
+
+    @property
+    def ndim(self):
+        return self._array.ndim
+
+    @property
+    def filled(self):
+        return self._array.filled
+
+    def __init__(self, pshape=None, filename=None, **kwargs):
+        cparams = CParams(**kwargs)
+        dparams = DParams(**kwargs)
         self.ctx = Context(cparams, dparams)
-        self.kargs = kargs
-
         cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(self.ctx.tocapsule(), "caterva_ctx_t*")
+        self.usermeta_len = 0
+
         cdef int64_t *pshape_
         cdef caterva_dims_t _pshape
         cdef blosc2_frame *_frame
-
 
         if pshape is None:
             if filename is not None:
@@ -417,14 +464,13 @@ cdef class _Container:
                     _frame = blosc2_new_frame(filename)
 
             self._array = caterva_empty_array(ctx_, _frame, &_pshape)
-            if _frame != NULL:
-                if "metalayers" in kargs:
-                    metalayers = kargs["metalayers"]
-                    for name, content in metalayers.items():
-                        name = name.encode("utf-8") if isinstance(name, str) else name
-                        content = msgpack.packb(content)
-                        blosc2_add_metalayer(self._array.sc, name, content, len(content))
 
+        if 'metalayers' in kwargs:
+            metalayers = kwargs['metalayers']
+            for name, content in metalayers.items():
+                name = name.encode("utf-8") if isinstance(name, str) else name
+                content = msgpack.packb(content)
+                blosc2_add_metalayer(self._array.sc, name, content, len(content))
 
     def tocapsule(self):
         return PyCapsule_New(self._array, "caterva_array_t*", NULL)
@@ -476,69 +522,9 @@ cdef class _Container:
     def squeeze(self):
         caterva_squeeze(self._array)
 
-    @property
-    def shape(self):
-        cdef caterva_dims_t shape = caterva_get_shape(self._array)
-        return tuple([shape.dims[i] for i in range(shape.ndim)])
-
-
-    @property
-    def pshape(self):
-        if self._array.storage == CATERVA_STORAGE_PLAINBUFFER:
-            return None
-        cdef caterva_dims_t pshape = caterva_get_pshape(self._array)
-        return tuple([pshape.dims[i] for i in range(pshape.ndim)])
-
-    @property
-    def cratio(self):
-        if self._array.storage is not CATERVA_STORAGE_BLOSC:
-            return 1
-        return self._array.sc.nbytes / self._array.sc.cbytes
-
-    @property
-    def itemsize(self):
-        return self._array.ctx.cparams.typesize
-
-    @property
-    def clevel(self):
-        return self._array.ctx.cparams.clevel
-
-    @property
-    def compcode(self):
-        return self._array.ctx.cparams.compcode
-
-    @property
-    def filters(self):
-        return [self._array.ctx.cparams.filters[i] for i in range(BLOSC2_MAX_FILTERS)]
-
-    @property
-    def size(self):
-        return self._array.size
-
-
-    @property
-    def psize(self):
-        return self._array.psize
-
-
-    @property
-    def npart(self):
-        return int(self._array.esize / self._array.psize)
-
-
-    @property
-    def ndim(self):
-        return self._array.ndim
-
-    @property
-    def filled(self):
-        return self._array.filled
-
-
     def __dealloc__(self):
         if self._array != NULL:
             caterva_free_array(self._array)
-
 
 
 def _from_file(_Container arr, filename):
@@ -632,6 +618,7 @@ def _to_buffer(_Container arr):
     caterva_to_buffer(arr._array, <void *> <char *> buffer)
     return buffer
 
+
 def _from_buffer(_Container arr, shape, buf):
     ndim = len(shape)
 
@@ -645,6 +632,7 @@ def _from_buffer(_Container arr, shape, buf):
     free(shape_)
 
     cdef int retcode = caterva_from_buffer(arr._array, &_shape, <void*> <char *> buf)
+
 
 def _has_metalayer(_Container arr, name):
     if  arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:

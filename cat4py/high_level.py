@@ -15,9 +15,25 @@ class WriteIter(ext._WriteIter):
 
 class Container(ext._Container):
 
-    def __init__(self, pshape=None, filename=None, **kargs):
-        self.kargs = kargs
-        super(Container, self).__init__(pshape, filename, **kargs)
+    def __init__(self, pshape=None, filename=None, **kwargs):
+        """Multidimensional and type-less data container.
+
+        Parameters
+        ----------
+        pshape: iterable object or None
+            The partition shape.  If None, the store is a plain buffer (non-compressed).
+        filename: str or None
+            The name of the file to store data.  If `None`, data store is in-memory.
+        kwargs: dict
+            Optional parameters for compression and decompression.  Also:
+            metalayers: dict or None
+                A dictionary with different metalayers.  One entry per metalayer:
+                    key: bytes or str
+                        The name of the metalayer.
+                    value: object
+                        The metalayer object that will be (de-)serialized using msgpack.
+        """
+        super(Container, self).__init__(pshape, filename, **kwargs)
 
     def __getitem__(self, key):
         if not isinstance(key, (tuple, list)):

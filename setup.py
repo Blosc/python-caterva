@@ -119,17 +119,19 @@ else:
                    'neon' not in f and 'altivec' not in f]
     sources += glob('c-blosc2/internal-complibs/lz4*/*.c')
     #sources += glob('c-blosc2/internal-complibs/miniz*/*.c')
-    sources += glob('c-blosc2/internal-complibs/zstd*/*/*.c')
+    #sources += glob('c-blosc2/internal-complibs/zstd*/*/*.c')  # TODO: add a flag for including zstd
     # sources += glob('c-blosc2/internal-complibs/lizard*/*/*.c')
     inc_dirs += [os.path.join('c-blosc2', 'blosc')]
     inc_dirs += [d for d in glob('c-blosc2/internal-complibs/*')
                  if os.path.isdir(d)]
-    inc_dirs += [d for d in glob('c-blosc2/internal-complibs/zstd*/*')
-                 if os.path.isdir(d)]
+    # inc_dirs += [d for d in glob('c-blosc2/internal-complibs/zstd*/*')
+    #              if os.path.isdir(d)]
     # TODO: when including miniz, we get a `_compress2` symbol not found error
     # def_macros += [('HAVE_LZ4', 1), ('HAVE_ZLIB', 1), ('HAVE_ZSTD', 1)]
-    def_macros += [('HAVE_LZ4', 1), ('HAVE_ZSTD', 1)]
-    # ('HAVE_LIZARD', 1)]  # TODO: xxhash collide between ztsd and lizard
+    # def_macros += [('HAVE_LZ4', 1), ('HAVE_ZSTD', 1)]
+    def_macros += [('HAVE_LZ4', 1)]
+    #               ('HAVE_ZSTD', 1)  # TODO: add a flag for including zstd
+    #               ('HAVE_LIZARD', 1)  # TODO: xxhash collide between ztsd and lizard
 
     # Guess SSE2 or AVX2 capabilities
     # SSE2
