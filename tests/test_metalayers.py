@@ -11,12 +11,9 @@ import os
                              ([12, 13, 14, 15, 16], [2, 6, 4, 5, 4], "testmeta02.cat", np.float32)
                          ])
 def test_persistency(shape, pshape, filename, dtype):
-    # Create a numpy array
-    nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
-
     # Create an empty caterva array (on disk)
     itemsize = np.dtype(dtype).itemsize
-    a = cat.empty(shape, pshape, filename=filename, itemsize=itemsize,
+    a = cat.empty(shape, pshape=pshape, filename=filename, itemsize=itemsize,
                   metalayers={"numpy": {b"dtype": str(np.dtype(dtype))},
                               "test": {b"lorem": 1234}})
 
@@ -29,6 +26,7 @@ def test_persistency(shape, pshape, filename, dtype):
     assert (a.get_metalayer("test") == {b"lorem": 4321})
 
     # Fill an empty caterva array using a block iterator
+    nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
     for block, info in a.iter_write():
         block[:] = bytes(nparray[info.slice])
 

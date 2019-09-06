@@ -2,8 +2,6 @@ import cat4py as cat
 import pytest
 
 
-kargs = ['itemsize', 'compcode', 'clevel', 'use_dict', 'cnthreads', 'dnthreads', 'blocksize', 'filters']
-
 @pytest.mark.parametrize("shape, pshape, itemsize, compcode, clevel, use_dict, cnthreads, dnthreads, blocksize, filters",
                          [
                              ((100, 1230), (20, 10), 4, 1, 4, 0, 1, 1, 0, [1]),
@@ -11,8 +9,7 @@ kargs = ['itemsize', 'compcode', 'clevel', 'use_dict', 'cnthreads', 'dnthreads',
                              ((400, 399, 401), (20, 10, 130), 3, 4, 5, 1, 2, 2, 128 * 1024, [4, 3, 0, 2, 1])
                          ])
 def test_empty(shape, pshape, itemsize, compcode, clevel, use_dict, cnthreads, dnthreads, blocksize, filters):
-    a = cat.empty(shape,
-                  pshape,
+    a = cat.empty(shape, pshape=pshape,
                   itemsize=itemsize,
                   compcode=compcode,
                   clevel=clevel,

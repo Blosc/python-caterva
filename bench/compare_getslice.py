@@ -46,7 +46,7 @@ itemsize = np.dtype(dtype).itemsize
 
 # Create and fill a caterva array using a buffer
 t0 = time()
-a = cat.from_buffer(bytes(content), shape, pshape, itemsize=itemsize, filename=fname_cat,
+a = cat.from_buffer(bytes(content), shape, pshape=pshape, itemsize=itemsize, filename=fname_cat,
                     compcode=compcode, clevel=clevel, filters=[filter])
 t1 = time()
 print("Time for filling array (caterva, from_buffer): %.3fs" % (t1 - t0))

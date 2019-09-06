@@ -15,7 +15,7 @@ def test_buffer(shape, pshape, itemsize):
 
     buffer = bytes(size * itemsize)
 
-    a = cat.from_buffer(buffer, shape, pshape, itemsize=itemsize)
+    a = cat.from_buffer(buffer, shape, pshape=pshape, itemsize=itemsize)
 
     buffer2 = a.to_buffer()
 

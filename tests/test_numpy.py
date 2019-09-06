@@ -10,15 +10,8 @@ import numpy as np
                              ([21, 21, 21, 31], None, np.float32)
                          ])
 def test_numpy(shape, pshape, dtype):
-
-    itemsize = np.dtype(dtype).itemsize
-
     size = int(np.prod(shape))
-
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-
-    a = cat.from_numpy(nparray, pshape, itemsize=itemsize)
-
+    a = cat.from_numpy(nparray, pshape=pshape, itemsize=nparray.itemsize)
     nparray2 = a.to_numpy(dtype)
-
     np.testing.assert_almost_equal(nparray, nparray2)

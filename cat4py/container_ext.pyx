@@ -429,7 +429,7 @@ cdef class _Container:
     def filled(self):
         return self._array.filled
 
-    def __init__(self, pshape=None, **kwargs):
+    def __init__(self, **kwargs):
         cparams = CParams(**kwargs)
         dparams = DParams(**kwargs)
         self.ctx = Context(cparams, dparams)
@@ -440,6 +440,7 @@ cdef class _Container:
         cdef caterva_dims_t _pshape
         cdef blosc2_frame *_frame
 
+        pshape = kwargs['pshape'] if 'pshape' in kwargs else None
         filename = kwargs['filename'] if 'filename' in kwargs else None
         if pshape is None:
             if filename is not None:

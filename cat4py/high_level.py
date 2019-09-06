@@ -15,15 +15,15 @@ class WriteIter(ext._WriteIter):
 
 class Container(ext._Container):
 
-    def __init__(self, pshape=None, **kwargs):
-        """Multidimensional and type-less data container.
+    def __init__(self, **kwargs):
+        """The basic and multidimensional and type-less data container.
 
         Parameters
         ----------
-        pshape: iterable object or None
-            The partition shape.  If None, the store is a plain buffer (non-compressed).
         kwargs: dict
             Optional parameters for compression and decompression.  Also:
+            pshape: iterable object or None
+                The partition shape.  If None, the store is a plain buffer (non-compressed).
             filename: str or None
                 The name of the file to store data.  If `None`, data is stores in-memory.
             metalayers: dict or None
@@ -33,7 +33,7 @@ class Container(ext._Container):
                     value: object
                         The metalayer object that will be (de-)serialized using msgpack.
         """
-        super(Container, self).__init__(pshape, **kwargs)
+        super(Container, self).__init__(**kwargs)
 
     def __getitem__(self, key):
         if not isinstance(key, (tuple, list)):
@@ -53,8 +53,8 @@ class Container(ext._Container):
     def iter_write(self):
         return WriteIter(self)
 
-    def copy(self, pshape=None, **kargs):
-        arr = Container(pshape, **kargs)
+    def copy(self, **kwargs):
+        arr = Container(**kwargs)
         ext._copy(self, arr)
         return arr
 
@@ -86,20 +86,20 @@ class Container(ext._Container):
         return ext._update_usermeta(self, content)
 
 
-def empty(shape, pshape=None, **kargs):
-    arr = Container(pshape, **kargs)
+def empty(shape, **kwargs):
+    arr = Container(**kwargs)
     arr.updateshape(shape)
     return arr
 
 
-def from_buffer(buffer, shape, pshape=None, **kargs):
-    arr = Container(pshape, **kargs)
+def from_buffer(buffer, shape, **kwargs):
+    arr = Container(**kwargs)
     ext._from_buffer(arr, shape, buffer)
     return arr
 
 
-def from_numpy(nparray, pshape=None, **kargs):
-    arr = from_buffer(bytes(nparray), nparray.shape, pshape, **kargs)
+def from_numpy(nparray, **kwargs):
+    arr = from_buffer(bytes(nparray), nparray.shape, **kwargs)
     return arr
 
 
