@@ -12,12 +12,12 @@ import os
 import shutil
 from time import time
 
+persistent = False   # set this to True to benchmark the persistent storage for the backends
 
 # Dimensions, type and persistency properties for the arrays
 shape = (50, 5000, 100)
 pshape = (10, 50, 20)
 dtype = np.float64
-persistent = True   # set this to True to benchmark the persistent storage for the backends
 
 # Compression properties
 cname = "lz4"
@@ -81,7 +81,7 @@ filters = tables.Filters(complevel=clevel, complib="blosc:%s" % cname, shuffle=T
 if persistent:
     h5f = tables.open_file(fname_h5, 'w')
 else:
-    h5f = tables.open_file(fname_h5, 'w', driver='H5FD_CORE')
+    h5f = tables.open_file(fname_h5, 'w', driver='H5FD_CORE', driver_core_backing_store=0)
 h5ca = h5f.create_carray(h5f.root, 'carray', filters=filters, chunkshape=pshape, obj=content)
 h5f.flush()
 t1 = time()
