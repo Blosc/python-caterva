@@ -36,6 +36,18 @@ class Container(ext._Container):
         super(Container, self).__init__(**kwargs)
 
     def __getitem__(self, key):
+        """Return a (multidimensional) slice as specified in `key`.
+
+        Parameters
+        ----------
+        key: int, slice or sequence of slices
+            Note that `step` parameter is not honored yet in slices.
+
+        Returns
+        -------
+        bytes
+            The a buffer with the requested data.
+        """
         if not isinstance(key, (tuple, list)):
              key = (key,)
         key = tuple(k if isinstance(k, slice) else slice(k, k + 1) for k in key)
@@ -45,15 +57,80 @@ class Container(ext._Container):
         return buff
 
     def __setitem__(self, key, item):
+        """Set a (multidimensional) slice as specified in `key`.
+
+        Currently, this only works on containers backed by a plain buffer
+        (i.e. pshape == None).
+
+        Parameters
+        ----------
+        key: int, slice or sequence of slices
+            Note that `step` parameter is not honored yet in slices.
+        """
         ext._setitem(self, key, item)
 
     def iter_read(self, blockshape):
+        """Iterate over data blocks whose dims are specified in `blockshape`.
+
+        Parameters
+        ----------
+        blockshape: tuple, list
+            The shape in which the data block will be returned.
+
+        Yields
+        ------
+        tuple of (block, info)
+            block: bytes
+                The buffer with the data block.
+            info: namedtuple
+                Info about the returned data block.  Its structure is:
+                namedtuple("IterInfo", "slice, shape, size")
+                IterInfo:
+                    slice: tuple
+                        The coordinates where the data block starts.
+                    shape: tuple
+                        The shape of the actual data block (it can be
+                        smaller than `blockshape` at the edges of the array).
+                    size: int
+                        The size, in elements, of the block.
+        """
         return ReadIter(self, blockshape)
 
     def iter_write(self):
+        """Iterate over non initialized data blocks.
+
+        Parameters
+        ----------
+        blockshape: tuple, list
+            The shape in which the data block should be delivered for filling.
+
+        Yields
+        ------
+        tuple of (block, info)
+            block: bytes
+                The buffer with the data block to be filled.
+            info: namedtuple
+                Info about the data block to be filled.  Its structure is:
+                namedtuple("IterInfo", "slice, shape, size")
+                IterInfo:
+                    slice: tuple
+                        The coordinates where the data block starts.
+                    shape: tuple
+                        The shape of the actual data block (it can be
+                        smaller than `blockshape` at the edges of the array).
+                    size: int
+                        The size, in elements, of the block.
+        """
         return WriteIter(self)
 
     def copy(self, **kwargs):
+        """Copy to a new container whose properties are specified in `kwargs`.
+
+        Returns
+        -------
+        Container
+            The new container that contains the copy.
+        """
         arr = Container(**kwargs)
         ext._copy(self, arr)
         return arr
