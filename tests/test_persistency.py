@@ -16,7 +16,7 @@ def test_persistency(shape, pshape, filename, dtype):
 
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    cat.from_numpy(nparray, pshape=pshape, filename=filename, itemsize=nparray.itemsize)
+    cat.from_numpy(nparray, pshape=pshape, filename=filename)
     b = cat.from_file(filename)
     nparray2 = b.to_numpy(dtype)
 

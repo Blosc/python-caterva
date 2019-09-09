@@ -12,7 +12,7 @@ import numpy as np
 def test_setitem(shape, pshape, slices, dtype):
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_numpy(nparray, pshape=pshape, itemsize=nparray.itemsize)
+    a = cat.from_numpy(nparray, pshape=pshape)
     slice_shape = slices.stop - slices.start if isinstance(slices, slice) else [s.stop - s.start for s in slices]
     nparray[slices] = np.ones(slice_shape, dtype=dtype)
     a[slices] = bytes(np.ones(slice_shape, dtype=dtype))

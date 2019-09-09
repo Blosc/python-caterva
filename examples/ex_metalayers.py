@@ -17,11 +17,12 @@ itemsize = np.dtype(dtype).itemsize
 nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create a caterva array from a numpy array
-a = cat.from_numpy(nparray, pshape, itemsize=itemsize)
+a = cat.from_numpy(nparray, pshape=pshape)
 
 # Create an empty caterva array (on disk)
-b = cat.empty(shape, pshape, filename, itemsize=itemsize, metalayers={"numpy": {b"dtype": str(np.dtype(dtype))},
-                                                                      "test": {b"lorem": 1234}})
+b = cat.empty(shape, pshape=pshape, filename=filename, itemsize=itemsize,
+              metalayers={"numpy": {b"dtype": str(np.dtype(dtype))},
+                          "test": {b"lorem": 1234}})
 
 assert(b.has_metalayer("numpy") is True)
 assert(b.get_metalayer("numpy") == {b"dtype": bytes(str(np.dtype(dtype)), "utf-8")})

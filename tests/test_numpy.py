@@ -12,6 +12,6 @@ import numpy as np
 def test_numpy(shape, pshape, dtype):
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_numpy(nparray, pshape=pshape, itemsize=nparray.itemsize)
+    a = cat.from_numpy(nparray, pshape=pshape)
     nparray2 = a.to_numpy(dtype)
     np.testing.assert_almost_equal(nparray, nparray2)

@@ -3,14 +3,14 @@ import numpy as np
 import msgpack
 
 
-class ReadIter(ext._ReadIter):
+class _ReadIter(ext._ReadIter):
     def __init__(self, arr, blockshape):
-        super(ReadIter, self).__init__(arr, blockshape)
+        super(_ReadIter, self).__init__(arr, blockshape)
 
 
-class WriteIter(ext._WriteIter):
+class _WriteIter(ext._WriteIter):
     def __init__(self, arr):
-        super(WriteIter, self).__init__(arr)
+        super(_WriteIter, self).__init__(arr)
 
 
 class Container(ext._Container):
@@ -41,6 +41,7 @@ class Container(ext._Container):
         Parameters
         ----------
         key: int, slice or sequence of slices
+            The index for the slices to be updated.
             Note that `step` parameter is not honored yet in slices.
 
         Returns
@@ -65,8 +66,16 @@ class Container(ext._Container):
         Parameters
         ----------
         key: int, slice or sequence of slices
+            The index for the slices to be updated.
             Note that `step` parameter is not honored yet in slices.
+        item: bytes
+            The buffer with the values to be used for the update.
         """
+        if not isinstance(key, (tuple, list)):
+             key = (key,)
+        key = tuple(k if isinstance(k, slice) else slice(k, k + 1) for k in key)
+        if len(key) < self.ndim:
+            key += tuple(slice(None) for i in range(self.ndim - len(key)))
         ext._setitem(self, key, item)
 
     def iter_read(self, blockshape):
@@ -94,15 +103,10 @@ class Container(ext._Container):
                     size: int
                         The size, in elements, of the block.
         """
-        return ReadIter(self, blockshape)
+        return _ReadIter(self, blockshape)
 
     def iter_write(self):
         """Iterate over non initialized data blocks.
-
-        Parameters
-        ----------
-        blockshape: tuple, list
-            The shape in which the data block should be delivered for filling.
 
         Yields
         ------
@@ -121,7 +125,7 @@ class Container(ext._Container):
                     size: int
                         The size, in elements, of the block.
         """
-        return WriteIter(self)
+        return _WriteIter(self)
 
     def copy(self, **kwargs):
         """Copy to a new container whose properties are specified in `kwargs`.
@@ -129,58 +133,196 @@ class Container(ext._Container):
         Returns
         -------
         Container
-            The new container that contains the copy.
+            A new container that contains the copy.
         """
         arr = Container(**kwargs)
         ext._copy(self, arr)
         return arr
 
     def to_buffer(self):
+        """Return a buffer with the data contents.
+
+        Returns
+        -------
+        bytes
+            The buffer containing the data of the whole Container.
+        """
         return ext._to_buffer(self)
 
     def to_numpy(self, dtype):
+        """Return a NumPy array with the data contents and `dtype`.
+
+        Parameters
+        ----------
+        dtype: a dtype instance or string
+            The dtype for the returned NumPy array.
+
+        Returns
+        -------
+        ndarray
+            The NumPy array object containing the data of the whole Container.
+        """
         return np.frombuffer(self.to_buffer(), dtype=dtype).reshape(self.shape)
 
     def has_metalayer(self, name):
+        """Whether `name` is an existing metalayer or not.
+
+        Parameters
+        ----------
+        name: str
+            The name of the metalayer to check.
+
+        Returns
+        -------
+        bool
+            True if metalayer exists in `self`; else False.
+        """
         return ext._has_metalayer(self, name)
 
     def get_metalayer(self, name):
+        """Return the `name` metalayer.
+
+        Parameters
+        ----------
+        name: str
+            The name of the metalayer to return.
+
+        Returns
+        -------
+        bytes
+            The buffer containing the metalayer info (typically in msgpack
+            format).
+        """
         if self.has_metalayer(name) is False:
             return None
         content = ext._get_metalayer(self, name)
         return msgpack.unpackb(content)
 
     def update_metalayer(self, name, content):
+        """Update the `name` metalayer with `content`.
+
+        Parameters
+        ----------
+        name: str
+            The name of the metalayer to update.
+        content: bytes
+            The buffer containing the new content for the metalayer.
+            Note that the *length* of the metalayer cannot not change,
+            else an exception will be raised.
+
+        """
         content = msgpack.packb(content)
         return ext._update_metalayer(self, name, content)
 
     def get_usermeta(self):
+        """Return the `usermeta` section.
+
+        Returns
+        -------
+        bytes
+            The buffer for the usermeta section (typically in msgpack format,
+            but not necessarily).
+        """
         content = ext._get_usermeta(self)
         return msgpack.unpackb(content)
 
     def update_usermeta(self, content):
+        """Update the `usermeta` section.
+
+        Parameters
+        ----------
+        content: bytes
+            The buffer containing the new `usermeta` data that replaces the
+            previous one.  Note that the length of the new content can be
+            different from the existing one.
+
+        """
         content = msgpack.packb(content)
         return ext._update_usermeta(self, content)
 
 
 def empty(shape, **kwargs):
+    """Create an empty container.
+
+    Parameters
+    ----------
+    shape: tuple or list
+        The shape for the final container.
+
+    In addition, you can pass any keyword argument that is supported by the
+    `Container` class.
+
+    Returns
+    -------
+    Container
+        The new Container object.
+    """
     arr = Container(**kwargs)
     arr.updateshape(shape)
     return arr
 
 
 def from_buffer(buffer, shape, **kwargs):
+    """Create a container out of a buffer.
+
+    Parameters
+    ----------
+    buffer: bytes
+        The buffer of the data to populate the container.
+    shape: tuple or list
+        The shape for the final container.
+
+    In addition, you can pass any keyword argument that is supported by the
+    `Container` class.
+
+    Returns
+    -------
+    Container
+        The new Container object.
+    """
     arr = Container(**kwargs)
     ext._from_buffer(arr, shape, buffer)
     return arr
 
 
 def from_numpy(nparray, **kwargs):
-    arr = from_buffer(bytes(nparray), nparray.shape, **kwargs)
+    """Create a container out of a NumPy array.
+
+    Parameters
+    ----------
+    nparray: NumPy array
+        The NumPy array to populate the container with.
+
+    In addition, you can pass any keyword argument that is supported by the
+    `Container` class.
+
+    Returns
+    -------
+    Container
+        The new Container object.
+    """
+    arr = from_buffer(bytes(nparray), nparray.shape,
+                      itemsize=nparray.itemsize, **kwargs)
     return arr
 
 
 def from_file(filename):
+    """Open a new container from `filename`.
+
+    Parameters
+    ----------
+    filename: str
+        The filename where the data is.  The file should have a Blosc2 frame
+        with a Caterva metalayer on it.
+
+    In addition, you can pass any keyword argument that is supported by the
+    `Container` class.
+
+    Returns
+    -------
+    Container
+        The new Container object.
+    """
     arr = Container()
     ext._from_file(arr, filename)
     # if arr.has_metalayer("numpy"):

@@ -577,17 +577,7 @@ def _setitem(_Container arr, key, item):
 
     cdef caterva_dims_t _start
     cdef caterva_dims_t _stop
-
     ndim = arr._array.ndim
-    if ndim == 1:
-        key = [key]
-
-    key = list(key)
-
-    for i, sl in enumerate(key):
-        if type(sl) is not slice:
-            key[i] = slice(sl, sl+1, None)
-
     start = [s.start if s.start is not None else 0 for s in key]
     stop = [s.stop if s.stop is not None else sh for s, sh in zip(key, arr.shape)]
 
@@ -616,7 +606,6 @@ def _to_buffer(_Container arr):
     size = np.prod(shape) * arr._array.ctx.cparams.typesize
 
     buffer = bytes(size)
-
     caterva_to_buffer(arr._array, <void *> <char *> buffer)
     return buffer
 
@@ -634,6 +623,8 @@ def _from_buffer(_Container arr, shape, buf):
     free(shape_)
 
     cdef int retcode = caterva_from_buffer(arr._array, &_shape, <void*> <char *> buf)
+    if retcode < 0:
+        raise ValueError("Error filling the caterva object with buffer")
 
 
 def _has_metalayer(_Container arr, name):
@@ -649,13 +640,14 @@ def _get_metalayer(_Container arr, name):
     if  arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
         return NotImplementedError
 
-
     name = name.encode("utf-8") if isinstance(name, str) else name
-    cdef uint8_t *content
+    cdef uint8_t *_content
     cdef uint32_t content_len
-    n = blosc2_get_metalayer(arr._array.sc, name, &content, &content_len)
-    _content = <char *> content
-    return _content[:content_len]
+    n = blosc2_get_metalayer(arr._array.sc, name, &_content, &content_len)
+    content = <char *>_content
+    content = content[:content_len]  # does a copy
+    free(_content)
+    return content
 
 
 def _update_metalayer(_Container arr, name, content):
@@ -663,14 +655,14 @@ def _update_metalayer(_Container arr, name, content):
          return NotImplementedError
 
      name = name.encode("utf-8") if isinstance(name, str) else name
-
      cdef uint8_t *_content
      cdef uint32_t _content_len
      n = blosc2_get_metalayer(arr._array.sc, name, &_content, &_content_len)
      if _content_len != len(content):
-         return AttributeError
+         return ValueError("The length of the content in a metalayer cannot change.")
 
      n = blosc2_update_metalayer(arr._array.sc, name, content, len(content))
+     free(_content)
      return n
 
 
@@ -681,7 +673,11 @@ def _update_usermeta(_Container arr, content):
 
 
 def _get_usermeta(_Container arr):
-    cdef uint8_t *content
-    n = blosc2_get_usermeta(arr._array.sc, &content)
-    _content = <char *> content
-    return _content[:arr.usermeta_len]
+    cdef uint8_t *_content
+    n = blosc2_get_usermeta(arr._array.sc, &_content)
+    if n < 0:
+        raise ValueError("Cannot get the usermeta section")
+    content = <char *>_content
+    content = content[:n]  # does a copy
+    free(_content)
+    return content

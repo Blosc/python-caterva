@@ -20,5 +20,5 @@ BITSHUFFLE = 2
 DELTA = 3
 TRUNC_PREC = 4
 
-from .high_level import Container, WriteIter, ReadIter, empty, from_buffer, from_numpy, from_file
+from .high_level import Container, _WriteIter, _ReadIter, empty, from_buffer, from_numpy, from_file
 from .version import version as __version__

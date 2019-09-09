@@ -12,7 +12,7 @@ itemsize = np.dtype(dtype).itemsize
 nparray = np.random.choice(a=[True, False], size=np.prod(shape)).reshape(shape)
 
 # Create a caterva array from a numpy array
-a = cat.from_numpy(nparray, pshape, itemsize=itemsize)
+a = cat.from_numpy(nparray, pshape=pshape)
 
 # Convert a caterva array to a numpy array
 nparray2 = a.to_numpy(dtype)

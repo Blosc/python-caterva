@@ -11,7 +11,7 @@ itemsize = 4
 buffer = bytes(np.prod(shape) * itemsize)
 
 # Create a caterva array from a buffer
-a = cat.from_buffer(buffer, shape, pshape, itemsize=itemsize)
+a = cat.from_buffer(buffer, shape, pshape=pshape, itemsize=itemsize)
 
 # Convert a caterva array to a buffer
 buffer2 = a.to_buffer()

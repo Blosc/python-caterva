@@ -17,7 +17,7 @@ itemsize = np.dtype(dtype).itemsize
 nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create a caterva array from a numpy array (on disk)
-a = cat.from_numpy(nparray, pshape, filename, itemsize=itemsize)
+a = cat.from_numpy(nparray, pshape=pshape, filename=filename)
 
 # Read a caterva array from disk
 b = cat.from_file(filename)

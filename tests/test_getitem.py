@@ -12,7 +12,7 @@ import numpy as np
 def test_getitem(shape, pshape, slices, dtype):
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_numpy(nparray, pshape=pshape, itemsize=nparray.itemsize)
+    a = cat.from_numpy(nparray, pshape=pshape)
 
     nparray_slice = nparray[slices]
     buffer_slice = a[slices]

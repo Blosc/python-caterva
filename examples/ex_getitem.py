@@ -12,7 +12,7 @@ itemsize = np.dtype(dtype).itemsize
 nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create a caterva array from a numpy array
-a = cat.from_numpy(nparray, itemsize=itemsize)
+a = cat.from_numpy(nparray)
 
 # Get a slice
 buffer = a[slices]
