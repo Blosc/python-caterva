@@ -13,6 +13,15 @@ class _WriteIter(ext._WriteIter):
         super(_WriteIter, self).__init__(arr)
 
 
+def process_key(key, ndim):
+    if not isinstance(key, (tuple, list)):
+        key = (key,)
+    key = tuple(k if isinstance(k, slice) else slice(k, k + 1) for k in key)
+    if len(key) < ndim:
+        key += tuple(slice(None) for i in range(ndim - len(key)))
+    return key
+
+
 class Container(ext._Container):
 
     def __init__(self, **kwargs):
@@ -49,11 +58,7 @@ class Container(ext._Container):
         bytes
             The a buffer with the requested data.
         """
-        if not isinstance(key, (tuple, list)):
-             key = (key,)
-        key = tuple(k if isinstance(k, slice) else slice(k, k + 1) for k in key)
-        if len(key) < self.ndim:
-            key += tuple(slice(None) for i in range(self.ndim - len(key)))
+        key = process_key(key, self.ndim)
         buff = ext._getitem(self, key)
         return buff
 
@@ -71,11 +76,7 @@ class Container(ext._Container):
         item: bytes
             The buffer with the values to be used for the update.
         """
-        if not isinstance(key, (tuple, list)):
-             key = (key,)
-        key = tuple(k if isinstance(k, slice) else slice(k, k + 1) for k in key)
-        if len(key) < self.ndim:
-            key += tuple(slice(None) for i in range(self.ndim - len(key)))
+        key = process_key(key, self.ndim)
         ext._setitem(self, key, item)
 
     def iter_read(self, blockshape):
