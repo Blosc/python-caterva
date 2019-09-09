@@ -262,8 +262,8 @@ cdef class Context:
         return PyCapsule_New(self._ctx, "caterva_ctx_t*", NULL)
 
 
-cdef class _WriteIter:
-    cdef _Container arr
+cdef class WriteIter:
+    cdef Container arr
     cdef buffer
     cdef dtype
     cdef buffer_shape
@@ -313,8 +313,8 @@ cdef class _WriteIter:
         return a, info
 
 
-cdef class _ReadIter:
-    cdef _Container arr
+cdef class ReadIter:
+    cdef Container arr
     cdef blockshape
     cdef dtype
     cdef nparts
@@ -369,7 +369,7 @@ cdef class _ReadIter:
         return buf, info
 
 
-cdef class _Container:
+cdef class Container:
     cdef Context ctx
     cdef caterva_array_t *_array
     cdef kargs
@@ -529,7 +529,7 @@ cdef class _Container:
             caterva_free_array(self._array)
 
 
-def _from_file(_Container arr, filename):
+def from_file(Container arr, filename):
     ctx = Context()
     cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.tocapsule(), "caterva_ctx_t*")
     filename = filename.encode("utf-8") if isinstance(filename, str) else filename
@@ -540,7 +540,7 @@ def _from_file(_Container arr, filename):
     arr._array = a_
 
 
-def _getitem(_Container src, key):
+def getitem(Container src, key):
 
     ndim = src._array.ndim
     start = [s.start if s.start is not None else 0 for s in key]
@@ -571,7 +571,7 @@ def _getitem(_Container src, key):
     return buffer
 
 
-def _setitem(_Container arr, key, item):
+def setitem(Container arr, key, item):
     if not arr._array.filled or arr._array.storage == CATERVA_STORAGE_BLOSC:
         raise NotImplementedError
 
@@ -594,11 +594,11 @@ def _setitem(_Container arr, key, item):
     caterva_set_slice_buffer(arr._array, <void *> <char *> item, &_start, &_stop)
 
 
-def _copy(_Container src, _Container dest):
+def copy(Container src, Container dest):
     caterva_copy(dest._array, src._array)
 
 
-def _to_buffer(_Container arr):
+def to_buffer(Container arr):
     cdef caterva_dims_t shape_ = caterva_get_shape(arr._array)
     shape = []
     for i in range(shape_.ndim):
@@ -610,7 +610,7 @@ def _to_buffer(_Container arr):
     return buffer
 
 
-def _from_buffer(_Container arr, shape, buf):
+def from_buffer(Container arr, shape, buf):
     ndim = len(shape)
 
     if arr.pshape is not None:
@@ -627,7 +627,7 @@ def _from_buffer(_Container arr, shape, buf):
         raise ValueError("Error filling the caterva object with buffer")
 
 
-def _has_metalayer(_Container arr, name):
+def has_metalayer(Container arr, name):
     if  arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
         return NotImplementedError
 
@@ -636,7 +636,7 @@ def _has_metalayer(_Container arr, name):
     return False if n < 0 else True
 
 
-def _get_metalayer(_Container arr, name):
+def get_metalayer(Container arr, name):
     if  arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
         return NotImplementedError
 
@@ -650,7 +650,7 @@ def _get_metalayer(_Container arr, name):
     return content
 
 
-def _update_metalayer(_Container arr, name, content):
+def update_metalayer(Container arr, name, content):
      if arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
          return NotImplementedError
 
@@ -666,13 +666,13 @@ def _update_metalayer(_Container arr, name, content):
      return n
 
 
-def _update_usermeta(_Container arr, content):
+def update_usermeta(Container arr, content):
     n = blosc2_update_usermeta(arr._array.sc, content, len(content), BLOSC2_CPARAMS_DEFAULTS)
     arr.usermeta_len = len(content)
     return n
 
 
-def _get_usermeta(_Container arr):
+def get_usermeta(Container arr):
     cdef uint8_t *_content
     n = blosc2_get_usermeta(arr._array.sc, &_content)
     if n < 0:

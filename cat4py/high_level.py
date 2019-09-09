@@ -3,12 +3,12 @@ import numpy as np
 import msgpack
 
 
-class _ReadIter(ext._ReadIter):
+class _ReadIter(ext.ReadIter):
     def __init__(self, arr, blockshape):
         super(_ReadIter, self).__init__(arr, blockshape)
 
 
-class _WriteIter(ext._WriteIter):
+class _WriteIter(ext.WriteIter):
     def __init__(self, arr):
         super(_WriteIter, self).__init__(arr)
 
@@ -18,11 +18,11 @@ def process_key(key, ndim):
         key = (key,)
     key = tuple(k if isinstance(k, slice) else slice(k, k + 1) for k in key)
     if len(key) < ndim:
-        key += tuple(slice(None) for i in range(ndim - len(key)))
+        key += tuple(slice(None) for _ in range(ndim - len(key)))
     return key
 
 
-class Container(ext._Container):
+class Container(ext.Container):
 
     def __init__(self, **kwargs):
         """The basic and multidimensional and type-less data container.
@@ -59,7 +59,7 @@ class Container(ext._Container):
             The a buffer with the requested data.
         """
         key = process_key(key, self.ndim)
-        buff = ext._getitem(self, key)
+        buff = ext.getitem(self, key)
         return buff
 
     def __setitem__(self, key, item):
@@ -77,7 +77,7 @@ class Container(ext._Container):
             The buffer with the values to be used for the update.
         """
         key = process_key(key, self.ndim)
-        ext._setitem(self, key, item)
+        ext.setitem(self, key, item)
 
     def iter_read(self, blockshape):
         """Iterate over data blocks whose dims are specified in `blockshape`.
@@ -137,7 +137,7 @@ class Container(ext._Container):
             A new container that contains the copy.
         """
         arr = Container(**kwargs)
-        ext._copy(self, arr)
+        ext.copy(self, arr)
         return arr
 
     def to_buffer(self):
@@ -148,7 +148,7 @@ class Container(ext._Container):
         bytes
             The buffer containing the data of the whole Container.
         """
-        return ext._to_buffer(self)
+        return ext.to_buffer(self)
 
     def to_numpy(self, dtype):
         """Return a NumPy array with the data contents and `dtype`.
@@ -178,7 +178,7 @@ class Container(ext._Container):
         bool
             True if metalayer exists in `self`; else False.
         """
-        return ext._has_metalayer(self, name)
+        return ext.has_metalayer(self, name)
 
     def get_metalayer(self, name):
         """Return the `name` metalayer.
@@ -196,7 +196,7 @@ class Container(ext._Container):
         """
         if self.has_metalayer(name) is False:
             return None
-        content = ext._get_metalayer(self, name)
+        content = ext.get_metalayer(self, name)
         return msgpack.unpackb(content)
 
     def update_metalayer(self, name, content):
@@ -213,7 +213,7 @@ class Container(ext._Container):
 
         """
         content = msgpack.packb(content)
-        return ext._update_metalayer(self, name, content)
+        return ext.update_metalayer(self, name, content)
 
     def get_usermeta(self):
         """Return the `usermeta` section.
@@ -224,7 +224,7 @@ class Container(ext._Container):
             The buffer for the usermeta section (typically in msgpack format,
             but not necessarily).
         """
-        content = ext._get_usermeta(self)
+        content = ext.get_usermeta(self)
         return msgpack.unpackb(content)
 
     def update_usermeta(self, content):
@@ -239,7 +239,7 @@ class Container(ext._Container):
 
         """
         content = msgpack.packb(content)
-        return ext._update_usermeta(self, content)
+        return ext.update_usermeta(self, content)
 
 
 def empty(shape, **kwargs):
@@ -282,7 +282,7 @@ def from_buffer(buffer, shape, **kwargs):
         The new Container object.
     """
     arr = Container(**kwargs)
-    ext._from_buffer(arr, shape, buffer)
+    ext.from_buffer(arr, shape, buffer)
     return arr
 
 
@@ -325,7 +325,7 @@ def from_file(filename):
         The new Container object.
     """
     arr = Container()
-    ext._from_file(arr, filename)
+    ext.from_file(arr, filename)
     # if arr.has_metalayer("numpy"):
     #     arr.__class__ = Array
     return arr
