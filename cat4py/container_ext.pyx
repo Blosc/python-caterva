@@ -268,6 +268,7 @@ cdef class WriteIter:
     cdef dtype
     cdef buffer_shape
 
+    # TODO: is np.dtype really necessary here?  Container does not have this notion, so...
     def __init__(self, arr):
         self.arr = arr
         dtypes = {1: np.int8, 2: np.int16, 4: np.int32, 8: np.int64, 16: np.complex128}
@@ -281,9 +282,10 @@ cdef class WriteIter:
     def __next__(self):
         if self.buffer is not None:
             item = np.frombuffer(self.buffer, self.dtype).reshape(self.buffer_shape)
-            item = np.pad(item, [(0, self.arr.array.pshape[i] - item.shape[i]) for i in range(self.arr.ndim)], mode='constant', constant_values=0)
+            item = np.pad(item, [(0, self.arr.array.pshape[i] - item.shape[i]) for i in range(self.arr.ndim)],
+                          mode='constant', constant_values=0)
             item = bytes(item)
-            caterva_append(self.arr.array, <char *> item, self.arr.array.psize * np.dtype(self.dtype).itemsize)
+            caterva_append(self.arr.array, <char *> item, self.arr.array.psize * self.arr.itemsize)
 
         if self.arr.array.filled:
             raise StopIteration
@@ -297,7 +299,6 @@ cdef class WriteIter:
             inc *= aux[i]
 
         stop_ = [start_[i] + self.arr.array.pshape[i] for i in range(self.arr.array.ndim)]
-
         for i in range(self.arr.array.ndim):
             if stop_[i] > self.arr.array.shape[i]:
                 stop_[i] = self.arr.array.shape[i]
