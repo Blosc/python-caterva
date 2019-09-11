@@ -11,7 +11,8 @@ BLOSCLZ = 0
 LZ4 = 1
 LZ4HC = 2
 ZLIB = 4
-LIZARD = 5
+ZSTD = 5
+LIZARD = 6
 
 # Filters
 NOFILTER = 0

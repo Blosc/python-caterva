@@ -30,7 +30,7 @@ class Container(ext.Container):
         Parameters
         ----------
         kwargs: dict
-            Optional parameters for compression and decompression.  Also:
+            Parameters related with the container:
             pshape: iterable object or None
                 The partition shape.  If None, the store is a plain buffer (non-compressed).
             filename: str or None
@@ -41,6 +41,27 @@ class Container(ext.Container):
                         The name of the metalayer.
                     value: object
                         The metalayer object that will be (de-)serialized using msgpack.
+            Parameters useful for compression and decompression:
+            itemsize: int
+                The number of bytes for the itemsize in container.  Default: 4.
+            compcode: int (categorical)
+                The code for the compressor codec.  Default: cat4py.LZ4.
+            clevel: int (0 to 9)
+                The compression level.  0 means no compression, and 9 maximum compression.
+                Default: 5.
+            filters: list
+                The filter pipeline.  Default: [BLOSC_SHUFFLE]
+            filters_meta: list
+                The meta info for each filter in pipeline.  An uint8 per slot. Default: [0]
+            cnthreads: int
+                The number of threads for compression.  Default: 1.
+            dnthreads: int
+                The number of threads for decompression.  Default: 1.
+            blocksize: int
+                The blocksize for every chunk in container.  The default is 0 (automatic).
+            use_dict: bool
+                If a dictionary should be used during compression.  Default: False.
+
         """
         super(Container, self).__init__(**kwargs)
 

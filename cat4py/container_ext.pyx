@@ -179,14 +179,14 @@ cdef extern from "caterva.h":
 
 cparams_dflts = {
     'itemsize': 4,
-    'compcode': 0,
+    'compcode': BLOSC_LZ4,
     'clevel': 5,
-    'use_dict': 0,
+    'use_dict': False,
     'cnthreads': 1,
     'dnthreads': 1,
     'blocksize': 0,
-    'filters': [BLOSC_SHUFFLE, BLOSC_LZ4],
-    'filters_meta': [0, 0],
+    'filters': [BLOSC_SHUFFLE],
+    'filters_meta': [0],  # no actual meta info for SHUFFLE, but anyway...
     }
 
 
@@ -244,12 +244,12 @@ cdef class Context:
     def __init__(self, CParams cparams=None, DParams dparams=None):
         cdef blosc2_cparams _cparams
         if cparams is None:
-            cparams=CParams()
+            cparams = CParams()
         self.cparams = cparams
         _cparams.typesize = cparams.itemsize  # TODO: typesize -> itemsize in c-blosc2
         _cparams.compcode = cparams.compcode
         _cparams.clevel = cparams.clevel
-        _cparams.use_dict = cparams.use_dict
+        _cparams.use_dict = int(cparams.use_dict)
         _cparams.nthreads = cparams.nthreads
         _cparams.blocksize = cparams.blocksize
         _cparams.prefilter = cparams.prefilter
