@@ -144,7 +144,7 @@ cdef extern from "caterva.h":
         int64_t nparts
         part_cache_s part_cache
 
-    caterva_ctx_t *caterva_new_ctx(void *(*all)(size_t), void (*free)(void *),
+    caterva_ctx_t *caterva_new_ctx(void *(*)(size_t), void (*free)(void *),
                                    blosc2_cparams cparams, blosc2_dparams dparams)
     int caterva_free_ctx(caterva_ctx_t *ctx)
     caterva_dims_t caterva_new_dims(int64_t *dims, int8_t ndim)
@@ -281,28 +281,28 @@ cdef class WriteIter:
     def __next__(self):
         if self.buffer is not None:
             item = np.frombuffer(self.buffer, self.dtype).reshape(self.buffer_shape)
-            item = np.pad(item, [(0, self.arr._array.pshape[i] - item.shape[i]) for i in range(self.arr.ndim)], mode='constant', constant_values=0)
+            item = np.pad(item, [(0, self.arr.array.pshape[i] - item.shape[i]) for i in range(self.arr.ndim)], mode='constant', constant_values=0)
             item = bytes(item)
-            caterva_append(self.arr._array, <char *> item, self.arr._array.psize * np.dtype(self.dtype).itemsize)
+            caterva_append(self.arr.array, <char *> item, self.arr.array.psize * np.dtype(self.dtype).itemsize)
 
-        if self.arr._array.filled:
+        if self.arr.array.filled:
             raise StopIteration
 
-        aux = [self.arr._array.eshape[i] // self.arr._array.pshape[i] for i in range(self.arr._array.ndim)]
-        start_ = [0 for _ in range(self.arr._array.ndim)]
+        aux = [self.arr.array.eshape[i] // self.arr.array.pshape[i] for i in range(self.arr.array.ndim)]
+        start_ = [0 for _ in range(self.arr.array.ndim)]
         inc = 1
-        for i in range(self.arr._array.ndim - 1, -1, -1):
-            start_[i] = self.arr._array.nparts % (aux[i] * inc) // inc
-            start_[i] *= self.arr._array.pshape[i]
+        for i in range(self.arr.array.ndim - 1, -1, -1):
+            start_[i] = self.arr.array.nparts % (aux[i] * inc) // inc
+            start_[i] *= self.arr.array.pshape[i]
             inc *= aux[i]
 
-        stop_ = [start_[i] + self.arr._array.pshape[i] for i in range(self.arr._array.ndim)]
+        stop_ = [start_[i] + self.arr.array.pshape[i] for i in range(self.arr.array.ndim)]
 
-        for i in range(self.arr._array.ndim):
-            if stop_[i] > self.arr._array.shape[i]:
-                stop_[i] = self.arr._array.shape[i]
+        for i in range(self.arr.array.ndim):
+            if stop_[i] > self.arr.array.shape[i]:
+                stop_[i] = self.arr.array.shape[i]
 
-        sl = tuple([slice(start_[i], stop_[i]) for i in range(self.arr._array.ndim)])
+        sl = tuple([slice(start_[i], stop_[i]) for i in range(self.arr.array.ndim)])
         shape = [s.stop - s.start for s in sl]
         self.buffer_shape = shape
         IterInfo = namedtuple("IterInfo", "slice, shape, size")
@@ -339,9 +339,7 @@ cdef class ReadIter:
                 eshape[i] = self.blockshape[i] * (shape[i] // self.blockshape[i])
             else:
                 eshape[i] = self.blockshape[i] * (shape[i] // self.blockshape[i] + 1)
-
         aux = [eshape[i] // self.blockshape[i] for i in range(ndim)]
-
         if self.nparts >= np.prod(aux):
             raise StopIteration
 
@@ -353,7 +351,6 @@ cdef class ReadIter:
             inc *= aux[i]
 
         stop_ = [start_[i] + self.blockshape[i] for i in range(ndim)]
-
         for i in range(ndim):
             if stop_[i] > shape[i]:
                 stop_[i] = shape[i]
@@ -365,69 +362,101 @@ cdef class ReadIter:
         self.nparts += 1
 
         buf = self.arr.slicebuffer(info.slice)
-
         return buf, info
+
+
+cdef get_caterva_shape(shape):
+    ndim = len(shape)
+    cdef int64_t *shape_ = <int64_t*>malloc(ndim * sizeof(int64_t))
+    for i in range(ndim):
+        shape_[i] = shape[i]
+    cdef caterva_dims_t _shape = caterva_new_dims(shape_, ndim)
+    free(shape_)
+    return _shape
+
+
+cdef get_caterva_start_stop(ndim, key, shape):
+    start = [s.start if s.start is not None else 0 for s in key]
+    stop = [s.stop if s.stop is not None else sh for s, sh in zip(key, shape)]
+    start_ = <int64_t*> malloc(ndim * sizeof(int64_t))
+    for i in range(ndim):
+        start_[i] = start[i]
+    cdef caterva_dims_t _start = caterva_new_dims(start_, ndim)
+    free(start_)
+    stop_ = <int64_t*> malloc(ndim * sizeof(int64_t))
+    for i in range(ndim):
+        stop_[i] = stop[i]
+    cdef caterva_dims_t _stop = caterva_new_dims(stop_, ndim)
+    free(stop_)
+    pshape_ = <int64_t*> malloc(ndim * sizeof(int64_t))
+    for i in range(ndim):
+        pshape_[i] = stop[i] - start[i]
+    cdef caterva_dims_t _pshape = caterva_new_dims(pshape_, ndim)
+    free(pshape_)
+    size = np.prod([stop[i] - start[i] for i in range(ndim)])
+
+    return _start, _stop, _pshape, size
 
 
 cdef class Container:
     cdef Context ctx
-    cdef caterva_array_t *_array
+    cdef caterva_array_t *array
     cdef kargs
     cdef usermeta_len
 
     @property
     def shape(self):
-        cdef caterva_dims_t shape = caterva_get_shape(self._array)
+        cdef caterva_dims_t shape = caterva_get_shape(self.array)
         return tuple([shape.dims[i] for i in range(shape.ndim)])
 
     @property
     def pshape(self):
-        if self._array.storage == CATERVA_STORAGE_PLAINBUFFER:
+        if self.array.storage == CATERVA_STORAGE_PLAINBUFFER:
             return None
-        cdef caterva_dims_t pshape = caterva_get_pshape(self._array)
+        cdef caterva_dims_t pshape = caterva_get_pshape(self.array)
         return tuple([pshape.dims[i] for i in range(pshape.ndim)])
 
     @property
     def cratio(self):
-        if self._array.storage is not CATERVA_STORAGE_BLOSC:
+        if self.array.storage is not CATERVA_STORAGE_BLOSC:
             return 1
-        return self._array.sc.nbytes / self._array.sc.cbytes
+        return self.array.sc.nbytes / self.array.sc.cbytes
 
     @property
     def itemsize(self):
-        return self._array.ctx.cparams.typesize
+        return self.array.ctx.cparams.typesize
 
     @property
     def clevel(self):
-        return self._array.ctx.cparams.clevel
+        return self.array.ctx.cparams.clevel
 
     @property
     def compcode(self):
-        return self._array.ctx.cparams.compcode
+        return self.array.ctx.cparams.compcode
 
     @property
     def filters(self):
-        return [self._array.ctx.cparams.filters[i] for i in range(BLOSC2_MAX_FILTERS)]
+        return [self.array.ctx.cparams.filters[i] for i in range(BLOSC2_MAX_FILTERS)]
 
     @property
     def size(self):
-        return self._array.size
+        return self.array.size
 
     @property
     def psize(self):
-        return self._array.psize
+        return self.array.psize
 
     @property
     def npart(self):
-        return int(self._array.esize / self._array.psize)
+        return int(self.array.esize / self.array.psize)
 
     @property
     def ndim(self):
-        return self._array.ndim
+        return self.array.ndim
 
     @property
     def filled(self):
-        return self._array.filled
+        return self.array.filled
 
     def __init__(self, **kwargs):
         cparams = CParams(**kwargs)
@@ -446,7 +475,7 @@ cdef class Container:
             if filename is not None:
                 raise NotImplementedError
             else:
-                self._array = caterva_empty_array(ctx_, NULL, NULL)
+                self.array = caterva_empty_array(ctx_, NULL, NULL)
         else:
             ndim = len(pshape)
 
@@ -465,68 +494,44 @@ cdef class Container:
                     filename = filename.encode("utf-8") if isinstance(filename, str) else filename
                     _frame = blosc2_new_frame(filename)
 
-            self._array = caterva_empty_array(ctx_, _frame, &_pshape)
+            self.array = caterva_empty_array(ctx_, _frame, &_pshape)
 
         if 'metalayers' in kwargs:
             metalayers = kwargs['metalayers']
             for name, content in metalayers.items():
                 name = name.encode("utf-8") if isinstance(name, str) else name
                 content = msgpack.packb(content)
-                blosc2_add_metalayer(self._array.sc, name, content, len(content))
+                blosc2_add_metalayer(self.array.sc, name, content, len(content))
 
     def tocapsule(self):
-        return PyCapsule_New(self._array, "caterva_array_t*", NULL)
+        return PyCapsule_New(self.array, "caterva_array_t*", NULL)
 
     def slicebuffer(self, key):
-        ndim = self._array.ndim
-
         key = list(key)
-
         for i, sl in enumerate(key):
             if type(sl) is not slice:
                 key[i] = slice(sl, sl+1, None)
 
-        start = [s.start if s.start is not None else 0 for s in key]
-        stop = [s.stop if s.stop is not None else sh for s, sh in zip(key, self.shape)]
+        cdef caterva_dims_t _start, _stop, _pshape
+        ndim = self.array.ndim
+        _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, self.shape)
 
-        start_ = <int64_t*> malloc(ndim * sizeof(int64_t))
-        for i in range(ndim):
-            start_[i] = start[i]
-        cdef caterva_dims_t _start = caterva_new_dims(start_, ndim)
-
-        stop_ = <int64_t*> malloc(ndim * sizeof(int64_t))
-        for i in range(ndim):
-            stop_[i] = stop[i]
-        cdef caterva_dims_t _stop = caterva_new_dims(stop_, ndim)
-
-        pshape_ = <int64_t*> malloc(ndim * sizeof(int64_t))
-        for i in range(ndim):
-            pshape_[i] = stop[i] - start[i]
-        cdef caterva_dims_t _pshape = caterva_new_dims(pshape_, ndim)
-
-        size = np.prod([stop[i] - start[i] for i in range(self.ndim)])
         bsize = size * self.itemsize
         buffer = bytes(bsize)
-
-        caterva_get_slice_buffer(<char *> buffer, self._array, &_start, &_stop, &_pshape)
+        caterva_get_slice_buffer(<char *> buffer, self.array, &_start, &_stop, &_pshape)
 
         return buffer
 
     def updateshape(self, shape):
-        ndim = len(shape)
-        cdef int64_t *shape_ = <int64_t*>malloc(ndim * sizeof(int64_t))
-        for i in range(ndim):
-            shape_[i] = shape[i]
-        cdef caterva_dims_t _shape = caterva_new_dims(shape_, ndim)
-        free(shape_)
-        caterva_update_shape(self._array, &_shape)
+        cdef caterva_dims_t _shape = get_caterva_shape(shape)
+        caterva_update_shape(self.array, &_shape)
 
     def squeeze(self):
-        caterva_squeeze(self._array)
+        caterva_squeeze(self.array)
 
     def __dealloc__(self):
-        if self._array != NULL:
-            caterva_free_array(self._array)
+        if self.array != NULL:
+            caterva_free_array(self.array)
 
 
 def from_file(Container arr, filename):
@@ -537,113 +542,71 @@ def from_file(Container arr, filename):
         raise FileNotFoundError
     cdef caterva_array_t *a_ = caterva_from_file(ctx_, filename)
     arr.ctx = ctx
-    arr._array = a_
+    arr.array = a_
 
 
-def getitem(Container src, key):
-
-    ndim = src._array.ndim
-    start = [s.start if s.start is not None else 0 for s in key]
-    stop = [s.stop if s.stop is not None else sh for s, sh in zip(key, src.shape)]
-
-    start_ = <int64_t*> malloc(ndim * sizeof(int64_t))
-    for i in range(ndim):
-        start_[i] = start[i]
-    cdef caterva_dims_t _start = caterva_new_dims(start_, ndim)
-    free(start_)
-
-    stop_ = <int64_t*> malloc(ndim * sizeof(int64_t))
-    for i in range(ndim):
-        stop_[i] = stop[i]
-    cdef caterva_dims_t _stop = caterva_new_dims(stop_, ndim)
-    free(stop_)
-
-    pshape_ = <int64_t*> malloc(ndim * sizeof(int64_t))
-    for i in range(ndim):
-        pshape_[i] = stop[i] - start[i]
-    cdef caterva_dims_t _pshape = caterva_new_dims(pshape_, ndim)
-    free(pshape_)
-
-    size = np.prod([stop[i] - start[i] for i in range(ndim)])
-    bsize = size * src.itemsize
+def getitem(Container cont, key):
+    cdef caterva_dims_t _start, _stop, _pshape
+    ndim = cont.array.ndim
+    _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, cont.shape)
+    bsize = size * cont.itemsize
     buffer = bytes(bsize)
-    err = caterva_get_slice_buffer(<char *> buffer, src._array, &_start, &_stop, &_pshape)
+    err = caterva_get_slice_buffer(<char *> buffer, cont.array, &_start, &_stop, &_pshape)
     return buffer
 
 
-def setitem(Container arr, key, item):
-    if not arr._array.filled or arr._array.storage == CATERVA_STORAGE_BLOSC:
+def setitem(Container cont, key, item):
+    if not cont.array.filled or cont.array.storage == CATERVA_STORAGE_BLOSC:
         raise NotImplementedError
-
-    cdef caterva_dims_t _start
-    cdef caterva_dims_t _stop
-    ndim = arr._array.ndim
-    start = [s.start if s.start is not None else 0 for s in key]
-    stop = [s.stop if s.stop is not None else sh for s, sh in zip(key, arr.shape)]
-
-    start_ = <int64_t*> malloc(ndim * sizeof(int64_t))
-    for i in range(ndim):
-        start_[i] = start[i]
-    _start = caterva_new_dims(start_, ndim)
-
-    stop_ = <int64_t*> malloc(ndim * sizeof(int64_t))
-    for i in range(ndim):
-        stop_[i] = stop[i]
-    _stop = caterva_new_dims(stop_, ndim)
-
-    caterva_set_slice_buffer(arr._array, <void *> <char *> item, &_start, &_stop)
+    cdef caterva_dims_t _start, _stop, _pshape
+    ndim = cont.array.ndim
+    _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, cont.shape)
+    caterva_set_slice_buffer(cont.array, <void *> <char *> item, &_start, &_stop)
 
 
 def copy(Container src, Container dest):
-    caterva_copy(dest._array, src._array)
+    caterva_copy(dest.array, src.array)
 
 
 def to_buffer(Container arr):
-    cdef caterva_dims_t shape_ = caterva_get_shape(arr._array)
+    cdef caterva_dims_t shape_ = caterva_get_shape(arr.array)
     shape = []
     for i in range(shape_.ndim):
         shape.append(shape_.dims[i])
-    size = np.prod(shape) * arr._array.ctx.cparams.typesize
+    size = np.prod(shape) * arr.array.ctx.cparams.typesize
 
     buffer = bytes(size)
-    caterva_to_buffer(arr._array, <void *> <char *> buffer)
+    caterva_to_buffer(arr.array, <void *> <char *> buffer)
     return buffer
 
 
 def from_buffer(Container arr, shape, buf):
-    ndim = len(shape)
-
     if arr.pshape is not None:
-        assert(ndim == len(arr.pshape))
+        assert(len(shape) == len(arr.pshape))
 
-    cdef int64_t *shape_ = <int64_t*>malloc(ndim * sizeof(int64_t))
-    for i in range(ndim):
-        shape_[i] = shape[i]
-    cdef caterva_dims_t _shape = caterva_new_dims(shape_, ndim)
-    free(shape_)
-
-    cdef int retcode = caterva_from_buffer(arr._array, &_shape, <void*> <char *> buf)
+    cdef caterva_dims_t _shape = get_caterva_shape(shape)
+    cdef int retcode = caterva_from_buffer(arr.array, &_shape, <void*> <char *> buf)
     if retcode < 0:
         raise ValueError("Error filling the caterva object with buffer")
 
 
 def has_metalayer(Container arr, name):
-    if  arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
+    if  arr.array.storage != CATERVA_STORAGE_BLOSC and arr.array.sc.frame == NULL:
         return NotImplementedError
 
     name = name.encode("utf-8") if isinstance(name, str) else name
-    n = blosc2_has_metalayer(arr._array.sc, name)
+    n = blosc2_has_metalayer(arr.array.sc, name)
     return False if n < 0 else True
 
 
 def get_metalayer(Container arr, name):
-    if  arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
+    if  arr.array.storage != CATERVA_STORAGE_BLOSC and arr.array.sc.frame == NULL:
         return NotImplementedError
 
     name = name.encode("utf-8") if isinstance(name, str) else name
     cdef uint8_t *_content
     cdef uint32_t content_len
-    n = blosc2_get_metalayer(arr._array.sc, name, &_content, &content_len)
+    n = blosc2_get_metalayer(arr.array.sc, name, &_content, &content_len)
     content = <char *>_content
     content = content[:content_len]  # does a copy
     free(_content)
@@ -651,30 +614,23 @@ def get_metalayer(Container arr, name):
 
 
 def update_metalayer(Container arr, name, content):
-     if arr._array.storage != CATERVA_STORAGE_BLOSC and arr._array.sc.frame == NULL:
-         return NotImplementedError
-
      name = name.encode("utf-8") if isinstance(name, str) else name
-     cdef uint8_t *_content
-     cdef uint32_t _content_len
-     n = blosc2_get_metalayer(arr._array.sc, name, &_content, &_content_len)
-     if _content_len != len(content):
+     content_ = get_metalayer(arr, name)
+     if len(content_) != len(content):
          return ValueError("The length of the content in a metalayer cannot change.")
-
-     n = blosc2_update_metalayer(arr._array.sc, name, content, len(content))
-     free(_content)
+     n = blosc2_update_metalayer(arr.array.sc, name, content, len(content))
      return n
 
 
 def update_usermeta(Container arr, content):
-    n = blosc2_update_usermeta(arr._array.sc, content, len(content), BLOSC2_CPARAMS_DEFAULTS)
+    n = blosc2_update_usermeta(arr.array.sc, content, len(content), BLOSC2_CPARAMS_DEFAULTS)
     arr.usermeta_len = len(content)
     return n
 
 
 def get_usermeta(Container arr):
     cdef uint8_t *_content
-    n = blosc2_get_usermeta(arr._array.sc, &_content)
+    n = blosc2_get_usermeta(arr.array.sc, &_content)
     if n < 0:
         raise ValueError("Cannot get the usermeta section")
     content = <char *>_content

@@ -11,6 +11,9 @@ import os
                              ([12, 13, 14, 15, 16], [2, 6, 4, 5, 4], "testmeta02.cat", np.float32)
                          ])
 def test_persistency(shape, pshape, filename, dtype):
+    if os.path.exists(filename):
+        os.remove(filename)
+
     # Create an empty caterva array (on disk)
     itemsize = np.dtype(dtype).itemsize
     a = cat.empty(shape, pshape=pshape, filename=filename, itemsize=itemsize,
