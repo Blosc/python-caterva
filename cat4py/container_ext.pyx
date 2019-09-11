@@ -33,6 +33,15 @@ cdef extern from "<stdint.h>":
 
 cdef extern from "blosc2.h":
     ctypedef enum:
+        BLOSC_NOFILTER
+        BLOSC_SHUFFLE
+        BLOSC_BITSHUFFLE
+        BLOSC_BLOSCLZ
+        BLOSC_LZ4
+        BLOSC_LZ4HC
+        BLOSC_ZLIB
+        BLOSC_ZSTD
+        BLOSC_LIZARD
         BLOSC2_MAX_FILTERS
         BLOSC2_MAX_METALAYERS
         BLOSC2_PREFILTER_INPUTS_MAX
@@ -168,16 +177,17 @@ cdef extern from "caterva.h":
     int caterva_copy(caterva_array_t *dest, caterva_array_t *src)
 
 
-defaults = {'itemsize': 4,
-            'compcode': 0,
-            'clevel': 5,
-            'use_dict': 0,
-            'cnthreads': 1,
-            'dnthreads': 1,
-            'blocksize': 0,
-            'filters': [1],
-            'filters_meta': [0],
-            }
+cparams_dflts = {
+    'itemsize': 4,
+    'compcode': 0,
+    'clevel': 5,
+    'use_dict': 0,
+    'cnthreads': 1,
+    'dnthreads': 1,
+    'blocksize': 0,
+    'filters': [BLOSC_SHUFFLE, BLOSC_LZ4],
+    'filters_meta': [0, 0],
+    }
 
 
 cdef class CParams:
@@ -194,12 +204,12 @@ cdef class CParams:
     cdef blosc2_prefilter_params* pparams
 
     def __init__(self, **kargs):
-        self.itemsize = kargs.get('itemsize', defaults['itemsize'])
-        self.compcode = kargs.get('compcode', defaults['compcode'])
-        self.clevel = kargs.get('clevel', defaults['clevel'])
-        self.use_dict = kargs.get('use_dict', defaults['use_dict'])
-        self.nthreads = kargs.get('cnthreads', defaults['cnthreads'])
-        self.blocksize = kargs.get('blocksize', defaults['blocksize'])
+        self.itemsize = kargs.get('itemsize', cparams_dflts['itemsize'])
+        self.compcode = kargs.get('compcode', cparams_dflts['compcode'])
+        self.clevel = kargs.get('clevel', cparams_dflts['clevel'])
+        self.use_dict = kargs.get('use_dict', cparams_dflts['use_dict'])
+        self.nthreads = kargs.get('cnthreads', cparams_dflts['cnthreads'])
+        self.blocksize = kargs.get('blocksize', cparams_dflts['blocksize'])
         self.prefilter = NULL  # TODO: implement support for prefilters
         self.pparams = NULL    # TODO: implement support for prefilters
 
@@ -209,11 +219,11 @@ cdef class CParams:
         for i in range(BLOSC2_MAX_FILTERS):
             self.filters_meta[i] = 0
 
-        filters = kargs.get('filters', defaults['filters'])
+        filters = kargs.get('filters', cparams_dflts['filters'])
         for i in range(BLOSC2_MAX_FILTERS - len(filters), BLOSC2_MAX_FILTERS):
             self.filters[i] = filters[i - BLOSC2_MAX_FILTERS + len(filters)]
 
-        filters_meta = kargs.get('filters_meta', defaults['filters_meta'])
+        filters_meta = kargs.get('filters_meta', cparams_dflts['filters_meta'])
         for i in range(BLOSC2_MAX_FILTERS - len(filters_meta), BLOSC2_MAX_FILTERS):
             self.filters_meta[i] = filters_meta[i - BLOSC2_MAX_FILTERS + len(filters_meta)]
 
@@ -223,7 +233,7 @@ cdef class DParams:
     cdef void* schunk
 
     def __init__(self, **kargs):
-        self.nthreads = kargs.get('dnthreads', defaults['dnthreads'])
+        self.nthreads = kargs.get('dnthreads', cparams_dflts['dnthreads'])
 
 
 cdef class Context:
