@@ -29,38 +29,35 @@ class Container(ext.Container):
 
         Parameters
         ----------
-        kwargs: dict
-            Parameters related with the container:
-            pshape: iterable object or None
-                The partition shape.  If None, the store is a plain buffer (non-compressed).
-            filename: str or None
-                The name of the file to store data.  If `None`, data is stores in-memory.
-            metalayers: dict or None
-                A dictionary with different metalayers.  One entry per metalayer:
-                    key: bytes or str
-                        The name of the metalayer.
-                    value: object
-                        The metalayer object that will be (de-)serialized using msgpack.
-            Parameters useful for compression and decompression:
-            itemsize: int
-                The number of bytes for the itemsize in container.  Default: 4.
-            compcode: int (categorical)
-                The code for the compressor codec.  Default: cat4py.LZ4.
-            clevel: int (0 to 9)
-                The compression level.  0 means no compression, and 9 maximum compression.
-                Default: 5.
-            filters: list
-                The filter pipeline.  Default: [BLOSC_SHUFFLE]
-            filters_meta: list
-                The meta info for each filter in pipeline.  An uint8 per slot. Default: [0]
-            cnthreads: int
-                The number of threads for compression.  Default: 1.
-            dnthreads: int
-                The number of threads for decompression.  Default: 1.
-            blocksize: int
-                The blocksize for every chunk in container.  The default is 0 (automatic).
-            use_dict: bool
-                If a dictionary should be used during compression.  Default: False.
+        pshape: iterable object or None
+            The partition shape.  If None, the store is a plain buffer (non-compressed).
+        filename: str or None
+            The name of the file to store data.  If `None`, data is stores in-memory.
+        metalayers: dict or None
+            A dictionary with different metalayers.  One entry per metalayer:
+                key: bytes or str
+                    The name of the metalayer.
+                value: object
+                    The metalayer object that will be (de-)serialized using msgpack.
+        itemsize: int
+            The number of bytes for the itemsize in container.  Default: 4.
+        compcode: int (enumerated)
+            The code for the compressor codec.  Default: cat4py.LZ4.
+        clevel: int (0 to 9)
+            The compression level.  0 means no compression, and 9 maximum compression.
+            Default: 5.
+        filters: list
+            The filter pipeline.  Default: [cat4py.SHUFFLE]
+        filters_meta: list
+            The meta info for each filter in pipeline.  An uint8 per slot. Default: [0]
+        cnthreads: int
+            The number of threads for compression.  Default: 1.
+        dnthreads: int
+            The number of threads for decompression.  Default: 1.
+        blocksize: int
+            The blocksize for every chunk in container.  The default is 0 (automatic).
+        use_dict: bool
+            If a dictionary should be used during compression.  Default: False.
 
         """
         super(Container, self).__init__(**kwargs)
@@ -266,18 +263,18 @@ class Container(ext.Container):
 def empty(shape, **kwargs):
     """Create an empty container.
 
+    In addition to regular arguments, you can pass any keyword argument that
+    is supported by the :py:meth:`Container.__init__` constructor.
+
     Parameters
     ----------
     shape: tuple or list
         The shape for the final container.
 
-    In addition, you can pass any keyword argument that is supported by the
-    `Container` class.
-
     Returns
     -------
     Container
-        The new Container object.
+        The new :py:class:`Container` object.
     """
     arr = Container(**kwargs)
     arr.updateshape(shape)
@@ -287,6 +284,9 @@ def empty(shape, **kwargs):
 def from_buffer(buffer, shape, **kwargs):
     """Create a container out of a buffer.
 
+    In addition to regular arguments, you can pass any keyword argument that
+    is supported by the :py:meth:`Container.__init__` constructor.
+
     Parameters
     ----------
     buffer: bytes
@@ -294,13 +294,10 @@ def from_buffer(buffer, shape, **kwargs):
     shape: tuple or list
         The shape for the final container.
 
-    In addition, you can pass any keyword argument that is supported by the
-    `Container` class.
-
     Returns
     -------
     Container
-        The new Container object.
+        The new :py:class:`Container` object.
     """
     arr = Container(**kwargs)
     ext.from_buffer(arr, shape, buffer)
@@ -310,18 +307,18 @@ def from_buffer(buffer, shape, **kwargs):
 def from_numpy(nparray, **kwargs):
     """Create a container out of a NumPy array.
 
+    In addition to regular arguments, you can pass any keyword argument that
+    is supported by the :py:meth:`Container.__init__` constructor.
+
     Parameters
     ----------
     nparray: NumPy array
         The NumPy array to populate the container with.
 
-    In addition, you can pass any keyword argument that is supported by the
-    `Container` class.
-
     Returns
     -------
     Container
-        The new Container object.
+        The new :py:class:`Container` object.
     """
     arr = from_buffer(bytes(nparray), nparray.shape,
                       itemsize=nparray.itemsize, **kwargs)
@@ -331,6 +328,9 @@ def from_numpy(nparray, **kwargs):
 def from_file(filename, copy=False):
     """Open a new container from `filename`.
 
+    In addition to regular arguments, you can pass any keyword argument that
+    is supported by the :py:meth:`Container.__init__` constructor.
+
     Parameters
     ----------
     filename: str
@@ -339,13 +339,10 @@ def from_file(filename, copy=False):
         If true, the container is backed by a new, sparse in-memory super-chunk.
         Else, an on-disk, frame-backed one is created (i.e. no copies are made).
 
-    In addition, you can pass any keyword argument that is supported by the
-    `Container` class.
-
     Returns
     -------
     Container
-        The new Container object.
+        The new :py:class:`Container` object.
     """
     arr = Container()
     ext.from_file(arr, filename, copy)
