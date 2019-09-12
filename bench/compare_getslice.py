@@ -15,8 +15,8 @@ from time import time
 persistent = False   # set this to True to benchmark the persistent storage for the backends
 
 # Dimensions, type and persistency properties for the arrays
-shape = (50, 5000, 100)
-pshape = (10, 50, 20)
+shape = (50, 5000, 250)
+pshape = (10, 500, 100)
 dtype = np.float64
 
 # Compression properties
@@ -24,6 +24,7 @@ cname = "lz4"
 compcode = cat.LZ4  # keep in sync with above
 clevel = 5
 filter = cat.SHUFFLE
+nthreads = 4
 
 fname_cat = None
 fname_zarr = None
@@ -45,28 +46,32 @@ content = np.linspace(0, 10, int(np.prod(shape)), dtype=dtype).reshape(shape)
 itemsize = np.dtype(dtype).itemsize
 
 # Create and fill a caterva array using a buffer
-t0 = time()
-a = cat.from_buffer(bytes(content), shape, pshape=pshape, itemsize=itemsize, filename=fname_cat,
-                    compcode=compcode, clevel=clevel, filters=[filter])
-t1 = time()
-print("Time for filling array (caterva, from_buffer): %.3fs" % (t1 - t0))
-
-# # Create and fill a caterva array using a block iterator
+# t0 = time()
+# a = cat.from_buffer(bytes(content), shape, pshape=pshape, itemsize=itemsize, filename=fname_cat,
+#                     compcode=compcode, clevel=clevel, filters=[filter],
+#                     cnthreads=nthreads, dnthreads=nthreads)
+# t1 = time()
+# print("Time for filling array (caterva, from_buffer): %.3fs" % (t1 - t0))
+#
 # if fname_cat is not None and os.path.exists(fname_cat):
 #     os.remove(fname_cat)
-# t0 = time()
-# itemsize = np.dtype(dtype).itemsize
-# a = cat.empty(shape, pshape=pshape, itemsize=itemsize, filename=fname_cat,
-#               compcode=compcode, clevel=clevel, filters=[filter])
-# for block, info in a.iter_write():
-#     nparray = content[info.slice]
-#     block[:] = bytes(nparray)
-# t1 = time()
-# print("Time for filling array (caterva, iter): %.3fs" % (t1 - t0))
+
+# Create and fill a caterva array using a block iterator
+t0 = time()
+itemsize = np.dtype(dtype).itemsize
+a = cat.empty(shape, pshape=pshape, itemsize=itemsize, filename=fname_cat,
+              compcode=compcode, clevel=clevel, filters=[filter],
+              cnthreads=nthreads, dnthreads=nthreads)
+for block, info in a.iter_write():
+    nparray = content[info.slice]
+    block[:] = bytes(nparray)
+t1 = time()
+print("Time for filling array (caterva, iter): %.3fs" % (t1 - t0))
 
 # Create and fill a zarr array
 t0 = time()
 compressor = numcodecs.Blosc(cname=cname, clevel=clevel, shuffle=filter)
+numcodecs.blosc.set_nthreads(nthreads)
 if persistent:
     z = zarr.open(fname_zarr, mode='w', shape=shape, chunks=pshape, dtype=dtype, compressor=compressor)
 else:
@@ -78,6 +83,7 @@ print("Time for filling array (zarr): %.3fs" % (t1 - t0))
 # Create and fill a hdf5 array
 t0 = time()
 filters = tables.Filters(complevel=clevel, complib="blosc:%s" % cname, shuffle=True)
+tables.set_blosc_max_threads(nthreads)
 if persistent:
     h5f = tables.open_file(fname_h5, 'w')
 else:
@@ -90,7 +96,7 @@ print("Time for filling array (hdf5): %.3fs" % (t1 - t0))
 # Check that the contents are the same
 t0 = time()
 for block, info in a.iter_read(pshape):
-    block_cat = np.frombuffer(block, dtype=dtype).reshape(pshape)
+    block_cat = np.frombuffer(block, dtype=dtype).reshape(info.shape)
     block_zarr = z[info.slice]
     np.testing.assert_array_almost_equal(block_cat, block_zarr)
     block_h5 = h5ca[info.slice]
