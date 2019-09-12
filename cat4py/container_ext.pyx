@@ -12,7 +12,6 @@
 import numpy as np
 cimport numpy as np
 import msgpack
-import ctypes
 
 from libc.stdlib cimport malloc, free
 from libcpp cimport bool

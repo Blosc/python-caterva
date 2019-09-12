@@ -61,9 +61,11 @@ content = np.linspace(0, 10, int(np.prod(shape)), dtype=dtype).reshape(shape)
 # a = cat.from_buffer(bytes(content), shape, pshape=pshape, itemsize=content.itemsize, filename=fname_cat,
 #                     compcode=compcode, clevel=clevel, filters=[filter],
 #                     cnthreads=nthreads, dnthreads=nthreads)
+# if persistent:
+#     del a
 # t1 = time()
 # print("Time for filling array (caterva, from_buffer): %.3fs" % (t1 - t0))
-#
+
 # if fname_cat is not None and os.path.exists(fname_cat):
 #     os.remove(fname_cat)
 
