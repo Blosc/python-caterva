@@ -29,13 +29,13 @@ fname_cat = None
 fname_zarr = None
 fname_h5 = "whatever.h5"
 if persistent:
-    fname_cat = "compare_getitem.cat"
+    fname_cat = "compare_getslice.cat"
     if os.path.exists(fname_cat):
         os.remove(fname_cat)
-    fname_zarr = "compare_getitem.zarr"
+    fname_zarr = "compare_getslice.zarr"
     if os.path.exists(fname_zarr):
         shutil.rmtree(fname_zarr)
-    fname_h5 = "compare_getitem.h5"
+    fname_h5 = "compare_getslice.h5"
     if os.path.exists(fname_h5):
         os.remove(fname_h5)
 
@@ -56,7 +56,7 @@ print("Time for filling array (caterva, from_buffer): %.3fs" % (t1 - t0))
 #     os.remove(fname_cat)
 # t0 = time()
 # itemsize = np.dtype(dtype).itemsize
-# a = cat.empty(shape, pshape, itemsize=itemsize, filename=fname_cat,
+# a = cat.empty(shape, pshape=pshape, itemsize=itemsize, filename=fname_cat,
 #               compcode=compcode, clevel=clevel, filters=[filter])
 # for block, info in a.iter_write():
 #     nparray = content[info.slice]
