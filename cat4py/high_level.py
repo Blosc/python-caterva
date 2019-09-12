@@ -328,14 +328,16 @@ def from_numpy(nparray, **kwargs):
     return arr
 
 
-def from_file(filename):
+def from_file(filename, copy=False):
     """Open a new container from `filename`.
 
     Parameters
     ----------
     filename: str
-        The filename where the data is.  The file should have a Blosc2 frame
-        with a Caterva metalayer on it.
+        The file having a Blosc2 frame format with a Caterva metalayer on it.
+    copy: bool
+        If true, the container is backed by a new, sparse in-memory super-chunk.
+        Else, an on-disk, frame-backed one is created (i.e. no copies are made).
 
     In addition, you can pass any keyword argument that is supported by the
     `Container` class.
@@ -346,7 +348,7 @@ def from_file(filename):
         The new Container object.
     """
     arr = Container()
-    ext.from_file(arr, filename)
+    ext.from_file(arr, filename, copy)
     # if arr.has_metalayer("numpy"):
     #     arr.__class__ = Array
     return arr

@@ -160,7 +160,7 @@ cdef extern from "caterva.h":
     caterva_dims_t caterva_new_dims(int64_t *dims, int8_t ndim)
     caterva_array_t *caterva_empty_array(caterva_ctx_t *ctx, blosc2_frame *fr, caterva_dims_t *pshape)
     int caterva_free_array(caterva_array_t *carr)
-    caterva_array_t *caterva_from_file(caterva_ctx_t *ctx, const char *filename)
+    caterva_array_t *caterva_from_file(caterva_ctx_t *ctx, const char *filename, bool copy)
     int caterva_from_buffer(caterva_array_t *dest, caterva_dims_t *shape, void *src)
     int caterva_to_buffer(caterva_array_t *src, void *dest)
     int caterva_get_slice(caterva_array_t *dest, caterva_array_t *src, caterva_dims_t *start, caterva_dims_t *stop)
@@ -560,13 +560,13 @@ cdef class Container:
             caterva_free_array(self.array)
 
 
-def from_file(Container arr, filename):
+def from_file(Container arr, filename, copy):
     ctx = Context()
     cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.tocapsule(), "caterva_ctx_t*")
     filename = filename.encode("utf-8") if isinstance(filename, str) else filename
     if not os.path.isfile(filename):
         raise FileNotFoundError
-    cdef caterva_array_t *a_ = caterva_from_file(ctx_, filename)
+    cdef caterva_array_t *a_ = caterva_from_file(ctx_, filename, copy)
     arr.ctx = ctx
     arr.array = a_
 
