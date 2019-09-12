@@ -12,6 +12,7 @@
 import numpy as np
 cimport numpy as np
 import msgpack
+import ctypes
 
 from libc.stdlib cimport malloc, free
 from libcpp cimport bool
@@ -277,25 +278,36 @@ cdef class WriteIter:
     cdef buffer
     cdef dtype
     cdef buffer_shape
+    cdef int32_t buffer_len
+    cdef int32_t part_len
 
     # TODO: is np.dtype really necessary here?  Container does not have this notion, so...
     def __init__(self, arr):
         self.arr = arr
         dtypes = {1: np.int8, 2: np.int16, 4: np.int32, 8: np.int64, 16: np.complex128}
         self.dtype = np.dtype(dtypes[arr.itemsize])
+        self.part_len = self.arr.array.psize * self.arr.itemsize
 
     def __iter__(self):
         self.buffer_shape = None
+        self.buffer_len = 0
         self.buffer = None
+        self.memview = None
         return self
 
     def __next__(self):
+        cdef char* data_pointer
         if self.buffer is not None:
-            item = np.frombuffer(self.buffer, self.dtype).reshape(self.buffer_shape)
-            item = np.pad(item, [(0, self.arr.array.pshape[i] - item.shape[i]) for i in range(self.arr.ndim)],
-                          mode='constant', constant_values=0)
-            item = bytes(item)
-            caterva_append(self.arr.array, <char *> item, self.arr.array.psize * self.arr.itemsize)
+            if self.part_len != self.buffer_len:
+                # Extended partition; pad with zeros
+                item = np.frombuffer(self.memview[:self.buffer_len], self.dtype).reshape(self.buffer_shape)
+                item = np.pad(item, [(0, self.arr.array.pshape[i] - item.shape[i]) for i in range(self.arr.ndim)],
+                              mode='constant', constant_values=0)
+                item = item.tobytes()
+                data_pointer = <char*> item
+            else:
+                data_pointer = <char*> self.buffer
+            caterva_append(self.arr.array, data_pointer, self.part_len)
 
         if self.arr.array.filled:
             raise StopIteration
@@ -315,13 +327,16 @@ cdef class WriteIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(self.arr.array.ndim)])
         shape = [s.stop - s.start for s in sl]
-        self.buffer_shape = shape
         IterInfo = namedtuple("IterInfo", "slice, shape, size")
         info = IterInfo(slice=sl, shape=shape, size=np.prod(shape))
 
-        a = bytearray(np.empty(info.shape, dtype=self.dtype))
-        self.buffer = a
-        return a, info
+        # Allocate a new buffer if needed
+        self.buffer_shape = shape
+        self.buffer_len = np.prod(shape) * self.arr.itemsize
+        if self.buffer is None:
+            self.buffer = bytearray(self.part_len)
+            self.memview = memoryview(self.buffer)
+        return self.memview[:self.buffer_len], info
 
 
 cdef class ReadIter:
