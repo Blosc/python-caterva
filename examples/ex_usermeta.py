@@ -16,7 +16,7 @@ itemsize = np.dtype(dtype).itemsize
 nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create a caterva array from a numpy array
-a = cat.from_numpy(nparray, pshape, itemsize=itemsize, filename=filename)
+a = cat.from_numpy(nparray, pshape=pshape, filename=filename)
 
 # Add some usermeta info
 usermeta = {b"author": b"cat4py example",

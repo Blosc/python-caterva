@@ -7,12 +7,12 @@ import numpy as np
                          [
                              ([2], [2], slice(0, 1), np.int32),
                              ([20, 134, 13], [3, 13, 5], (slice(3, 7), slice (50, 100), slice(2, 7)), np.float64),
-                             ([12, 13, 14, 15, 16], None, (slice(1, 3), slice(2, 5), slice(0, 12), slice(3, 6), slice(2, 7)), np.float32)
+                             ([12, 13, 14, 15, 16], None, (slice(1, 3), slice(2, 5), slice(0, 12), slice(3, 6)), np.float32)
                          ])
 def test_getitem(shape, pshape, slices, dtype):
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_numpy(nparray, pshape=pshape, itemsize=nparray.itemsize)
+    a = cat.from_numpy(nparray, pshape=pshape)
 
     nparray_slice = nparray[slices]
     buffer_slice = a[slices]

@@ -11,7 +11,8 @@ BLOSCLZ = 0
 LZ4 = 1
 LZ4HC = 2
 ZLIB = 4
-LIZARD = 5
+ZSTD = 5
+LIZARD = 6
 
 # Filters
 NOFILTER = 0
@@ -20,5 +21,5 @@ BITSHUFFLE = 2
 DELTA = 3
 TRUNC_PREC = 4
 
-from .high_level import Container, WriteIter, ReadIter, empty, from_buffer, from_numpy, from_file
+from .container import Container, empty, from_buffer, from_numpy, from_file
 from .version import version as __version__
