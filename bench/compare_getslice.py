@@ -23,13 +23,13 @@ else:
     print("Testing the in-memory backends...")
 
 # Dimensions, type and persistency properties for the arrays
+# 'Small' arrays config follow...
+# shape = (100, 5000, 250)
+# pshape = (20, 500, 50)
+# This config generates containers of more than 2 GB in size, which is great for testing
+shape = (250, 4000, 150)
+pshape = (200, 100, 100)
 
-# This config triggers an "Container is not filled" message
-# shape = (500, 5000, 250)
-# pshape = (50, 500, 50)
-
-shape = (100, 5000, 250)
-pshape = (20, 500, 50)
 dtype = np.float64
 
 # Compression properties

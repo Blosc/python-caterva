@@ -346,8 +346,7 @@ cdef class ReadIter:
 
     def __init__(self, arr, blockshape):
         if not arr.filled:
-            print("Container is not filled")
-            raise AttributeError
+            raise ValueError("Container is not filled")
         self.arr = arr
         self.blockshape = blockshape
         self.nparts = 0
