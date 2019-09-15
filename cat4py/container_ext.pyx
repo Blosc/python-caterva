@@ -430,11 +430,13 @@ cdef class Container:
 
     @property
     def shape(self):
+        """The shape of this container."""
         cdef caterva_dims_t shape = caterva_get_shape(self.array)
         return tuple([shape.dims[i] for i in range(shape.ndim)])
 
     @property
     def pshape(self):
+        """The partition shape of this container."""
         if self.array.storage == CATERVA_STORAGE_PLAINBUFFER:
             return None
         cdef caterva_dims_t pshape = caterva_get_pshape(self.array)
@@ -442,44 +444,54 @@ cdef class Container:
 
     @property
     def cratio(self):
+        """The compression ratio for this container."""
         if self.array.storage is not CATERVA_STORAGE_BLOSC:
             return 1
         return self.array.sc.nbytes / self.array.sc.cbytes
 
     @property
     def itemsize(self):
+        """The itemsize of this container."""
         return self.array.ctx.cparams.typesize
 
     @property
     def clevel(self):
+        """The compression level for this container."""
         return self.array.ctx.cparams.clevel
 
     @property
     def compcode(self):
+        """The compression codec for this container."""
         return self.array.ctx.cparams.compcode
 
     @property
     def filters(self):
+        """The filters list for this container."""
         return [self.array.ctx.cparams.filters[i] for i in range(BLOSC2_MAX_FILTERS)]
 
     @property
     def size(self):
+        """The size (in items) for this container."""
         return self.array.size
 
     @property
     def psize(self):
+        """The partition size (in items) for this container."""
         return self.array.psize
 
     @property
     def npart(self):
+        """The number of partitions in this container."""
         return int(self.array.esize / self.array.psize)
 
     @property
     def ndim(self):
+        """The number of dimensions of this container."""
         return self.array.ndim
 
     @property
     def filled(self):
+        """Whether the container is filled or not."""
         return self.array.filled
 
     def __init__(self, **kwargs):
