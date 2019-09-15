@@ -10,19 +10,17 @@ from __future__ import absolute_import
 from sys import version_info as v
 
 # Check this Python version is supported
-if any([(3,) < v < (3, 5)]):
+if any([(3,) < v < (3, 6)]):
     raise Exception(
-        "Unsupported Python version %d.%d. Requires Python >= 3.5 " % v[:2])
+        "Unsupported Python version %d.%d. Requires Python >= 3.6 " % v[:2])
 
 import os
 from glob import glob
 import sys
-
 import numpy
 
 from setuptools import setup, Extension, find_packages
 from Cython.Build import cythonize
-from pkg_resources import resource_filename
 
 # For guessing the capabilities of the CPU for C-Blosc2
 try:
@@ -33,55 +31,13 @@ except:
     cpu_info = {'flags': []}
 
 
-class LazyCommandClass(dict):
-    """
-    Lazy command class that defers operations requiring Cython and numpy until
-    they've actually been downloaded and installed by setup_requires.
-    """
-    def __contains__(self, key):
-        return (
-            key == 'build_ext'
-            or super(LazyCommandClass, self).__contains__(key)
-        )
-
-    def __setitem__(self, key, value):
-        if key == 'build_ext':
-            raise AssertionError("build_ext overridden!")
-        super(LazyCommandClass, self).__setitem__(key, value)
-
-    def __getitem__(self, key):
-        if key != 'build_ext':
-            return super(LazyCommandClass, self).__getitem__(key)
-
-        from Cython.Distutils import build_ext as cython_build_ext
-
-        class build_ext(cython_build_ext):
-            """
-            Custom build_ext command that lazily adds numpy's include_dir to
-            extensions.
-            """
-            def build_extensions(self):
-                """
-                Lazily append numpy's include directory to Extension includes.
-
-                This is done here rather than at module scope because setup.py
-                may be run before numpy has been installed, in which case
-                importing numpy and calling `numpy.get_include()` will fail.
-                """
-                numpy_incl = resource_filename('numpy', 'core/include')
-                for ext in self.extensions:
-                    ext.include_dirs.append(numpy_incl)
-
-                super(cython_build_ext, self).build_extensions()
-        return build_ext
-
-
 # Global variables
 CFLAGS = os.environ.get('CFLAGS', '').split()
-print("CFLAGS->", CFLAGS)
 LFLAGS = os.environ.get('LFLAGS', '').split()
-# Allow setting the Blosc2 dir if installed in the system
+# Allow looking for the Blosc2 libs and headers if installed in the system
 BLOSC2_DIR = os.environ.get('BLOSC2_DIR', '')
+# Allow looking for the Blosc2 libs and headers if installed in the system
+CATERVA_DIR = os.environ.get('CATERVA_DIR', '')
 
 # Sources & libraries
 inc_dirs = [numpy.get_include()]
@@ -92,9 +48,12 @@ sources = ['cat4py/container_ext.pyx']
 
 optional_libs = []
 
-# Handle --blosc2=[PATH] --lflags=[FLAGS] --cflags=[FLAGS]
+# Handle --caterva=[PATH] --blosc2=[PATH] --lflags=[FLAGS] --cflags=[FLAGS]
 args = sys.argv[:]
 for arg in args:
+    if arg.find('--caterva=') == 0:
+        CATERVA_DIR = os.path.expanduser(arg.split('=')[1])
+        sys.argv.remove(arg)
     if arg.find('--blosc2=') == 0:
         BLOSC2_DIR = os.path.expanduser(arg.split('=')[1])
         sys.argv.remove(arg)
@@ -106,14 +65,12 @@ for arg in args:
         sys.argv.remove(arg)
 
 if BLOSC2_DIR != '':
-    print("BLOSC_DIR!")
-    # Using the Blosc library
+    print(f"Using the Blosc2 library installed in {BLOSC2_DIR}")
     lib_dirs += [os.path.join(BLOSC2_DIR, 'lib')]
     inc_dirs += [os.path.join(BLOSC2_DIR, 'include')]
     libs += ['blosc2']
 else:
-    print("NO BLOSC_DIR!")
-    # Compiling everything from sources
+    print(f"Compiling the included Blosc2 sources")
     sources += [f for f in glob('c-blosc2/blosc/*.c')
                 if 'avx2' not in f and 'sse2' not in f and
                    'neon' not in f and 'altivec' not in f]
@@ -155,8 +112,15 @@ else:
             def_macros += [('__AVX2__', 1)]
 
 # Add Caterva sources
-sources += [f for f in glob('Caterva/caterva/*.c')]
-inc_dirs += [os.path.join('Caterva', 'caterva')]
+if CATERVA_DIR != '':
+    print(f"Using the Caterva library installed in {CATERVA_DIR}")
+    lib_dirs += [os.path.join(CATERVA_DIR, 'lib')]
+    inc_dirs += [os.path.join(CATERVA_DIR, 'include')]
+    libs += ['caterva']
+else:
+    print(f"Compiling the included Caterva sources")
+    sources += [f for f in glob('Caterva/caterva/*.c')]
+    inc_dirs += [os.path.join('Caterva', 'caterva')]
 
 tests_require = []
 
@@ -165,7 +129,6 @@ if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (3, 7):
     CFLAGS.extend(["-fprofile-arcs", "-ftest-coverage"])
     LFLAGS.append("-lgcov")
 
-print("CFLAGS2->", CFLAGS)
 
 setup(
     name="cat4py",
@@ -197,7 +160,6 @@ increasing the I/O speed not only to disk, but potentially to memory too.
         'Operating System :: Microsoft :: Windows',
         'Operating System :: Unix',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
@@ -238,5 +200,4 @@ increasing the I/O speed not only to disk, but potentially to memory too.
     ),
     packages=find_packages(),
     package_data={'cat4py': ['container_ext.pyx']},
-    #cmdclass=LazyCommandClass(),
 )
