@@ -110,7 +110,7 @@ if BLOSC2_DIR != '':
     # Using the Blosc library
     lib_dirs += [os.path.join(BLOSC2_DIR, 'lib')]
     inc_dirs += [os.path.join(BLOSC2_DIR, 'include')]
-    libs += ['blosc']
+    libs += ['blosc2']
 else:
     print("NO BLOSC_DIR!")
     # Compiling everything from sources
