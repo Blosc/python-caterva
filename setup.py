@@ -38,6 +38,11 @@ LFLAGS = os.environ.get('LFLAGS', '').split()
 BLOSC2_DIR = os.environ.get('BLOSC2_DIR', '')
 # Allow looking for the Blosc2 libs and headers if installed in the system
 CATERVA_DIR = os.environ.get('CATERVA_DIR', '')
+# For conditional compilation of different codecs in internal Blosc2 sources
+DISABLE_CAT4PY_ZSTD = False
+DISABLE_CAT4PY_ZLIB = True    # TODO: fix a `_compress2` symbol not found error
+DISABLE_CAT4PY_LIZARD = True  # TODO: xxhash collision between ztsd and lizard
+
 
 # Sources & libraries
 inc_dirs = [numpy.get_include()]
@@ -75,20 +80,23 @@ else:
                 if 'avx2' not in f and 'sse2' not in f and
                    'neon' not in f and 'altivec' not in f]
     sources += glob('c-blosc2/internal-complibs/lz4*/*.c')
-    #sources += glob('c-blosc2/internal-complibs/miniz*/*.c')
-    #sources += glob('c-blosc2/internal-complibs/zstd*/*/*.c')  # TODO: add a flag for including zstd
-    # sources += glob('c-blosc2/internal-complibs/lizard*/*/*.c')
+    if not DISABLE_CAT4PY_ZSTD:
+        sources += glob('c-blosc2/internal-complibs/zstd*/*/*.c')
     inc_dirs += [os.path.join('c-blosc2', 'blosc')]
     inc_dirs += [d for d in glob('c-blosc2/internal-complibs/*')
                  if os.path.isdir(d)]
-    # inc_dirs += [d for d in glob('c-blosc2/internal-complibs/zstd*/*')
-    #              if os.path.isdir(d)]
-    # TODO: when including miniz, we get a `_compress2` symbol not found error
-    # def_macros += [('HAVE_LZ4', 1), ('HAVE_ZLIB', 1), ('HAVE_ZSTD', 1)]
-    # def_macros += [('HAVE_LZ4', 1), ('HAVE_ZSTD', 1)]
+    if not DISABLE_CAT4PY_ZSTD:
+        inc_dirs += [d for d in glob('c-blosc2/internal-complibs/zstd*/*')
+                     if os.path.isdir(d)]
     def_macros += [('HAVE_LZ4', 1)]
-    #               ('HAVE_ZSTD', 1)  # TODO: add a flag for including zstd
-    #               ('HAVE_LIZARD', 1)  # TODO: xxhash collide between ztsd and lizard
+    if not DISABLE_CAT4PY_ZLIB:
+        sources += glob('c-blosc2/internal-complibs/miniz*/*.c')
+        def_macros += [('HAVE_ZLIB', 1)]
+    if not DISABLE_CAT4PY_ZSTD:
+        def_macros += [('HAVE_ZSTD', 1)]
+    if not DISABLE_CAT4PY_LIZARD:
+        sources += glob('c-blosc2/internal-complibs/lizard*/*/*.c')
+        def_macros += [('HAVE_LIZARD', 1)]
 
     # Guess SSE2 or AVX2 capabilities
     # SSE2
@@ -194,8 +202,7 @@ increasing the I/O speed not only to disk, but potentially to memory too.
     ],
     tests_require=tests_require,
     extras_require=dict(
-        optional=[
-        ],
+        optional=[],
         test=tests_require
     ),
     packages=find_packages(),
