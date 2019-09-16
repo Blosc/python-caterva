@@ -36,6 +36,8 @@ cdef extern from "blosc2.h":
         BLOSC_NOFILTER
         BLOSC_SHUFFLE
         BLOSC_BITSHUFFLE
+        BLOSC_DELTA
+        BLOSC_TRUNC_PREC
         BLOSC_BLOSCLZ
         BLOSC_LZ4
         BLOSC_LZ4HC
@@ -111,6 +113,8 @@ cdef extern from "blosc2.h":
     int blosc2_update_usermeta(blosc2_schunk *schunk, uint8_t *content, int32_t content_len, blosc2_cparams cparams)
     int blosc2_get_usermeta(blosc2_schunk* schunk, uint8_t** content)
 
+    char* blosc_list_compressors()
+
 
 cdef extern from "caterva.h":
     ctypedef enum:
@@ -177,9 +181,42 @@ cdef extern from "caterva.h":
     int caterva_copy(caterva_array_t *dest, caterva_array_t *src)
 
 
+# Codecs
+BLOSCLZ = BLOSC_BLOSCLZ
+LZ4 = BLOSC_LZ4
+LZ4HC = BLOSC_LZ4HC
+ZLIB = BLOSC_ZLIB
+ZSTD = BLOSC_ZSTD
+LIZARD = BLOSC_LIZARD
+
+# Filters
+NOFILTER = BLOSC_NOFILTER
+SHUFFLE = BLOSC_SHUFFLE
+BITSHUFFLE = BLOSC_BITSHUFFLE
+DELTA = BLOSC_DELTA
+TRUNC_PREC = BLOSC_TRUNC_PREC
+
+cnames = blosc_list_compressors()
+# Build a dict with all the available cnames
+cnames2codecs = {
+    "blosclz": BLOSCLZ,
+    "lz4": LZ4,
+    "lz4hc": LZ4HC,
+    "zlib": ZLIB,
+    "zstd": ZSTD,
+    "lizard": LIZARD,
+}
+cnames = blosc_list_compressors()
+cnames = cnames.split(b",")
+for cname in cnames:
+    cname = cname.decode()
+    if cname not in cnames2codecs:
+        cnames2codecs.pop(cname)
+
+# Defaults for compression params
 cparams_dflts = {
     'itemsize': 4,
-    'compcode': BLOSC_LZ4,
+    'cname': 'lz4',
     'clevel': 5,
     'use_dict': False,
     'cnthreads': 1,
@@ -191,6 +228,7 @@ cparams_dflts = {
 
 
 cdef class CParams:
+    cdef str cname
     cdef uint8_t compcode
     cdef uint8_t clevel
     cdef int use_dict
@@ -204,9 +242,15 @@ cdef class CParams:
     cdef blosc2_prefilter_params* pparams
 
     def __init__(self, **kargs):
-        self.itemsize = kargs.get('itemsize', cparams_dflts['itemsize'])
-        self.compcode = kargs.get('compcode', cparams_dflts['compcode'])
+        cname = kargs.get('cname', cparams_dflts['cname'])
+        if isinstance(cname, bytes):
+            cname = cname.decode()
+        if cname not in cnames2codecs:
+            raise ValueError(f"'{cname}' is not among the list of available codecs ({cnames2codecs.keys()})")
+        self.cname = cname
+        self.compcode = cnames2codecs[cname]
         self.clevel = kargs.get('clevel', cparams_dflts['clevel'])
+        self.itemsize = kargs.get('itemsize', cparams_dflts['itemsize'])
         self.use_dict = kargs.get('use_dict', cparams_dflts['use_dict'])
         self.nthreads = kargs.get('cnthreads', cparams_dflts['cnthreads'])
         self.blocksize = kargs.get('blocksize', cparams_dflts['blocksize'])
@@ -427,6 +471,8 @@ cdef class Container:
     cdef caterva_array_t *array
     cdef kargs
     cdef usermeta_len
+    cdef CParams cparams
+    cdef DParams dparams
 
     @property
     def shape(self):
@@ -460,9 +506,9 @@ cdef class Container:
         return self.array.ctx.cparams.clevel
 
     @property
-    def compcode(self):
-        """The compression codec for this container."""
-        return self.array.ctx.cparams.compcode
+    def cname(self):
+        """The compression codec name for this container."""
+        return self.cparams.cname
 
     @property
     def filters(self):
@@ -495,9 +541,9 @@ cdef class Container:
         return self.array.filled
 
     def __init__(self, **kwargs):
-        cparams = CParams(**kwargs)
-        dparams = DParams(**kwargs)
-        self.ctx = Context(cparams, dparams)
+        self.cparams = CParams(**kwargs)
+        self.dparams = DParams(**kwargs)
+        self.ctx = Context(self.cparams, self.dparams)
         cdef caterva_ctx_t * ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(self.ctx.tocapsule(), "caterva_ctx_t*")
         self.usermeta_len = 0
 
@@ -673,3 +719,16 @@ def get_usermeta(Container arr):
     content = content[:n]  # does a copy
     free(_content)
     return content
+
+
+def list_cnames():
+    """Return a list of all the available compressor names.
+
+    Returns
+    -------
+    List
+        A list with all the available compressor names.
+    """
+    cnames = blosc_list_compressors()
+    cnames = cnames.split(b",")
+    return cnames

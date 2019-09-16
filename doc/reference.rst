@@ -22,6 +22,6 @@ The Container class
 ===================
 .. module:: cat4py.container
 .. autoclass:: Container
-    :inherited-members: shape, pshape, cratio, clevel, compcode, filters, size, psize, npart, ndim, filled
+    :inherited-members: shape, pshape, cratio, clevel, cname, filters, size, psize, npart, ndim, filled
     :members: copy, get_metalayer, get_usermeta, has_metalayer, iter_read, iter_write, to_buffer, to_numpy, update_metalayer, update_usermeta
     :special-members: __init__, __getitem__, __setitem__

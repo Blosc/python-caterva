@@ -6,20 +6,15 @@
 # LICENSE file in the root directory of this source tree)
 #######################################################################
 
-# Codecs
-BLOSCLZ = 0
-LZ4 = 1
-LZ4HC = 2
-ZLIB = 4
-ZSTD = 5
-LIZARD = 6
 
-# Filters
-NOFILTER = 0
-SHUFFLE = 1
-BITSHUFFLE = 2
-DELTA = 3
-TRUNC_PREC = 4
-
-from .container import Container, empty, from_buffer, from_numpy, from_file
 from .version import version as __version__
+
+from . import container_ext as ext
+# Codecs
+from .container_ext import BLOSCLZ, LZ4, LZ4HC, ZLIB, ZSTD, LIZARD
+# Available compression library names
+cnames = list(ext.cnames2codecs)
+# Filters
+from .container_ext import NOFILTER, SHUFFLE, BITSHUFFLE, DELTA, TRUNC_PREC
+# Public API for container module
+from .container import Container, empty, from_buffer, from_numpy, from_file

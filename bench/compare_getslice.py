@@ -33,12 +33,7 @@ pshape = (20, 500, 50)
 dtype = np.float64
 
 # Compression properties
-# cname = "blosclz"
-# compcode = cat.BLOSCLZ  # keep in sync with above
-# cname = "lz4"
-# compcode = cat.LZ4  # keep in sync with above
 cname = "zstd"
-compcode = cat.ZSTD  # keep in sync with above
 clevel = 6
 filter = cat.SHUFFLE
 nthreads = 4
@@ -63,7 +58,7 @@ content = np.linspace(0, 10, int(np.prod(shape)), dtype=dtype).reshape(shape)
 # Create and fill a caterva array using a buffer
 # t0 = time()
 # a = cat.from_buffer(bytes(content), shape, pshape=pshape, itemsize=content.itemsize, filename=fname_cat,
-#                     compcode=compcode, clevel=clevel, filters=[filter],
+#                     cname=cname, clevel=clevel, filters=[filter],
 #                     cnthreads=nthreads, dnthreads=nthreads)
 # if persistent:
 #     del a
@@ -76,7 +71,7 @@ content = np.linspace(0, 10, int(np.prod(shape)), dtype=dtype).reshape(shape)
 # Create and fill a caterva array using a block iterator
 t0 = time()
 a = cat.empty(shape, pshape=pshape, itemsize=content.itemsize, filename=fname_cat,
-              compcode=compcode, clevel=clevel, filters=[filter],
+              cname=cname, clevel=clevel, filters=[filter],
               cnthreads=nthreads, dnthreads=nthreads)
 for block, info in a.iter_write():
     nparray = content[info.slice]

@@ -41,8 +41,8 @@ class Container(ext.Container):
                     The metalayer object that will be (de-)serialized using msgpack.
         itemsize: int
             The number of bytes for the itemsize in container.  Default: 4.
-        compcode: int (enumerated)
-            The code for the compressor codec.  Default: cat4py.LZ4.
+        cname: string
+            The name for the compressor codec.  Default: "lz4".
         clevel: int (0 to 9)
             The compression level.  0 means no compression, and 9 maximum compression.
             Default: 5.
