@@ -24,8 +24,9 @@ author = 'The Blosc Developers'
 import git
 repo = git.Repo('./..')
 tags = sorted(repo.tags, key=lambda t: t.commit.committed_datetime)
+print(tags)
 latest_tag = tags[-1]
-release = latest_tag
+release = str(latest_tag)[1:]
 
 
 # -- General configuration ---------------------------------------------------
