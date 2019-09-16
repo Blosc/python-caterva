@@ -16,8 +16,7 @@ First level variables
 
 The Container class
 ===================
-.. automodule:: container_ext
-.. autoclass:: Container
+.. autoclass:: cat4py.Container
     :members:
     :exclude-members: slicebuffer, squeeze, tocapsule, updateshape
     :special-members: __init__, __getitem__, __setitem__
