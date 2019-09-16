@@ -28,6 +28,9 @@ print(tags)
 latest_tag = tags[-1]
 release = str(latest_tag)[1:]
 
+f = open('./../cat4py/version.py','w')
+f.write(f'version = "{release}"')
+f.close()
 
 # -- General configuration ---------------------------------------------------
 
