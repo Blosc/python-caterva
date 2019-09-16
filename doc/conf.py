@@ -22,7 +22,7 @@ author = 'The Blosc Developers'
 
 # The full version, including alpha/beta/rc tags
 import git
-repo = git.Repo('./')
+repo = git.Repo('./..')
 tags = sorted(repo.tags, key=lambda t: t.commit.committed_datetime)
 latest_tag = tags[-1]
 release = latest_tag
