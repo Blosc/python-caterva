@@ -4,7 +4,7 @@ import msgpack
 
 
 class ReadIter(ext.ReadIter):
-    def __init__(self, arr, blockshape):
+    def __init__(self, arr, blockshape=None):
         super(ReadIter, self).__init__(arr, blockshape)
 
 
@@ -97,13 +97,14 @@ class Container(ext.Container):
         key = process_key(key, self.ndim)
         ext.setitem(self, key, item)
 
-    def iter_read(self, blockshape):
+    def iter_read(self, blockshape=None):
         """Iterate over data blocks whose dims are specified in `blockshape`.
 
         Parameters
         ----------
         blockshape: tuple, list
-            The shape in which the data block will be returned.
+            The shape in which the data block will be returned.  If `None`,
+            the `Container.pshape` will be used as `blockshape`.
 
         Yields
         ------
