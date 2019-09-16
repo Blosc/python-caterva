@@ -14,6 +14,10 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
+import subprocess
+
+subprocess.call('cd .. && python setup.py build_ext -i && cd ../doc', shell=True)
+
 # -- Project information -----------------------------------------------------
 
 project = 'cat4py'
