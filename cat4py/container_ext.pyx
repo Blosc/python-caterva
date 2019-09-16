@@ -391,6 +391,8 @@ cdef class ReadIter:
         if not arr.filled:
             raise ValueError("Container is not filled")
         self.arr = arr
+        if blockshape is None:
+            blockshape = arr.pshape
         self.blockshape = blockshape
         self.nparts = 0
 
