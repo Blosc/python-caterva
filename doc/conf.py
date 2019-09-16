@@ -21,8 +21,11 @@ copyright = '2019, The Blosc Developers'
 author = 'The Blosc Developers'
 
 # The full version, including alpha/beta/rc tags
-import cat4py
-release = cat4py.__version__
+import git
+repo = git.Repo('./')
+tags = sorted(repo.tags, key=lambda t: t.commit.committed_datetime)
+latest_tag = tags[-1]
+release = latest_tag
 
 
 # -- General configuration ---------------------------------------------------
