@@ -16,6 +16,7 @@ First level variables
 
 The Container class
 ===================
+.. automodule:: container_ext
 .. autoclass:: Container
     :members:
     :exclude-members: slicebuffer, squeeze, tocapsule, updateshape
