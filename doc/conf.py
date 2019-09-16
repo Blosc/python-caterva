@@ -21,7 +21,7 @@ copyright = '2019, The Blosc Developers'
 author = 'The Blosc Developers'
 
 import cat4py
-release = cat4py.__version__
+release = '0.2.0'
 
 
 # -- General configuration ---------------------------------------------------
