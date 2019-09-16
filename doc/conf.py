@@ -20,7 +20,6 @@ project = 'cat4py'
 copyright = '2019, The Blosc Developers'
 author = 'The Blosc Developers'
 
-import cat4py
 release = '0.2.0'
 
 
