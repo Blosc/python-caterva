@@ -22,14 +22,13 @@ if persistent:
 else:
     print("Testing the in-memory backends...")
 
-# Dimensions, type and persistency properties for the arrays
+# Dimensions and type properties for the arrays
 # 'Small' arrays config follows...
 shape = (100, 5000, 250)
 pshape = (20, 500, 50)
-# This config generates containers of more than 2 GB in size, which is great for testing
-# shape = (250, 4000, 150)
+# This config generates containers of more than 2 GB in size
+# shape = (250, 4000, 350)
 # pshape = (200, 100, 100)
-
 dtype = np.float64
 
 # Compression properties
