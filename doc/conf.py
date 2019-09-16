@@ -14,9 +14,10 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-import subprocess
-
-subprocess.call('cd .. && python setup.py build_ext -i && cd ../doc', shell=True)
+if 'READ_THE_DOCS' in os.environ:
+    import subprocess
+    # It is necessary for the readthedocs for finding cython docstrings
+    subprocess.call('cd .. && python setup.py build_ext -i && cd ../doc', shell=True)
 
 # -- Project information -----------------------------------------------------
 
