@@ -7,6 +7,10 @@ import cat4py as cat
 import numpy as np
 import os
 from time import time
+import platform
+
+macosx = 'Darwin' in platform.platform()
+linux = 'Linux' in platform.platform()
 
 # Dimensions, type and persistency properties for the arrays
 shape = (100, 5000, 250)
@@ -19,10 +23,10 @@ clevel = 5
 filter = cat.SHUFFLE
 nthreads = 4
 
-fname_npy = "compare_loadframe2.npy"
+fname_npy = "compare_reduceframe.npy"
 if os.path.exists(fname_npy):
     os.remove(fname_npy)
-fname_cat = "compare_loadframe2.cat"
+fname_cat = "compare_reduceframe.cat"
 if os.path.exists(fname_cat):
     os.remove(fname_cat)
 
@@ -54,12 +58,14 @@ print("Time for storing array on-disk (caterva, iter): %.3fs ; CRatio: %.1fx" % 
 print()
 
 def bench_read_numpy(fname, copy):
+    if macosx: os.system("/usr/sbin/purge")
     t0 = time()
     mmap_mode = None if copy else 'r'
     a = np.load(fname, mmap_mode=mmap_mode)
     t1 = time()
     print("Time for opening the on-disk frame (numpy, copy=%s): %.3fs" % (copy, (t1 - t0)))
 
+    if macosx: os.system("/usr/sbin/purge")
     t0 = time()
     acc = a.sum()
     del a
@@ -68,11 +74,13 @@ def bench_read_numpy(fname, copy):
     return acc
 
 def bench_read_caterva(fname, copy):
+    if macosx: os.system("/usr/sbin/purge")
     t0 = time()
     a = cat.from_file(fname, copy=copy)
     t1 = time()
     print("Time for opening the on-disk frame (caterva, copy=%s): %.3fs" % (copy, (t1 - t0)))
 
+    if macosx: os.system("/usr/sbin/purge")
     t0 = time()
     acc = 0
     for (block, info) in a.iter_read():
