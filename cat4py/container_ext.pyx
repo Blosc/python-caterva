@@ -327,8 +327,7 @@ cdef class WriteIter:
     # TODO: is np.dtype really necessary here?  Container does not have this notion, so...
     def __init__(self, arr):
         self.arr = arr
-        dtypes = {1: np.int8, 2: np.int16, 4: np.int32, 8: np.int64, 16: np.complex128}
-        self.dtype = np.dtype(dtypes[arr.itemsize])
+        self.dtype = np.dtype(f"S{arr.itemsize}")
         self.part_len = self.arr.array.psize * self.arr.itemsize
 
     def __iter__(self):

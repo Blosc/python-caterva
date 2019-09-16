@@ -8,11 +8,13 @@ from itertools import zip_longest as lzip
                          [
                              ([4], [2], [2], np.int32),
                              ([134, 121, 78], [27, 12, 44], [12, 13, 18], np.float64),
-                             ([21, 21, 21, 31], None, None, np.float32)
+                             ([21, 21, 21, 31], None, None, np.float32),
+                             ([21, 10, 50, 15], None, [13, 5, 13, 2], np.dtype("S3"))
+
                          ])
 def test_iters(shape, pshape1, pshape2, dtype):
     size = int(np.prod(shape))
-    nparray = np.arange(size, dtype=dtype).reshape(shape)
+    nparray = np.ones(size, dtype=dtype).reshape(shape)
     a = cat.from_numpy(nparray, pshape=pshape1)
 
     itemsize = np.dtype(dtype).itemsize
@@ -22,4 +24,4 @@ def test_iters(shape, pshape1, pshape2, dtype):
         block_w[:] = block_r
 
     nparray2 = b.to_numpy(dtype)
-    np.testing.assert_almost_equal(nparray, nparray2)
+    np.testing.assert_equal(nparray, nparray2)
