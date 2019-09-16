@@ -20,17 +20,9 @@ project = 'cat4py'
 copyright = '2019, The Blosc Developers'
 author = 'The Blosc Developers'
 
-# The full version, including alpha/beta/rc tags
-import git
-repo = git.Repo('./..')
-tags = sorted(repo.tags, key=lambda t: t.commit.committed_datetime)
-print(tags)
-latest_tag = tags[-1]
-release = str(latest_tag)[1:]
+import cat4py
+release = cat4py.__version__
 
-f = open('./../cat4py/version.py','w')
-f.write(f'version = "{release}"')
-f.close()
 
 # -- General configuration ---------------------------------------------------
 
