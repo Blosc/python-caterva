@@ -25,7 +25,8 @@ project = 'cat4py'
 copyright = '2019, The Blosc Developers'
 author = 'The Blosc Developers'
 
-release = '0.2.0'
+import cat4py
+release = cat4py.__version__
 
 
 # -- General configuration ---------------------------------------------------
