@@ -3,14 +3,14 @@ import numpy as np
 import msgpack
 
 
-class _ReadIter(ext.ReadIter):
-    def __init__(self, arr, blockshape):
-        super(_ReadIter, self).__init__(arr, blockshape)
+class ReadIter(ext.ReadIter):
+    def __init__(self, arr, blockshape=None):
+        super(ReadIter, self).__init__(arr, blockshape)
 
 
-class _WriteIter(ext.WriteIter):
+class WriteIter(ext.WriteIter):
     def __init__(self, arr):
-        super(_WriteIter, self).__init__(arr)
+        super(WriteIter, self).__init__(arr)
 
 
 def process_key(key, ndim):
@@ -97,13 +97,14 @@ class Container(ext.Container):
         key = process_key(key, self.ndim)
         ext.setitem(self, key, item)
 
-    def iter_read(self, blockshape):
+    def iter_read(self, blockshape=None):
         """Iterate over data blocks whose dims are specified in `blockshape`.
 
         Parameters
         ----------
         blockshape: tuple, list
-            The shape in which the data block will be returned.
+            The shape in which the data block will be returned.  If `None`,
+            the `Container.pshape` will be used as `blockshape`.
 
         Yields
         ------
@@ -122,7 +123,7 @@ class Container(ext.Container):
                     size: int
                         The size, in elements, of the block.
         """
-        return _ReadIter(self, blockshape)
+        return ReadIter(self, blockshape)
 
     def iter_write(self):
         """Iterate over non initialized data blocks.
@@ -144,7 +145,7 @@ class Container(ext.Container):
                     size: int
                         The size, in elements, of the block.
         """
-        return _WriteIter(self)
+        return WriteIter(self)
 
     def copy(self, **kwargs):
         """Copy to a new container whose properties are specified in `kwargs`.

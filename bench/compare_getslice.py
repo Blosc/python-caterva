@@ -132,7 +132,7 @@ if persistent:
 t1 = time()
 print("Time for checking contents: %.3fs" % (t1 - t0))
 
-# Get the coordinates for random planes
+# Setup the coordinates for random planes
 planes_idx = np.random.randint(0, shape[1], 100)
 
 # Time getitem with caterva

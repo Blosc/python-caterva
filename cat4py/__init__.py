@@ -17,4 +17,5 @@ cnames = list(ext.cnames2codecs)
 # Filters
 from .container_ext import NOFILTER, SHUFFLE, BITSHUFFLE, DELTA, TRUNC_PREC
 # Public API for container module
-from .container import Container, empty, from_buffer, from_numpy, from_file
+from .container import (Container, empty, from_buffer, from_numpy, from_file,
+                        WriteIter, ReadIter)
