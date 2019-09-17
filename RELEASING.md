@@ -15,7 +15,7 @@ in the release.
 * Check any copyright listings and update them if necessary. You can use ``grep
   -i copyright`` to figure out where they might be.
 
-* Commit the changes::
+* Commit the changes:
 
   $ git commit -a -m "Getting ready for release X.Y.Z"
   $ git push
@@ -34,8 +34,21 @@ in the release.
     $ git push
     $ git push --tags
 
+After the tag would be up, update the release notes in:
 
 ## Packaging
+
+* Make sure that you are in a clean directory.  The best way is to
+  re-clone and re-build:
+
+  $ cd /tmp
+  $ git clone git@github.com:Blosc/cat4py.git
+  $ cd cat4py
+  $ git submodule init
+  $ git submodule update
+  $ CFLAGS="" python setup.py build_ext
+
+* Check that all Cython generated ``*.c`` files are present.
 
 * Make the tarball with the command:
 
@@ -48,18 +61,22 @@ Do a quick check that the tarball is sane.
 
 * Register and upload it also in the PyPi repository:
 
-    $ python setup.py sdist upload
+    $ twine upload dist/*
 
 
 ## Announcing
 
-* Send an announcement to the blosc lists.  Use the ``ANNOUNCE.md`` file as skeleton
+* Send an announcement to the Blosc list.  Use the ``ANNOUNCE.md`` file as skeleton
 (or possibly as the definitive version).
 
 * Announce in Twitter via @Blosc2 account and rejoice.
 
 
 ## Post-release actions
+
+* Change back to the actual cat4py repo:
+
+  $ cd $HOME/blosc/cat4py
 
 * Create new headers for adding new features in ``RELEASE_NOTES.md``
   add this place-holder:
