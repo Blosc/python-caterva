@@ -7,7 +7,7 @@
 
 ## Preliminaries
 
-* Make sure that te current master branch is passing the tests on Microsoft Azure.
+* Make sure that the current master branch is passing the tests on Microsoft Azure.
 
 * Make sure that `RELEASE_NOTES.md` and `ANNOUNCE.md` are up to date with the latest news
 in the release.
@@ -25,11 +25,11 @@ in the release.
 
 ## Tagging
 
-* Create a signed tag ``X.Y.Z`` from ``master``.  Use the next message::
+* Create a signed tag ``X.Y.Z`` from ``master``.  Use the next message:
 
     $ git tag -a vX.Y.Z -m "Tagging version X.Y.Z"
 
-* Push the tag to the github repo::
+* Push the tag to the github repo:
 
     $ git push
     $ git push --tags
@@ -37,7 +37,7 @@ in the release.
 
 ## Packaging
 
-* Make the tarball with the command::
+* Make the tarball with the command:
 
   $ python setup.py sdist
 
@@ -46,7 +46,7 @@ Do a quick check that the tarball is sane.
 
 ## Uploading
 
-* Register and upload it also in the PyPi repository::
+* Register and upload it also in the PyPi repository:
 
     $ python setup.py sdist upload
 
@@ -62,11 +62,11 @@ Do a quick check that the tarball is sane.
 ## Post-release actions
 
 * Create new headers for adding new features in ``RELEASE_NOTES.md``
-  add this place-holder::
+  add this place-holder:
 
   XXX version-specific blurb XXX
 
-* Commit your changes with::
+* Commit your changes with:
 
   $ git commit -a -m"Post X.Y.Z release actions done"
   $ git push

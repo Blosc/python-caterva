@@ -1,0 +1,16 @@
+include MANIFEST.in
+include LICENSE
+include *.txt *.rst *.md
+exclude RELEASING.rst
+include setup.py
+
+recursive-include cat4py *.py *.pyx *.pxd *.c *.h
+recursive-include tests *.py
+recursive-include c-blosc2 *.c *.h
+recursive-include Caterva *.c *.h
+recursive-include bench *.py *.txt
+recursive-include doc *.rst *.txt *.py *.pdf *.html *.css *.png
+recursive-exclude doc/_build *
+recursive-include LICENSES *
+recursive-include c-blosc2/LICENSE.txt *
+recursive-include Caterva/LICENSE *

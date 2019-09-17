@@ -1,11 +1,10 @@
-# Announcing cat4py 0.2.1
+# Announcing cat4py 0.2.2
 
 
 ## What is new?
 
-Docstrings has been added! In addition, the documentation can be found at:
-https://cat4py.readthedocs.io. Also, the use of an itemsize different than
-a 2 power is allowed now.
+This release just add a `MANIFEST.in` for including all C-Blosc2 and Caterva
+sources in package.
 
 For more info, you can have a look at the release notes in:
 
