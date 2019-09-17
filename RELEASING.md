@@ -27,7 +27,7 @@ in the release.
 
 * Create a signed tag ``X.Y.Z`` from ``master``.  Use the next message::
 
-    $ git tag -s vX.Y.Z -m "Tagging version X.Y.Z"
+    $ git tag -a vX.Y.Z -m "Tagging version X.Y.Z"
 
 * Push the tag to the github repo::
 
