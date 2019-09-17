@@ -23,6 +23,18 @@ in the release.
 * Check that the documentation is correctly created in https://cat4py.readthedocs.io.
 
 
+## Tagging
+
+* Create a signed tag ``X.Y.Z`` from ``master``.  Use the next message::
+
+    $ git tag -s vX.Y.Z -m "Tagging version X.Y.Z"
+
+* Push the tag to the github repo::
+
+    $ git push
+    $ git push --tags
+
+
 ## Packaging
 
 * Make the tarball with the command::
@@ -37,18 +49,6 @@ Do a quick check that the tarball is sane.
 * Register and upload it also in the PyPi repository::
 
     $ python setup.py sdist upload
-
-
-## Tagging
-
-* Create a signed tag ``X.Y.Z`` from ``master``.  Use the next message::
-
-    $ git tag -s vX.Y.Z -m "Tagging version X.Y.Z"
-
-* Push the tag to the github repo::
-
-    $ git push
-    $ git push --tags
 
 
 ## Announcing
