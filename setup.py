@@ -152,7 +152,7 @@ increasing the I/O speed not only to disk, but potentially to memory too.
 
 """,
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Intended Audience :: Information Technology',
         'Intended Audience :: Science/Research',
