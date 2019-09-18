@@ -21,7 +21,7 @@ $ git submodule update --recursive --remote
 $ CFLAGS='' python setup.py build_ext -i
 ```
 
-**Please note**: If the CFLAGS environment variable is not passed, Anaconda Python (maybe other distributions too) will inject their own paths there. As a result, it will find possible incompatible headers/libs for Blosc, LZ4 or Zstd.  I understand packagers trying to re-use shared libraries in their setups, but this can create issues when normal users try to compile extensions by themselves.
+**Please note**: If the CFLAGS environment variable is not passed, Anaconda Python (maybe other distributions too) will inject their own paths there. As a result, it will find possible incompatible headers/libs for Blosc, LZ4 or Zstd.  We understand packagers trying to re-use shared libraries in their setups, but this can create issues when normal users try to compile extensions by themselves.
 
 Compiling the extension implies re-compiling C-Blosc2 and Caterva sources everytime, so a trick for accelerating the process during the development process is to direct the compiler to not optimize the code, and use pre-installed Blosc2 and Caterva libraries:
 
@@ -40,3 +40,11 @@ $ PYTHONPATH=. pytest
 ```sh
 $ PYTHONPATH=. python examples/ex_persistency.py
 ```
+
+### Installing
+
+```sh
+$ CFLAGS='' pip install cat4py
+```
+
+We don't produce wheels yet, so you will currently need a C compiler in order to install cat4py.  The reason why you need the `CFLAGS=''` above is to prevent Anaconda Python injecting their own paths for dependencies (LZ4, Zstd...). 
