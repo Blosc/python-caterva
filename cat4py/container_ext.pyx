@@ -198,7 +198,7 @@ TRUNC_PREC = BLOSC_TRUNC_PREC
 
 cnames = blosc_list_compressors()
 # Build a dict with all the available cnames
-cnames2codecs = {
+_cnames2codecs = {
     "blosclz": BLOSCLZ,
     "lz4": LZ4,
     "lz4hc": LZ4HC,
@@ -206,12 +206,13 @@ cnames2codecs = {
     "zstd": ZSTD,
     "lizard": LIZARD,
 }
-cnames = blosc_list_compressors()
-cnames = cnames.split(b",")
-for cname in cnames:
-    cname = cname.decode()
-    if cname not in cnames2codecs:
-        cnames2codecs.pop(cname)
+cnames2codecs = {}
+blosc_cnames = blosc_list_compressors()
+blosc_cnames = blosc_cnames.split(b",")
+blosc_cnames = [cname.decode() for cname in blosc_cnames]
+for cname in _cnames2codecs:
+    if cname in blosc_cnames:
+        cnames2codecs[cname] = _cnames2codecs[cname]
 
 # Defaults for compression params
 cparams_dflts = {
