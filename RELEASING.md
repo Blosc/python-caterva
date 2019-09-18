@@ -79,7 +79,7 @@ Do a quick check that the tarball is sane.
 * Announce in Twitter via @Blosc2 account and rejoice.
 
 
-## Post-release actions
+## Post-release actions
 
 * Change back to the actual cat4py repo:
 ```
