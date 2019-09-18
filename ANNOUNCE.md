@@ -1,10 +1,10 @@
-# Announcing cat4py 0.2.2
+# Announcing cat4py 0.2.3
 
 
 ## What is new?
 
-This release just add a `MANIFEST.in` for including all C-Blosc2 and Caterva
-sources in package.
+This release just rename the `MANINFEST.in` file to `MANIFEST.in`. Also fix the
+list of available cnames.
 
 For more info, you can have a look at the release notes in:
 
