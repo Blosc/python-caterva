@@ -77,7 +77,7 @@ class Container(ext.Container):
             The a buffer with the requested data.
         """
         key = process_key(key, self.ndim)
-        buff = ext.getitem(self, key)
+        buff = super(Container, self).__getitem__(key)
         return buff
 
     def __setitem__(self, key, item):
@@ -95,7 +95,7 @@ class Container(ext.Container):
             The buffer with the values to be used for the update.
         """
         key = process_key(key, self.ndim)
-        ext.setitem(self, key, item)
+        super(Container, self).__setitem__(key, item)
 
     def iter_read(self, blockshape=None):
         """Iterate over data blocks whose dims are specified in `blockshape`.
