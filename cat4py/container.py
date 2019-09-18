@@ -33,6 +33,9 @@ class Container(ext.Container):
             The partition shape.  If None, the store is a plain buffer (non-compressed).
         filename: str or None
             The name of the file to store data.  If `None`, data is stores in-memory.
+        memframe: bool
+            If True, the Container is backed by a frame in-memory.  Else, by a
+            super-chunk.  Default: False.
         metalayers: dict or None
             A dictionary with different metalayers.  One entry per metalayer:
                 key: bytes or str

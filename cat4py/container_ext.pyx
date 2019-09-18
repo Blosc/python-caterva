@@ -49,7 +49,14 @@ cdef extern from "blosc2.h":
         BLOSC2_PREFILTER_INPUTS_MAX
 
     ctypedef struct blosc2_frame_metalayer
-    ctypedef struct blosc2_frame
+    ctypedef struct blosc2_frame:
+      char* fname
+      uint8_t* sdata
+      uint8_t* coffsets
+      int64_t len
+      int64_t maxlen
+      uint32_t trailer_len
+
     blosc2_frame *blosc2_new_frame(char *fname)
 
     ctypedef struct blosc2_context
@@ -105,6 +112,7 @@ cdef extern from "blosc2.h":
     blosc2_cparams BLOSC2_CPARAMS_DEFAULTS
     blosc2_dparams BLOSC2_DPARAMS_DEFAULTS
 
+    int64_t blosc2_schunk_to_frame(blosc2_schunk* schunk, blosc2_frame* frame)
     int blosc2_has_metalayer(blosc2_schunk *schunk, char *name)
     int blosc2_add_metalayer(blosc2_schunk *schunk, char *name, uint8_t *content, uint32_t content_len)
     int blosc2_update_metalayer(blosc2_schunk *schunk, char *name, uint8_t *content, uint32_t content_len)
@@ -114,6 +122,8 @@ cdef extern from "blosc2.h":
     int blosc2_get_usermeta(blosc2_schunk* schunk, uint8_t** content)
 
     char* blosc_list_compressors()
+
+    int blosc2_free_frame(blosc2_frame *frame)
 
 
 cdef extern from "caterva.h":
@@ -555,6 +565,9 @@ cdef class Container:
 
         pshape = kwargs['pshape'] if 'pshape' in kwargs else None
         filename = kwargs['filename'] if 'filename' in kwargs else None
+        memframe = kwargs['memframe'] if 'memframe' in kwargs else None
+        if filename is not None and memframe is True:
+            raise ValueError("You cannot specify a `filename` and set `memframe` to True at once.")
         if pshape is None:
             if filename is not None:
                 raise NotImplementedError
@@ -570,7 +583,10 @@ cdef class Container:
             free(pshape_)
 
             if filename is None:
-                _frame = NULL
+                if memframe:
+                    _frame = blosc2_new_frame(NULL)
+                else:
+                    _frame = NULL
             else:
                 if os.path.isfile(filename):
                     raise FileExistsError
@@ -586,6 +602,25 @@ cdef class Container:
                 name = name.encode("utf-8") if isinstance(name, str) else name
                 content = msgpack.packb(content)
                 blosc2_add_metalayer(self.array.sc, name, content, len(content))
+
+    def __getitem__(self, key):
+        cdef caterva_dims_t _start, _stop, _pshape
+        ndim = self.array.ndim
+        _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, self.shape)
+        bsize = size * self.itemsize
+        buffer = bytes(bsize)
+        err = caterva_get_slice_buffer(<char *> buffer, self.array, &_start, &_stop, &_pshape)
+        return buffer
+
+    def __setitem__(self, key, item):
+        if not self.array.filled:
+            raise NotImplementedError("The Container is not filled")
+        if self.array.storage == CATERVA_STORAGE_BLOSC:
+            raise NotImplementedError("The Container is not backed by a plain buffer")
+        cdef caterva_dims_t _start, _stop, _pshape
+        ndim = self.array.ndim
+        _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, self.shape)
+        caterva_set_slice_buffer(self.array, <void *> <char *> item, &_start, &_stop)
 
     def tocapsule(self):
         return PyCapsule_New(self.array, "caterva_array_t*", NULL)
@@ -613,22 +648,32 @@ cdef class Container:
     def squeeze(self):
         caterva_squeeze(self.array)
 
-    def __getitem__(self, key):
-        cdef caterva_dims_t _start, _stop, _pshape
-        ndim = self.array.ndim
-        _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, self.shape)
-        bsize = size * self.itemsize
-        buffer = bytes(bsize)
-        err = caterva_get_slice_buffer(<char *> buffer, self.array, &_start, &_stop, &_pshape)
-        return buffer
-
-    def __setitem__(self, key, item):
-        if not self.array.filled or self.array.storage == CATERVA_STORAGE_BLOSC:
-            raise NotImplementedError
-        cdef caterva_dims_t _start, _stop, _pshape
-        ndim = self.array.ndim
-        _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, self.shape)
-        caterva_set_slice_buffer(self.array, <void *> <char *> item, &_start, &_stop)
+    def to_frame(self):
+        if not self.array.filled:
+            raise NotImplementedError("The Container is not filled")
+        if self.array.storage != CATERVA_STORAGE_BLOSC:
+            raise NotImplementedError("The Container is backed by a plain buffer")
+        cdef char* fname
+        cdef char* data
+        cdef bytes sdata
+        cdef blosc2_frame* frame
+        if self.array.sc.frame != NULL:
+            fname = self.array.sc.frame.fname
+            if fname == NULL:
+                data = <char*> self.array.sc.frame.sdata
+                sdata = data[:self.array.sc.frame.len]
+            else:
+                with open(fname, 'rb') as f:
+                    sdata = f.read()
+        else:
+            # Container is not backed by a frame, so create a new one and fill it
+            # Here there is a double copy; how to avoid it?
+            frame = blosc2_new_frame(NULL)
+            blosc2_schunk_to_frame(self.array.sc, frame)
+            data = <char*> frame.sdata
+            sdata = data[:frame.len]
+            blosc2_free_frame(frame)
+        return sdata
 
     def __dealloc__(self):
         if self.array != NULL:
