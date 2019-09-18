@@ -6,6 +6,11 @@
 | Date | 2019-09-17 |
 
 
+## Changes from 0.2.3 to 0.2.4
+
+XXX version-specific blurb XXX
+
+
 ## Changes from 0.2.2 to 0.2.3
 
 * Rename `MANINFEST.in` for `MANIFEST.in`.

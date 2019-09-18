@@ -39,7 +39,7 @@ in the release.
     $ git push --tags
 ```
 
-After the tag would be up, update the release notes in:
+After the tag would be up, update the release notes in: https://github.com/Blosc/cat4py/releases
 
 ## Packaging
 
@@ -70,6 +70,12 @@ Do a quick check that the tarball is sane.
 ```
     $ twine upload dist/*
 ```
+
+It takes about 15 minutes for it to be installed using:
+```
+$pip install cat4py
+```
+
 
 ## Announcing
 
