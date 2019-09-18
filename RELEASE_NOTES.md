@@ -1,8 +1,8 @@
 # Release notes for python-blosc
 
-:Author: The Blosc Developer Team
-:Contact: blosc@blosc.org
-:Date: 2019-09-17
+| Author | The Blosc Developer Team |
+| Contact | blosc@blosc.org |
+| Date | 2019-09-17 |
 
 
 ## Changes from 0.2.2 to 0.2.3
