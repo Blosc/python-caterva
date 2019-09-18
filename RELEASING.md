@@ -1,8 +1,10 @@
 # Releasing cat4py
 
+| | |
+| - | - |
 | Author | The Blosc Developer Team |
 | Contact | blosc@blosc.org |
-| Date | 2019-09-17 |
+| Date | 2019-09-17 |
 
 
 ## Preliminaries
