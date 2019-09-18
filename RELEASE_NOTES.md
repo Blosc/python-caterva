@@ -1,4 +1,4 @@
-# Release notes for python-blosc
+# Release notes for cat4py
 
 | Author | The Blosc Developer Team |
 | Contact | blosc@blosc.org |
