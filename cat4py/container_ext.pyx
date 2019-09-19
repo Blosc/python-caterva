@@ -74,14 +74,16 @@ cdef extern from "blosc2.h":
         int32_t chunksize
         uint8_t filters[BLOSC2_MAX_FILTERS]
         uint8_t filters_meta[BLOSC2_MAX_FILTERS]
-        int32_t nchunks;
-        int64_t nbytes;
-        int64_t cbytes;
-        uint8_t** data;
-        blosc2_frame* frame;
-        blosc2_context* cctx;
-        blosc2_context* dctx;
-        uint8_t* reserved;
+        int32_t nchunks
+        int64_t nbytes
+        int64_t cbytes
+        uint8_t** data
+        blosc2_frame* frame
+        blosc2_context* cctx
+        blosc2_context* dctx
+        int16_t nmetalayers
+        uint8_t* usermeta
+        int32_t usermeta_len
 
     ctypedef struct blosc2_prefilter_params:
         int ninputs
@@ -173,6 +175,7 @@ cdef extern from "caterva.h":
     caterva_dims_t caterva_new_dims(int64_t *dims, int8_t ndim)
     caterva_array_t *caterva_empty_array(caterva_ctx_t *ctx, blosc2_frame *fr, caterva_dims_t *pshape)
     int caterva_free_array(caterva_array_t *carr)
+    caterva_array_t *caterva_from_sframe(caterva_ctx_t *ctx, uint8_t *sframe, int64_t len, bool copy)
     caterva_array_t *caterva_from_file(caterva_ctx_t *ctx, const char *filename, bool copy)
     int caterva_from_buffer(caterva_array_t *dest, caterva_dims_t *shape, void *src)
     int caterva_to_buffer(caterva_array_t *src, void *dest)
@@ -648,7 +651,7 @@ cdef class Container:
     def squeeze(self):
         caterva_squeeze(self.array)
 
-    def to_frame(self):
+    def to_sframe(self):
         if not self.array.filled:
             raise NotImplementedError("The Container is not filled")
         if self.array.storage != CATERVA_STORAGE_BLOSC:
@@ -687,6 +690,15 @@ def from_file(Container arr, filename, copy):
     if not os.path.isfile(filename):
         raise FileNotFoundError
     cdef caterva_array_t *a_ = caterva_from_file(ctx_, filename, copy)
+    arr.ctx = ctx
+    arr.array = a_
+
+
+def from_sframe(Container arr, bytes sframe, copy):
+    ctx = Context()
+    cdef caterva_ctx_t *ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.tocapsule(), "caterva_ctx_t*")
+    cdef uint8_t *frame_ = sframe
+    cdef caterva_array_t *a_ = caterva_from_sframe(ctx_, frame_, len(sframe), copy)
     arr.ctx = ctx
     arr.array = a_
 

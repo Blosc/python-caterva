@@ -19,12 +19,19 @@ def test_frame(shape, pshape, itemsize, memframe, filename):
     buffer = bytes(size * itemsize)
     a = cat.from_buffer(buffer, shape, pshape=pshape, itemsize=itemsize,
                         memframe=memframe, filename=filename)
-    buffer1 = a.to_frame()
-    buffer2 = a.to_buffer()
+    frame1 = a.to_sframe()
+    buffer1 = a.to_buffer()
     # Size of a compressed frame should be less than the plain buffer for
     # the cases here
-    # print("->", len(buffer1), len(buffer2))
-    assert len(buffer1) < len(buffer2)
+    # print("->", len(frame1), len(buffer1))
+    assert len(frame1) < len(buffer1)
+
+    b = cat.from_sframe(frame1, copy=True)
+    frame2 = b.to_sframe()
+    # TODO: the next assert currently fails.  Investigate...
+    # assert len(frame2) == len(frame1)
+    buffer2 = b.to_buffer()
+    assert buffer2 == buffer1
 
     if filename is not None and os.path.exists(filename):
         os.remove(filename)

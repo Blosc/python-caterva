@@ -332,9 +332,6 @@ def from_numpy(nparray, **kwargs):
 def from_file(filename, copy=False):
     """Open a new container from `filename`.
 
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`Container.__init__` constructor.
-
     Parameters
     ----------
     filename: str
@@ -350,6 +347,29 @@ def from_file(filename, copy=False):
     """
     arr = Container()
     ext.from_file(arr, filename, copy)
+    # if arr.has_metalayer("numpy"):
+    #     arr.__class__ = Array
+    return arr
+
+
+def from_sframe(sframe, copy=False):
+    """Open a new container from `sframe`.
+
+    Parameters
+    ----------
+    sframe: bytes
+        The Blosc2 serialized frame with a Caterva metalayer on it.
+    copy: bool
+        If true, the container is backed by a new, sparse in-memory super-chunk.
+        Else, an in-memory, frame-backed one is created (i.e. no copies are made).
+
+    Returns
+    -------
+    Container
+        The new :py:class:`Container` object.
+    """
+    arr = Container()
+    ext.from_sframe(arr, sframe, copy)
     # if arr.has_metalayer("numpy"):
     #     arr.__class__ = Array
     return arr
