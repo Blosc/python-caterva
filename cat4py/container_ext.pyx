@@ -613,6 +613,23 @@ cdef class Container:
     def squeeze(self):
         caterva_squeeze(self.array)
 
+    def __getitem__(self, key):
+        cdef caterva_dims_t _start, _stop, _pshape
+        ndim = self.array.ndim
+        _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, self.shape)
+        bsize = size * self.itemsize
+        buffer = bytes(bsize)
+        err = caterva_get_slice_buffer(<char *> buffer, self.array, &_start, &_stop, &_pshape)
+        return buffer
+
+    def __setitem__(self, key, item):
+        if not self.array.filled or self.array.storage == CATERVA_STORAGE_BLOSC:
+            raise NotImplementedError
+        cdef caterva_dims_t _start, _stop, _pshape
+        ndim = self.array.ndim
+        _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, self.shape)
+        caterva_set_slice_buffer(self.array, <void *> <char *> item, &_start, &_stop)
+
     def __dealloc__(self):
         if self.array != NULL:
             caterva_free_array(self.array)
@@ -627,25 +644,6 @@ def from_file(Container arr, filename, copy):
     cdef caterva_array_t *a_ = caterva_from_file(ctx_, filename, copy)
     arr.ctx = ctx
     arr.array = a_
-
-
-def getitem(Container cont, key):
-    cdef caterva_dims_t _start, _stop, _pshape
-    ndim = cont.array.ndim
-    _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, cont.shape)
-    bsize = size * cont.itemsize
-    buffer = bytes(bsize)
-    err = caterva_get_slice_buffer(<char *> buffer, cont.array, &_start, &_stop, &_pshape)
-    return buffer
-
-
-def setitem(Container cont, key, item):
-    if not cont.array.filled or cont.array.storage == CATERVA_STORAGE_BLOSC:
-        raise NotImplementedError
-    cdef caterva_dims_t _start, _stop, _pshape
-    ndim = cont.array.ndim
-    _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, cont.shape)
-    caterva_set_slice_buffer(cont.array, <void *> <char *> item, &_start, &_stop)
 
 
 def copy(Container src, Container dest):
