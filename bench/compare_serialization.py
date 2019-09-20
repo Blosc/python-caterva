@@ -63,9 +63,10 @@ t1 = time()
 print("Time for de-serializing array in-memory (caterva): %.3fs" % (t1 - t0))
 
 t0 = time()
-carr3 = cat.from_sframe(sframe)
-dtype_deserialized = carr3.get_metalayer("numpy")
-content3 = carr3.to_numpy(dtype=dtype_deserialized)
+for i in range(1):
+    carr3 = cat.from_sframe(sframe)
+    dtype_deserialized = carr3.get_metalayer("numpy")
+    content3 = carr3.to_numpy(dtype=dtype_deserialized)
 t1 = time()
 print("Time for re-creating array in-memory (caterva -> numpy): %.3fs" % (t1 - t0))
 

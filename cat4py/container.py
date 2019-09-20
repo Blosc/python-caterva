@@ -159,7 +159,7 @@ class Container(ext.Container):
             A new container that contains the copy.
         """
         arr = Container(**kwargs)
-        ext.copy(self, arr)
+        super(Container, self).copy(arr)
         return arr
 
     def to_buffer(self):
@@ -170,7 +170,7 @@ class Container(ext.Container):
         bytes
             The buffer containing the data of the whole Container.
         """
-        return ext.to_buffer(self)
+        return super(Container, self).to_buffer()
 
     def to_numpy(self, dtype):
         """Return a NumPy array with the data contents and `dtype`.

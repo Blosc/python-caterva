@@ -651,6 +651,12 @@ cdef class Container:
     def squeeze(self):
         caterva_squeeze(self.array)
 
+    def to_buffer(self):
+        size = self.size * self.itemsize
+        buffer = bytes(size)
+        caterva_to_buffer(self.array, <void *> <char *> buffer)
+        return buffer
+
     def to_sframe(self):
         if not self.array.filled:
             raise NotImplementedError("The Container is not filled")
@@ -678,6 +684,9 @@ cdef class Container:
             blosc2_free_frame(frame)
         return sdata
 
+    def copy(self, Container dest):
+        caterva_copy(dest.array, self.array)
+
     def __dealloc__(self):
         if self.array != NULL:
             caterva_free_array(self.array)
@@ -701,22 +710,6 @@ def from_sframe(Container arr, bytes sframe, copy):
     cdef caterva_array_t *a_ = caterva_from_sframe(ctx_, frame_, len(sframe), copy)
     arr.ctx = ctx
     arr.array = a_
-
-
-def copy(Container src, Container dest):
-    caterva_copy(dest.array, src.array)
-
-
-def to_buffer(Container arr):
-    cdef caterva_dims_t shape_ = caterva_get_shape(arr.array)
-    shape = []
-    for i in range(shape_.ndim):
-        shape.append(shape_.dims[i])
-    size = np.prod(shape) * arr.array.ctx.cparams.typesize
-
-    buffer = bytes(size)
-    caterva_to_buffer(arr.array, <void *> <char *> buffer)
-    return buffer
 
 
 def from_buffer(Container arr, shape, buf):
