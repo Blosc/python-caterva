@@ -25,26 +25,26 @@ clevel = 3
 filter = cat.SHUFFLE
 nthreads = 4
 
-# Create content for populating arrays
+# Create a plain numpy array
 t0 = time()
-content = np.linspace(0, 10, int(np.prod(shape)), dtype=dtype).reshape(shape)
-# content = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
+arr = np.linspace(0, 10, int(np.prod(shape)), dtype=dtype).reshape(shape)
+# arr = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 t1 = time()
 print("Time for filling array (numpy): %.3fs" % (t1 - t0))
 
 t0 = time()
-content2 = content.copy()
+arr2 = arr.copy()
 t1 = time()
 print("Time for copying array in-memory (numpy): %.3fs" % (t1 - t0))
 
 # Create and fill a caterva array using a block iterator and an in-memory frame
 t0 = time()
-carr = cat.empty(shape, pshape=pshape, itemsize=content.itemsize, memframe=True,
+carr = cat.empty(shape, pshape=pshape, itemsize=arr.itemsize, memframe=True,
                  cname=cname, clevel=clevel, filters=[filter],
                  cnthreads=nthreads, dnthreads=nthreads,
                  metalayers={"numpy": dtype})
 for block, info in carr.iter_write():
-    nparray = content[info.slice]
+    nparray = arr[info.slice]
     block[:] = bytes(nparray)
 acratio = carr.cratio
 t1 = time()
@@ -66,12 +66,12 @@ t0 = time()
 for i in range(1):
     carr3 = cat.from_sframe(sframe)
     dtype_deserialized = carr3.get_metalayer("numpy")
-    content3 = carr3.to_numpy(dtype=dtype_deserialized)
+    arr3 = carr3.to_numpy(dtype=dtype_deserialized)
 t1 = time()
 print("Time for re-creating array in-memory (caterva -> numpy): %.3fs" % (t1 - t0))
 
 # print("Checking that the deserialization is ...")
 # t0 = time()
-# np.testing.assert_allclose(content2, content3)
+# np.testing.assert_allclose(arr2, arr3)
 # t1 = time()
 # print("ok!")

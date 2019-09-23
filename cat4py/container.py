@@ -185,6 +185,11 @@ class Container(ext.Container):
         ndarray
             The NumPy array object containing the data of the whole Container.
         """
+        # Alternate way to build a numpy array, but a bit slower
+        # arr = np.empty(self.shape, dtype)
+        # for block, info in self.iter_read(self.pshape):
+        #     arr[info.slice] = np.frombuffer(block, dtype=dtype).reshape(info.shape)
+        # return arr
         return np.frombuffer(self.to_buffer(), dtype=dtype).reshape(self.shape)
 
     def has_metalayer(self, name):

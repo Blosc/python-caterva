@@ -400,6 +400,7 @@ cdef class ReadIter:
     cdef blockshape
     cdef dtype
     cdef nparts
+    cdef object IterInfo
 
     def __init__(self, arr, blockshape):
         if not arr.filled:
@@ -409,6 +410,7 @@ cdef class ReadIter:
             blockshape = arr.pshape
         self.blockshape = blockshape
         self.nparts = 0
+        self.IterInfo = namedtuple("IterInfo", "slice, shape, size")
 
     def __iter__(self):
         return self
@@ -440,8 +442,7 @@ cdef class ReadIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(ndim)])
         sh = [s.stop - s.start for s in sl]
-        IterInfo = namedtuple("IterInfo", "slice, shape, size")
-        info = IterInfo(slice=sl, shape=sh, size=np.prod(sh))
+        info = self.IterInfo(slice=sl, shape=sh, size=np.prod(sh))
         self.nparts += 1
 
         buf = self.arr.slicebuffer(info.slice)
