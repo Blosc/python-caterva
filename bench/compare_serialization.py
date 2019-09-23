@@ -2,7 +2,8 @@
 # multidimensional arrays using different methods:
 # * to_sframe() / from_sframe()
 # * Numpy copy
-# * PyArrow (shallow copy)
+# * PyArrow
+# * Pickle v4
 # * Pickle v5 (in the future)
 
 import cat4py as cat
@@ -10,8 +11,8 @@ import numpy as np
 from time import time
 import pyarrow as pa
 
-# import pickle
-# assert(pickle.HIGHEST_PROTOCOL < 5)
+import pickle
+assert(pickle.HIGHEST_PROTOCOL <= 4)
 
 check_roundtrip = True  # set this to True to check for roundtrip validity
 
@@ -68,6 +69,11 @@ t1 = time()
 print("Time for serializing array in-memory (arrow, no-copy): %.3fs" % (t1 - t0))
 
 t0 = time()
+frame_pickle = pickle.dumps(arr, protocol=4)
+t1 = time()
+print("Time for serializing array in-memory (pickle4, copy): %.3fs" % (t1 - t0))
+
+t0 = time()
 carr2 = cat.from_sframe(sframe)
 t1 = time()
 print("Time for de-serializing array in-memory (caterva, no-copy): %.3fs" % (t1 - t0))
@@ -82,6 +88,16 @@ t0 = time()
 arr2 = pa.deserialize_components(components)
 t1 = time()
 print("Time for de-serializing array in-memory (arrow, no-copy): %.3fs" % (t1 - t0))
+
+if check_roundtrip:
+    print("Checking that the roundtrip is... ", end="")
+    np.testing.assert_allclose(arr2, arr)
+    print("ok!")
+
+t0 = time()
+arr2 = pickle.loads(frame_pickle)
+t1 = time()
+print("Time for de-serializing array in-memory (pickle4, copy): %.3fs" % (t1 - t0))
 
 if check_roundtrip:
     print("Checking that the roundtrip is... ", end="")
