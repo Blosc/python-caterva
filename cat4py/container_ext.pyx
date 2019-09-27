@@ -49,7 +49,14 @@ cdef extern from "blosc2.h":
         BLOSC2_PREFILTER_INPUTS_MAX
 
     ctypedef struct blosc2_frame_metalayer
-    ctypedef struct blosc2_frame
+    ctypedef struct blosc2_frame:
+      char* fname
+      uint8_t* sdata
+      uint8_t* coffsets
+      int64_t len
+      int64_t maxlen
+      uint32_t trailer_len
+
     blosc2_frame *blosc2_new_frame(char *fname)
 
     ctypedef struct blosc2_context
@@ -67,14 +74,16 @@ cdef extern from "blosc2.h":
         int32_t chunksize
         uint8_t filters[BLOSC2_MAX_FILTERS]
         uint8_t filters_meta[BLOSC2_MAX_FILTERS]
-        int32_t nchunks;
-        int64_t nbytes;
-        int64_t cbytes;
-        uint8_t** data;
-        blosc2_frame* frame;
-        blosc2_context* cctx;
-        blosc2_context* dctx;
-        uint8_t* reserved;
+        int32_t nchunks
+        int64_t nbytes
+        int64_t cbytes
+        uint8_t** data
+        blosc2_frame* frame
+        blosc2_context* cctx
+        blosc2_context* dctx
+        int16_t nmetalayers
+        uint8_t* usermeta
+        int32_t usermeta_len
 
     ctypedef struct blosc2_prefilter_params:
         int ninputs
@@ -105,6 +114,7 @@ cdef extern from "blosc2.h":
     blosc2_cparams BLOSC2_CPARAMS_DEFAULTS
     blosc2_dparams BLOSC2_DPARAMS_DEFAULTS
 
+    int64_t blosc2_schunk_to_frame(blosc2_schunk* schunk, blosc2_frame* frame)
     int blosc2_has_metalayer(blosc2_schunk *schunk, char *name)
     int blosc2_add_metalayer(blosc2_schunk *schunk, char *name, uint8_t *content, uint32_t content_len)
     int blosc2_update_metalayer(blosc2_schunk *schunk, char *name, uint8_t *content, uint32_t content_len)
@@ -114,6 +124,8 @@ cdef extern from "blosc2.h":
     int blosc2_get_usermeta(blosc2_schunk* schunk, uint8_t** content)
 
     char* blosc_list_compressors()
+
+    int blosc2_free_frame(blosc2_frame *frame)
 
 
 cdef extern from "caterva.h":
@@ -163,6 +175,7 @@ cdef extern from "caterva.h":
     caterva_dims_t caterva_new_dims(int64_t *dims, int8_t ndim)
     caterva_array_t *caterva_empty_array(caterva_ctx_t *ctx, blosc2_frame *fr, caterva_dims_t *pshape)
     int caterva_free_array(caterva_array_t *carr)
+    caterva_array_t *caterva_from_sframe(caterva_ctx_t *ctx, uint8_t *sframe, int64_t len, bool copy)
     caterva_array_t *caterva_from_file(caterva_ctx_t *ctx, const char *filename, bool copy)
     int caterva_from_buffer(caterva_array_t *dest, caterva_dims_t *shape, void *src)
     int caterva_to_buffer(caterva_array_t *src, void *dest)
@@ -387,6 +400,7 @@ cdef class ReadIter:
     cdef blockshape
     cdef dtype
     cdef nparts
+    cdef object IterInfo
 
     def __init__(self, arr, blockshape):
         if not arr.filled:
@@ -396,6 +410,7 @@ cdef class ReadIter:
             blockshape = arr.pshape
         self.blockshape = blockshape
         self.nparts = 0
+        self.IterInfo = namedtuple("IterInfo", "slice, shape, size")
 
     def __iter__(self):
         return self
@@ -427,8 +442,7 @@ cdef class ReadIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(ndim)])
         sh = [s.stop - s.start for s in sl]
-        IterInfo = namedtuple("IterInfo", "slice, shape, size")
-        info = IterInfo(slice=sl, shape=sh, size=np.prod(sh))
+        info = self.IterInfo(slice=sl, shape=sh, size=np.prod(sh))
         self.nparts += 1
 
         buf = self.arr.slicebuffer(info.slice)
@@ -555,6 +569,9 @@ cdef class Container:
 
         pshape = kwargs['pshape'] if 'pshape' in kwargs else None
         filename = kwargs['filename'] if 'filename' in kwargs else None
+        memframe = kwargs['memframe'] if 'memframe' in kwargs else None
+        if filename is not None and memframe is True:
+            raise ValueError("You cannot specify a `filename` and set `memframe` to True at once.")
         if pshape is None:
             if filename is not None:
                 raise NotImplementedError
@@ -570,7 +587,10 @@ cdef class Container:
             free(pshape_)
 
             if filename is None:
-                _frame = NULL
+                if memframe:
+                    _frame = blosc2_new_frame(NULL)
+                else:
+                    _frame = NULL
             else:
                 if os.path.isfile(filename):
                     raise FileExistsError
@@ -586,6 +606,25 @@ cdef class Container:
                 name = name.encode("utf-8") if isinstance(name, str) else name
                 content = msgpack.packb(content)
                 blosc2_add_metalayer(self.array.sc, name, content, len(content))
+
+    def __getitem__(self, key):
+        cdef caterva_dims_t _start, _stop, _pshape
+        ndim = self.array.ndim
+        _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, self.shape)
+        bsize = size * self.itemsize
+        buffer = bytes(bsize)
+        err = caterva_get_slice_buffer(<char *> buffer, self.array, &_start, &_stop, &_pshape)
+        return buffer
+
+    def __setitem__(self, key, item):
+        if not self.array.filled:
+            raise NotImplementedError("The Container is not filled")
+        if self.array.storage == CATERVA_STORAGE_BLOSC:
+            raise NotImplementedError("The Container is not backed by a plain buffer")
+        cdef caterva_dims_t _start, _stop, _pshape
+        ndim = self.array.ndim
+        _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, self.shape)
+        caterva_set_slice_buffer(self.array, <void *> <char *> item, &_start, &_stop)
 
     def tocapsule(self):
         return PyCapsule_New(self.array, "caterva_array_t*", NULL)
@@ -613,22 +652,41 @@ cdef class Container:
     def squeeze(self):
         caterva_squeeze(self.array)
 
-    def __getitem__(self, key):
-        cdef caterva_dims_t _start, _stop, _pshape
-        ndim = self.array.ndim
-        _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, self.shape)
-        bsize = size * self.itemsize
-        buffer = bytes(bsize)
-        err = caterva_get_slice_buffer(<char *> buffer, self.array, &_start, &_stop, &_pshape)
+    def to_buffer(self):
+        size = self.size * self.itemsize
+        buffer = bytes(size)
+        caterva_to_buffer(self.array, <void *> <char *> buffer)
         return buffer
 
-    def __setitem__(self, key, item):
-        if not self.array.filled or self.array.storage == CATERVA_STORAGE_BLOSC:
-            raise NotImplementedError
-        cdef caterva_dims_t _start, _stop, _pshape
-        ndim = self.array.ndim
-        _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, self.shape)
-        caterva_set_slice_buffer(self.array, <void *> <char *> item, &_start, &_stop)
+    def to_sframe(self):
+        if not self.array.filled:
+            raise NotImplementedError("The Container is not filled")
+        if self.array.storage != CATERVA_STORAGE_BLOSC:
+            raise NotImplementedError("The Container is backed by a plain buffer")
+        cdef char* fname
+        cdef char* data
+        cdef bytes sdata
+        cdef blosc2_frame* frame
+        if self.array.sc.frame != NULL:
+            fname = self.array.sc.frame.fname
+            if fname == NULL:
+                data = <char*> self.array.sc.frame.sdata
+                sdata = data[:self.array.sc.frame.len]
+            else:
+                with open(fname, 'rb') as f:
+                    sdata = f.read()
+        else:
+            # Container is not backed by a frame, so create a new one and fill it
+            # Here there is a double copy; how to avoid it?
+            frame = blosc2_new_frame(NULL)
+            blosc2_schunk_to_frame(self.array.sc, frame)
+            data = <char*> frame.sdata
+            sdata = data[:frame.len]
+            blosc2_free_frame(frame)
+        return sdata
+
+    def copy(self, Container dest):
+        caterva_copy(dest.array, self.array)
 
     def __dealloc__(self):
         if self.array != NULL:
@@ -646,20 +704,13 @@ def from_file(Container arr, filename, copy):
     arr.array = a_
 
 
-def copy(Container src, Container dest):
-    caterva_copy(dest.array, src.array)
-
-
-def to_buffer(Container arr):
-    cdef caterva_dims_t shape_ = caterva_get_shape(arr.array)
-    shape = []
-    for i in range(shape_.ndim):
-        shape.append(shape_.dims[i])
-    size = np.prod(shape) * arr.array.ctx.cparams.typesize
-
-    buffer = bytes(size)
-    caterva_to_buffer(arr.array, <void *> <char *> buffer)
-    return buffer
+def from_sframe(Container arr, bytes sframe, copy):
+    ctx = Context()
+    cdef caterva_ctx_t *ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.tocapsule(), "caterva_ctx_t*")
+    cdef uint8_t *frame_ = sframe
+    cdef caterva_array_t *a_ = caterva_from_sframe(ctx_, frame_, len(sframe), copy)
+    arr.ctx = ctx
+    arr.array = a_
 
 
 def from_buffer(Container arr, shape, buf):

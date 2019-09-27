@@ -17,6 +17,7 @@ cnames = list(ext.cnames2codecs)
 # Filters
 from .container_ext import NOFILTER, SHUFFLE, BITSHUFFLE, DELTA, TRUNC_PREC
 # Public API for container module
+
 from .tlarray import (TLArray)
 from .nparray import (NPArray)
 
@@ -117,6 +118,34 @@ def from_file(filename, copy=False):
 
     arr = ext.Container()
     ext.from_file(arr, filename, copy)
+    if arr.has_metalayer("numpy"):
+        arr.__class__ = NPArray
+        dtype = arr.get_metalayer("numpy")[b"dtype"]
+        arr.pre_init(dtype)
+    else:
+        arr.pre_init()
+
+    return arr
+
+
+def from_sframe(sframe, copy=False):
+    """Open a new container from `sframe`.
+
+    Parameters
+    ----------
+    sframe: bytes
+        The Blosc2 serialized frame with a Caterva metalayer on it.
+    copy: bool
+        If true, the container is backed by a new, sparse in-memory super-chunk.
+        Else, an in-memory, frame-backed one is created (i.e. no copies are made).
+
+    Returns
+    -------
+    Container
+        The new :py:class:`Container` object.
+    """
+    arr = Container()
+    ext.from_sframe(arr, sframe, copy)
     if arr.has_metalayer("numpy"):
         arr.__class__ = NPArray
         dtype = arr.get_metalayer("numpy")[b"dtype"]

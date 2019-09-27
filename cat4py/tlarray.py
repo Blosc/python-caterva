@@ -33,6 +33,9 @@ class TLArray(ext.Container):
             The partition shape.  If None, the store is a plain buffer (non-compressed).
         filename: str or None
             The name of the file to store data.  If `None`, data is stores in-memory.
+        memframe: bool
+            If True, the Container is backed by a frame in-memory.  Else, by a
+            super-chunk.  Default: False.
         metalayers: dict or None
             A dictionary with different metalayers.  One entry per metalayer:
                 key: bytes or str
@@ -160,7 +163,7 @@ class TLArray(ext.Container):
             A new container that contains the copy.
         """
         arr = TLArray(**kwargs)
-        ext.copy(self, arr)
+        super(Container, self).copy(arr)
         return arr
 
     def to_buffer(self):
@@ -171,7 +174,7 @@ class TLArray(ext.Container):
         bytes
             The buffer containing the data of the whole Container.
         """
-        return ext.to_buffer(self)
+        return super(Container, self).to_buffer()
 
     def to_numpy(self, dtype):
         """Return a NumPy array with the data contents and `dtype`.
@@ -186,6 +189,11 @@ class TLArray(ext.Container):
         ndarray
             The NumPy array object containing the data of the whole Container.
         """
+        # Alternate way to build a numpy array, but a bit slower
+        # arr = np.empty(self.shape, dtype)
+        # for block, info in self.iter_read(self.pshape):
+        #     arr[info.slice] = np.frombuffer(block, dtype=dtype).reshape(info.shape)
+        # return arr
         return np.frombuffer(self.to_buffer(), dtype=dtype).reshape(self.shape)
 
     def has_metalayer(self, name):
