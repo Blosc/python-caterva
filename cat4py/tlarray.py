@@ -22,7 +22,7 @@ def process_key(key, ndim):
     return key
 
 
-class Container(ext.Container):
+class TLArray(ext.Container):
 
     def __init__(self, **kwargs):
         """The basic and multidimensional and type-less data container.
@@ -60,7 +60,8 @@ class Container(ext.Container):
             If a dictionary should be used during compression.  Default: False.
 
         """
-        super(Container, self).__init__(**kwargs)
+        self.pre_init(**kwargs)
+        super(TLArray, self).__init__(**kwargs)
 
     def __getitem__(self, key):
         """Return a (multidimensional) slice as specified in `key`.
@@ -77,7 +78,7 @@ class Container(ext.Container):
             The a buffer with the requested data.
         """
         key = process_key(key, self.ndim)
-        buff = super(Container, self).__getitem__(key)
+        buff = super(TLArray, self).__getitem__(key)
         return buff
 
     def __setitem__(self, key, item):
@@ -95,7 +96,10 @@ class Container(ext.Container):
             The buffer with the values to be used for the update.
         """
         key = process_key(key, self.ndim)
-        super(Container, self).__setitem__(key, item)
+        super(TLArray, self).__setitem__(key, item)
+
+    def pre_init(self, **kwargs):
+        pass
 
     def iter_read(self, blockshape=None):
         """Iterate over data blocks whose dims are specified in `blockshape`.
@@ -152,10 +156,10 @@ class Container(ext.Container):
 
         Returns
         -------
-        Container
+        TLArray
             A new container that contains the copy.
         """
-        arr = Container(**kwargs)
+        arr = TLArray(**kwargs)
         ext.copy(self, arr)
         return arr
 
@@ -259,94 +263,3 @@ class Container(ext.Container):
         """
         content = msgpack.packb(content)
         return ext.update_usermeta(self, content)
-
-
-def empty(shape, **kwargs):
-    """Create an empty container.
-
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`Container.__init__` constructor.
-
-    Parameters
-    ----------
-    shape: tuple or list
-        The shape for the final container.
-
-    Returns
-    -------
-    Container
-        The new :py:class:`Container` object.
-    """
-    arr = Container(**kwargs)
-    arr.updateshape(shape)
-    return arr
-
-
-def from_buffer(buffer, shape, **kwargs):
-    """Create a container out of a buffer.
-
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`Container.__init__` constructor.
-
-    Parameters
-    ----------
-    buffer: bytes
-        The buffer of the data to populate the container.
-    shape: tuple or list
-        The shape for the final container.
-
-    Returns
-    -------
-    Container
-        The new :py:class:`Container` object.
-    """
-    arr = Container(**kwargs)
-    ext.from_buffer(arr, shape, buffer)
-    return arr
-
-
-def from_numpy(nparray, **kwargs):
-    """Create a container out of a NumPy array.
-
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`Container.__init__` constructor.
-
-    Parameters
-    ----------
-    nparray: NumPy array
-        The NumPy array to populate the container with.
-
-    Returns
-    -------
-    Container
-        The new :py:class:`Container` object.
-    """
-    arr = from_buffer(bytes(nparray), nparray.shape,
-                      itemsize=nparray.itemsize, **kwargs)
-    return arr
-
-
-def from_file(filename, copy=False):
-    """Open a new container from `filename`.
-
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`Container.__init__` constructor.
-
-    Parameters
-    ----------
-    filename: str
-        The file having a Blosc2 frame format with a Caterva metalayer on it.
-    copy: bool
-        If true, the container is backed by a new, sparse in-memory super-chunk.
-        Else, an on-disk, frame-backed one is created (i.e. no copies are made).
-
-    Returns
-    -------
-    Container
-        The new :py:class:`Container` object.
-    """
-    arr = Container()
-    ext.from_file(arr, filename, copy)
-    # if arr.has_metalayer("numpy"):
-    #     arr.__class__ = Array
-    return arr

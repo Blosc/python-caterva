@@ -34,14 +34,14 @@ def process_key(key, ndim):
     return key
 
 
-class NPContainer(ext.Container):
+class NPArray(ext.Container):
 
     def __init__(self, dtype=np.float32, **kwargs):
         """The basic and multidimensional and type-less data container.
 
         Parameters
         ----------
-         dtype: numpy.dtype
+        dtype: numpy.dtype
             The dtype of the container elements.  Default: np.float32.
         pshape: iterable object or None
             The partition shape.  If None, the store is a plain buffer (non-compressed).
@@ -72,12 +72,8 @@ class NPContainer(ext.Container):
             If a dictionary should be used during compression.  Default: False.
 
         """
-        self.dtype = np.dtype(dtype)
-        kwargs["itemsize"] = self.dtype.itemsize
-        if "pshape" in kwargs:
-            kwargs["metalayers"] = {"numpy": {"dtype": str(self.dtype)}}
-        self.kwargs = kwargs
-        super(NPContainer, self).__init__(**kwargs)
+        self.pre_init(dtype, **kwargs)
+        super(NPArray, self).__init__(**kwargs)
 
     def __getitem__(self, key):
         """Return a (multidimensional) slice as specified in `key`.
@@ -94,11 +90,10 @@ class NPContainer(ext.Container):
             The numpy array with the requested data.
         """
         key = process_key(key, self.ndim)
-        buff = super(NPContainer, self).__getitem__(key)
+        buff = super(NPArray, self).__getitem__(key)
 
         shape = [k.stop - k.start for k in key]
         return np.frombuffer(buff, dtype=self.dtype).reshape(shape)
-
 
     def __setitem__(self, key, item):
         """Set a (multidimensional) slice as specified in `key`.
@@ -115,7 +110,14 @@ class NPContainer(ext.Container):
             The numpy array with the values to be used for the update.
         """
         key = process_key(key, self.ndim)
-        super(NPContainer, self).__setitem__(key, bytes(item))
+        super(NPArray, self).__setitem__(key, bytes(item))
+
+    def pre_init(self, dtype, **kwargs):
+        self.dtype = np.dtype(dtype)
+        kwargs["itemsize"] = self.dtype.itemsize
+        if "pshape" in kwargs:
+            kwargs["metalayers"] = {"numpy": {"dtype": str(self.dtype)}}
+        self.kwargs = kwargs
 
     def iter_read(self, blockshape=None):
         """Iterate over data blocks whose dims are specified in `blockshape`.
@@ -175,7 +177,7 @@ class NPContainer(ext.Container):
         Container
             A new container that contains the copy.
         """
-        arr = NPContainer(dtype=self.dtype, **kwargs)
+        arr = NPArray(dtype=self.dtype, **kwargs)
         ext.copy(self, arr)
         return arr
 
@@ -291,10 +293,10 @@ def empty(shape, dtype=np.float32, **kwargs):
 
     Returns
     -------
-    NPContainer
+    NPArray
         The new :py:class:`NPContainer` object.
     """
-    arr = NPContainer(dtype, **kwargs)
+    arr = NPArray(dtype, **kwargs)
     arr.updateshape(shape)
     return arr
 
@@ -316,10 +318,10 @@ def from_buffer(buffer, shape, dtype=np.float32, **kwargs):
 
     Returns
     -------
-    NPContainer
+    NPArray
         The new :py:class:`NPContainer` object.
     """
-    arr = NPContainer(dtype, **kwargs)
+    arr = NPArray(dtype, **kwargs)
     ext.from_buffer(arr, shape, buffer)
     return arr
 
@@ -337,7 +339,7 @@ def from_numpy(nparray, **kwargs):
 
     Returns
     -------
-    NPContainer
+    NPArray
         The new :py:class:`NPContainer` object.
     """
     arr = from_buffer(bytes(nparray), nparray.shape, dtype=nparray.dtype,
@@ -361,10 +363,10 @@ def from_file(filename, copy=False):
 
     Returns
     -------
-    NPContainer
+    NPArray
         The new :py:class:`Container` object.
     """
-    arr = NPContainer()
+    arr = NPArray()
     ext.from_file(arr, filename, copy)
     dtype = arr.get_metalayer("numpy")[b"dtype"]
     arr.dtype = np.dtype(dtype)

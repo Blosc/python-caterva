@@ -14,11 +14,11 @@ itemsize = np.dtype(dtype).itemsize
 nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create a caterva array from a numpy array
-a = cat.npcontainer.from_numpy(nparray, pshape=pshape)
+a = cat.from_numpy(nparray, dtype=nparray.dtype, pshape=pshape)
 print(a.to_numpy())
 
 # Create an empty caterva array (on disk)
-b = cat.npcontainer.empty(shape, dtype=dtype, itemsize=itemsize)
+b = cat.empty(shape, dtype=dtype, itemsize=itemsize)
 
 # Fill an empty caterva array using a block iterator
 for block, info in b.iter_write():
