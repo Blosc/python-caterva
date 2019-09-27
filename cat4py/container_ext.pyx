@@ -688,6 +688,48 @@ cdef class Container:
     def copy(self, Container dest):
         caterva_copy(dest.array, self.array)
 
+    def has_metalayer(self, name):
+        if  self.array.storage != CATERVA_STORAGE_BLOSC and self.array.sc.frame == NULL:
+            return NotImplementedError
+        name = name.encode("utf-8") if isinstance(name, str) else name
+        n = blosc2_has_metalayer(self.array.sc, name)
+        return False if n < 0 else True
+
+    def get_metalayer(self, name):
+        if  self.array.storage != CATERVA_STORAGE_BLOSC and self.array.sc.frame == NULL:
+            return NotImplementedError
+        name = name.encode("utf-8") if isinstance(name, str) else name
+        cdef uint8_t *_content
+        cdef uint32_t content_len
+        n = blosc2_get_metalayer(self.array.sc, name, &_content, &content_len)
+        content = <char *>_content
+        content = content[:content_len]  # does a copy
+        free(_content)
+        return content
+
+    def update_metalayer(self, name, content):
+        name = name.encode("utf-8") if isinstance(name, str) else name
+        content_ = self.get_metalayer(name)
+        if len(msgpack.packb(content_)) != len(content):
+            return ValueError("The length of the content in a metalayer cannot change.")
+        n = blosc2_update_metalayer(self.array.sc, name, content, len(content))
+        return n
+
+    def update_usermeta(self, content):
+        n = blosc2_update_usermeta(self.array.sc, content, len(content), BLOSC2_CPARAMS_DEFAULTS)
+        self.usermeta_len = len(content)
+        return n
+
+    def get_usermeta(self):
+        cdef uint8_t *_content
+        n = blosc2_get_usermeta(self.array.sc, &_content)
+        if n < 0:
+            raise ValueError("Cannot get the usermeta section")
+        content = <char *>_content
+        content = content[:n]  # does a copy
+        free(_content)
+        return content
+
     def __dealloc__(self):
         if self.array != NULL:
             caterva_free_array(self.array)
@@ -721,55 +763,6 @@ def from_buffer(Container arr, shape, buf):
     cdef int retcode = caterva_from_buffer(arr.array, &_shape, <void*> <char *> buf)
     if retcode < 0:
         raise ValueError("Error filling the caterva object with buffer")
-
-
-def has_metalayer(Container arr, name):
-    if  arr.array.storage != CATERVA_STORAGE_BLOSC and arr.array.sc.frame == NULL:
-        return NotImplementedError
-
-    name = name.encode("utf-8") if isinstance(name, str) else name
-    n = blosc2_has_metalayer(arr.array.sc, name)
-    return False if n < 0 else True
-
-
-def get_metalayer(Container arr, name):
-    if  arr.array.storage != CATERVA_STORAGE_BLOSC and arr.array.sc.frame == NULL:
-        return NotImplementedError
-
-    name = name.encode("utf-8") if isinstance(name, str) else name
-    cdef uint8_t *_content
-    cdef uint32_t content_len
-    n = blosc2_get_metalayer(arr.array.sc, name, &_content, &content_len)
-    content = <char *>_content
-    content = content[:content_len]  # does a copy
-    free(_content)
-    return content
-
-
-def update_metalayer(Container arr, name, content):
-     name = name.encode("utf-8") if isinstance(name, str) else name
-     content_ = get_metalayer(arr, name)
-     if len(content_) != len(content):
-         return ValueError("The length of the content in a metalayer cannot change.")
-     n = blosc2_update_metalayer(arr.array.sc, name, content, len(content))
-     return n
-
-
-def update_usermeta(Container arr, content):
-    n = blosc2_update_usermeta(arr.array.sc, content, len(content), BLOSC2_CPARAMS_DEFAULTS)
-    arr.usermeta_len = len(content)
-    return n
-
-
-def get_usermeta(Container arr):
-    cdef uint8_t *_content
-    n = blosc2_get_usermeta(arr.array.sc, &_content)
-    if n < 0:
-        raise ValueError("Cannot get the usermeta section")
-    content = <char *>_content
-    content = content[:n]  # does a copy
-    free(_content)
-    return content
 
 
 def list_cnames():

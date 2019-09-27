@@ -10,7 +10,7 @@ import os
                              ([20, 134, 13], [3, 13, 5], "testmeta01.cat", np.int32),
                              ([12, 13, 14, 15, 16], [2, 6, 4, 5, 4], "testmeta02.cat", np.float32)
                          ])
-def test_persistency(shape, pshape, filename, dtype):
+def test_metalayers(shape, pshape, filename, dtype):
     if os.path.exists(filename):
         os.remove(filename)
 

@@ -1,6 +1,7 @@
 from . import container_ext as ext
 import numpy as np
 import msgpack
+from .container import Container
 
 
 class ReadIter(ext.ReadIter):
@@ -22,7 +23,7 @@ def process_key(key, ndim):
     return key
 
 
-class TLArray(ext.Container):
+class TLArray(Container):
 
     def __init__(self, **kwargs):
         """The basic and multidimensional and type-less data container.
@@ -65,6 +66,13 @@ class TLArray(ext.Container):
         """
         self.pre_init(**kwargs)
         super(TLArray, self).__init__(**kwargs)
+
+    @classmethod
+    def cast(cls, some_cont):
+        assert isinstance(some_cont, Container)
+        some_cont.__class__ = cls
+        assert isinstance(some_cont, TLArray)
+        return some_cont
 
     def __getitem__(self, key):
         """Return a (multidimensional) slice as specified in `key`.
@@ -163,7 +171,7 @@ class TLArray(ext.Container):
             A new container that contains the copy.
         """
         arr = TLArray(**kwargs)
-        super(Container, self).copy(arr)
+        super(TLArray, self).copy(arr)
         return arr
 
     def to_buffer(self):
@@ -174,7 +182,7 @@ class TLArray(ext.Container):
         bytes
             The buffer containing the data of the whole Container.
         """
-        return super(Container, self).to_buffer()
+        return super(TLArray, self).to_buffer()
 
     def to_numpy(self, dtype):
         """Return a NumPy array with the data contents and `dtype`.
@@ -209,7 +217,7 @@ class TLArray(ext.Container):
         bool
             True if metalayer exists in `self`; else False.
         """
-        return ext.has_metalayer(self, name)
+        return super(TLArray, self).has_metalayer(name)
 
     def get_metalayer(self, name):
         """Return the `name` metalayer.
@@ -227,7 +235,8 @@ class TLArray(ext.Container):
         """
         if self.has_metalayer(name) is False:
             return None
-        content = ext.get_metalayer(self, name)
+        content = super(TLArray, self).get_metalayer(name)
+
         return msgpack.unpackb(content)
 
     def update_metalayer(self, name, content):
@@ -244,7 +253,7 @@ class TLArray(ext.Container):
 
         """
         content = msgpack.packb(content)
-        return ext.update_metalayer(self, name, content)
+        return super(TLArray, self).update_metalayer(name, content)
 
     def get_usermeta(self):
         """Return the `usermeta` section.
@@ -255,7 +264,7 @@ class TLArray(ext.Container):
             The buffer for the usermeta section (typically in msgpack format,
             but not necessarily).
         """
-        content = ext.get_usermeta(self)
+        content = super(TLArray, self).get_usermeta()
         return msgpack.unpackb(content)
 
     def update_usermeta(self, content):
@@ -270,4 +279,4 @@ class TLArray(ext.Container):
 
         """
         content = msgpack.packb(content)
-        return ext.update_usermeta(self, content)
+        return super(TLArray, self).update_usermeta(content)
