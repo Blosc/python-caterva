@@ -79,10 +79,10 @@ t1 = time()
 print("Time for de-serializing array in-memory (caterva, no-copy): %.3fs" % (t1 - t0))
 
 # Activate this when we would have a proper NPArray class with an __array__ method
-# if check_roundtrip:
-#     print("Checking that the roundtrip is... ", end="")
-#     np.testing.assert_allclose(carr2, arr)
-#     print("ok!")
+if check_roundtrip:
+    print("The roundtrip is... ", end="", flush=True)
+    np.testing.assert_allclose(carr2, arr)
+    print("ok!")
 
 t0 = time()
 arr2 = pa.deserialize_components(components)
@@ -90,7 +90,7 @@ t1 = time()
 print("Time for de-serializing array in-memory (arrow, no-copy): %.3fs" % (t1 - t0))
 
 if check_roundtrip:
-    print("Checking that the roundtrip is... ", end="")
+    print("The roundtrip is... ", end="", flush=True)
     np.testing.assert_allclose(arr2, arr)
     print("ok!")
 
@@ -100,7 +100,7 @@ t1 = time()
 print("Time for de-serializing array in-memory (pickle4, copy): %.3fs" % (t1 - t0))
 
 if check_roundtrip:
-    print("Checking that the roundtrip is... ", end="")
+    print("The roundtrip is... ", end="", flush=True)
     np.testing.assert_allclose(arr2, arr)
     print("ok!")
 
@@ -110,7 +110,7 @@ t1 = time()
 print("Time for de-serializing array in-memory (arrow, copy): %.3fs" % (t1 - t0))
 
 if check_roundtrip:
-    print("Checking that the roundtrip is... ", end="")
+    print("The roundtrip is... ", end="", flush=True)
     np.testing.assert_allclose(arr2, arr)
     print("ok!")
 
@@ -123,6 +123,6 @@ t1 = time()
 print("Time for re-creating array in-memory (caterva -> numpy, copy): %.3fs" % (t1 - t0))
 
 if check_roundtrip:
-    print("Checking that the roundtrip is... ", end="")
+    print("The roundtrip is... ", end="", flush=True)
     np.testing.assert_allclose(arr2, arr)
     print("ok!")

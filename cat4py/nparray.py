@@ -82,7 +82,8 @@ class NPArray(Container):
         self.dtype = np.dtype(dtype)
         kwargs["itemsize"] = self.dtype.itemsize
         kwargs["metalayers"] = {"numpy": {
-            "version": 0,    # can be any number up to 127
+            # TODO: adding "version" does not deserialize well
+            # "version": 0,    # can be any number up to 127
             "dtype": str(self.dtype),
         }}
         self.kwargs = kwargs
@@ -117,6 +118,10 @@ class NPArray(Container):
         a = np.lib.stride_tricks.as_strided(np.empty(0), self.shape, (0, 0))
         shape = a[key].shape
         return np.frombuffer(buff, dtype=self.dtype).reshape(shape)
+
+    def __array__(self):
+        """Convert into a NumPy object via the array protocol."""
+        return self.to_numpy()
 
     def iter_read(self, blockshape=None):
         """Iterate over data blocks whose dims are specified in `blockshape`.
@@ -181,7 +186,7 @@ class NPArray(Container):
         return arr
 
     def to_buffer(self):
-        """Return a buffer with the data contents.
+        """Returns a buffer with the data contents.
 
         Returns
         -------
@@ -191,7 +196,7 @@ class NPArray(Container):
         return super(NPArray, self).to_buffer()
 
     def to_numpy(self):
-        """Return a NumPy array with the data contents and `dtype`.
+        """Returns a NumPy array with the data contents and `dtype`.
 
         Returns
         -------
