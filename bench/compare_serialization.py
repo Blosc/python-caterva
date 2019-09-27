@@ -64,9 +64,14 @@ print("Time for serializing array in-memory (caterva, copy): %.3fs" % (t1 - t0))
 
 t0 = time()
 serialized = pa.serialize(arr)
-components = serialized.to_components()
+pyarrow_nocopy = serialized.to_components()
 t1 = time()
 print("Time for serializing array in-memory (arrow, no-copy): %.3fs" % (t1 - t0))
+
+t0 = time()
+pyarrow_dumped = pa.serialize(arr).to_buffer().to_pybytes()
+t1 = time()
+print("Time for serializing array in-memory (arrow, copy): %.3fs" % (t1 - t0))
 
 t0 = time()
 frame_pickle = pickle.dumps(arr, protocol=4)
@@ -76,7 +81,7 @@ print("Time for serializing array in-memory (pickle4, copy): %.3fs" % (t1 - t0))
 t0 = time()
 carr2 = cat.from_sframe(sframe)
 t1 = time()
-print("Time for de-serializing array in-memory (caterva, no-copy): %.3fs" % (t1 - t0))
+print("Time for de-serializing array in-memory (caterva, copy): %.3fs" % (t1 - t0))
 
 # Activate this when we would have a proper NPArray class with an __array__ method
 if check_roundtrip:
@@ -85,9 +90,19 @@ if check_roundtrip:
     print("ok!")
 
 t0 = time()
-arr2 = pa.deserialize_components(components)
+arr2 = pa.deserialize_components(pyarrow_nocopy)
 t1 = time()
 print("Time for de-serializing array in-memory (arrow, no-copy): %.3fs" % (t1 - t0))
+
+if check_roundtrip:
+    print("The roundtrip is... ", end="", flush=True)
+    np.testing.assert_allclose(arr2, arr)
+    print("ok!")
+
+t0 = time()
+arr2 = pa.deserialize(pyarrow_dumped)
+t1 = time()
+print("Time for de-serializing array in-memory (arrow, copy): %.3fs" % (t1 - t0))
 
 if check_roundtrip:
     print("The roundtrip is... ", end="", flush=True)
@@ -105,19 +120,8 @@ if check_roundtrip:
     print("ok!")
 
 t0 = time()
-arr2 = pa.deserialize_components(components).copy()
-t1 = time()
-print("Time for de-serializing array in-memory (arrow, copy): %.3fs" % (t1 - t0))
-
-if check_roundtrip:
-    print("The roundtrip is... ", end="", flush=True)
-    np.testing.assert_allclose(arr2, arr)
-    print("ok!")
-
-t0 = time()
 for i in range(1):
     carr3 = cat.from_sframe(sframe)
-    dtype_deserialized = carr3.get_metalayer("numpy")
     arr2 = carr3.to_numpy()
 t1 = time()
 print("Time for re-creating array in-memory (caterva -> numpy, copy): %.3fs" % (t1 - t0))
@@ -126,3 +130,19 @@ if check_roundtrip:
     print("The roundtrip is... ", end="", flush=True)
     np.testing.assert_allclose(arr2, arr)
     print("ok!")
+
+print()
+arrsize = arr.size * arr.itemsize
+time_100Mbps = arrsize / (10 * 2 ** 20)
+print("Time to transmit at 100 Mbps (no compression): %.3fs" % time_100Mbps)
+time_1Gbps = arrsize / (100 * 2 ** 20)
+print("Time to transmit at 1 Gbps (no compression): %.3fs" % time_1Gbps)
+time_10Gbps = arrsize / (1000 * 2 ** 20)
+print("Time to transmit at 10 Gbps (no compression): %.3fs" % time_10Gbps)
+
+ctime_100Mbps = (arrsize / acratio) / (10 * 2**20)
+print("Time to transmit at 100 Mbps (compression): %.3fs" % ctime_100Mbps)
+ctime_1Gbps = (arrsize / acratio) / (100 * 2**20)
+print("Time to transmit at 1 Gbps (compression): %.3fs" % ctime_1Gbps)
+ctime_10Gbps = (arrsize / acratio) / (1000 * 2**20)
+print("Time to transmit at 10 Gbps (compression): %.3fs" % ctime_10Gbps)
