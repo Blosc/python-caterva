@@ -20,15 +20,15 @@ else:
 
 itemsize = np.dtype(dtype).itemsize
 
-# Create an empty caterva array (on disk)
-a = cat.empty(shape, pshape, itemsize=itemsize, filename=filename, compcode=0)
+# Create an empty caterva array
+a = cat.empty(shape, pshape=pshape, dtype=dtype, filename=filename, compcode=0)
 
 # Fill an empty caterva array using a block iterator
 t0 = time()
 count = 0
 for block, info in a.iter_write():
-    nparray = np.arange(count, count + info.size, dtype=dtype)
-    block[:] = bytes(nparray)
+    nparray = np.arange(count, count + info.size, dtype=dtype).reshape(info.shape)
+    block[:] = nparray
     count += info.size
 t1 = time()
 print("Time for filling: %.3fs" % (t1 - t0))
@@ -37,8 +37,8 @@ print("Time for filling: %.3fs" % (t1 - t0))
 t0 = time()
 count = 0
 for block, info in a.iter_read(pshape):
-    nparray = np.arange(count, count + info.size, dtype=dtype)
-    assert block == bytes(nparray)
+    nparray = np.arange(count, count + info.size, dtype=dtype).reshape(info.shape)
+    np.testing.assert_allclose(block, nparray)
     count += info.size
 t1 = time()
 print("Time for reading with iterator: %.3fs" % (t1 - t0))

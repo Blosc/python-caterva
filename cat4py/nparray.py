@@ -108,7 +108,11 @@ class NPArray(Container):
         key = process_key(key, self.ndim)
         buff = super(NPArray, self).__getitem__(key)
 
-        shape = [k.stop - k.start for k in key]
+        # shape = [k.stop - k.start for k in key]   # not quite correct
+        # Trick to get the slice easily and without a lot of memory consumption
+        # Maybe there are more elegant ways for this, but meanwhile ...
+        a = np.lib.stride_tricks.as_strided(np.empty(0), self.shape, (0, 0))
+        shape = a[key].shape
         return np.frombuffer(buff, dtype=self.dtype).reshape(shape)
 
     def iter_read(self, blockshape=None):
