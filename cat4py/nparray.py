@@ -2,6 +2,8 @@ from cat4py import container_ext as ext
 import numpy as np
 import msgpack
 
+from .container import Container
+
 
 class ReadIter(ext.ReadIter):
     def __init__(self, arr, blockshape):
@@ -34,17 +36,18 @@ def process_key(key, ndim):
     return key
 
 
-class NPArray(ext.Container):
+class NPArray(Container):
 
-    def __init__(self, dtype=np.float32, **kwargs):
+    def __init__(self, dtype="float32", **kwargs):
         """The basic and multidimensional and type-less data container.
 
         Parameters
         ----------
         dtype: numpy.dtype
-            The dtype of the container elements.  Default: np.float32.
+            The dtype of the container elements.  Default: "float32".
         pshape: iterable object or None
             The partition shape.  If None, the store is a plain buffer (non-compressed).
+            Default: None.
         filename: str or None
             The name of the file to store data.  If `None`, data is stores in-memory.
         metalayers: dict or None
@@ -73,7 +76,13 @@ class NPArray(ext.Container):
 
         """
         self.pre_init(dtype, **kwargs)
-        super(NPArray, self).__init__(**kwargs)
+        super(NPArray, self).__init__(**self.kwargs)
+
+    def pre_init(self, dtype, **kwargs):
+        self.dtype = np.dtype(dtype)
+        kwargs["itemsize"] = self.dtype.itemsize
+        kwargs["metalayers"] = {"numpy": {"dtype": str(self.dtype)}}
+        self.kwargs = kwargs
 
     @classmethod
     def cast(cls, some_cont):
@@ -101,13 +110,6 @@ class NPArray(ext.Container):
 
         shape = [k.stop - k.start for k in key]
         return np.frombuffer(buff, dtype=self.dtype).reshape(shape)
-
-    def pre_init(self, dtype, **kwargs):
-        self.dtype = np.dtype(dtype)
-        kwargs["itemsize"] = self.dtype.itemsize
-        if "pshape" in kwargs:
-            kwargs["metalayers"] = {"numpy": {"dtype": str(self.dtype)}}
-        self.kwargs = kwargs
 
     def iter_read(self, blockshape=None):
         """Iterate over data blocks whose dims are specified in `blockshape`.
@@ -179,7 +181,7 @@ class NPArray(ext.Container):
         bytes
             The buffer containing the data of the whole Container.
         """
-        return ext.to_buffer(self)
+        return super(NPArray, self).to_buffer()
 
     def to_numpy(self):
         """Return a NumPy array with the data contents and `dtype`.
@@ -204,7 +206,7 @@ class NPArray(ext.Container):
         bool
             True if metalayer exists in `self`; else False.
         """
-        return super(TLArray, self).has_metalayer(name)
+        return super(NPArray, self).has_metalayer(name)
 
     def get_metalayer(self, name):
         """Return the `name` metalayer.
@@ -222,7 +224,7 @@ class NPArray(ext.Container):
         """
         if self.has_metalayer(name) is False:
             return None
-        content = super(TLArray, self).get_metalayer(name)
+        content = super(NPArray, self).get_metalayer(name)
 
         return msgpack.unpackb(content)
 
@@ -240,7 +242,7 @@ class NPArray(ext.Container):
 
         """
         content = msgpack.packb(content)
-        return super(TLArray, self).update_metalayer(name, content)
+        return super(NPArray, self).update_metalayer(name, content)
 
     def get_usermeta(self):
         """Return the `usermeta` section.
@@ -251,7 +253,7 @@ class NPArray(ext.Container):
             The buffer for the usermeta section (typically in msgpack format,
             but not necessarily).
         """
-        content = super(TLArray, self).get_usermeta()
+        content = super(NPArray, self).get_usermeta()
         return msgpack.unpackb(content)
 
     def update_usermeta(self, content):
@@ -266,4 +268,4 @@ class NPArray(ext.Container):
 
         """
         content = msgpack.packb(content)
-        return super(TLArray, self).update_usermeta(content)
+        return super(NPArray, self).update_usermeta(content)

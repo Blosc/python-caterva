@@ -576,10 +576,10 @@ cdef class Container:
             if filename is not None:
                 raise NotImplementedError
             else:
+                # We are probably de-serializing
                 self.array = caterva_empty_array(ctx_, NULL, NULL)
         else:
             ndim = len(pshape)
-
             pshape_ = <int64_t*> malloc(ndim * sizeof(int64_t))
             for i in range(ndim):
                 pshape_[i] = pshape[i]

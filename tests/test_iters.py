@@ -19,7 +19,7 @@ def test_iters(shape, pshape1, pshape2, dtype):
 
     itemsize = np.dtype(dtype).itemsize
     b = cat.empty(shape, pshape=pshape2, itemsize=itemsize)
-    blockshape = pshape2 if pshape2 is not None else shape
+    blockshape = pshape2 if pshape2 is not None else b.pshape
     for (block_r, info_r), (block_w, info_w) in lzip(a.iter_read(blockshape), b.iter_write()):
         block_w[:] = block_r
 

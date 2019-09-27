@@ -27,8 +27,8 @@ def get_pshape_guess(shape, itemsize=4, suggested_size=2**20):
     suggested_size: int
         A suggestion for the partition size.
 
-    Return
-    ------
+    Returns
+    -------
     tuple
         The guessed pshape.
     """
@@ -42,7 +42,8 @@ def get_pshape_guess(shape, itemsize=4, suggested_size=2**20):
             continue
         ratio = math.trunc(goal / current_goal)
         if ratio > 0:
-            print(ratio, goal)
             pshape[i] = ratio
         break
-    return tuple(pshape[::-1])
+    pshape = tuple(pshape[::-1])
+    # print("->", pshape)
+    return pshape

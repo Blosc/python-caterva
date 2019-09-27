@@ -15,7 +15,7 @@ def empty(shape, dtype=None, **kwargs):
     ----------
     shape: tuple or list
         The shape for the final container.
-    dtype: numpy.dtype
+    dtype: str or numpy.dtype
         The dtype of the data.  Default: None.
     Returns
     -------
@@ -23,6 +23,12 @@ def empty(shape, dtype=None, **kwargs):
         If dtype is None, a new :py:class:`Container` object is returned. If a
         dtype is passed, a new :py:class:`NPArray` is returned.
     """
+    itemsize = kwargs["itemsize"] if "itemsize" in kwargs else ext.cparams_dflts["itemsize"]
+    if "pshape" not in kwargs:
+        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
+    if kwargs["pshape"] is None:
+        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
+
     arr = TLArray(**kwargs) if dtype is None else NPArray(dtype, **kwargs)
     arr.updateshape(shape)
     return arr
@@ -142,7 +148,7 @@ def from_sframe(sframe, copy=False):
     ext.from_sframe(arr, sframe, copy)
     if arr.has_metalayer("numpy"):
         arr = NPArray.cast(arr)
-        dtype = arr.get_metalayer("numpy")[b"dtype"]
+        dtype = arr.get_metalayer("numpy")[b'dtype']
         arr.pre_init(dtype)
     else:
         arr = TLArray.cast(arr)

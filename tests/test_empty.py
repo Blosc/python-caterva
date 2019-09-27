@@ -19,7 +19,8 @@ def test_empty(shape, pshape, itemsize, cname, clevel, use_dict, cnthreads, dnth
                   blocksize=blocksize,
                   filters=filters)
 
-    assert a.pshape == pshape
+    if pshape is not None:
+        assert a.pshape == pshape
     assert a.shape == shape
     assert a.itemsize == itemsize
     assert a.cname == cname

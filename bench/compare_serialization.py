@@ -14,12 +14,13 @@ import pyarrow as pa
 import pickle
 assert(pickle.HIGHEST_PROTOCOL <= 4)
 
-check_roundtrip = True  # set this to True to check for roundtrip validity
+check_roundtrip = False  # set this to True to check for roundtrip validity
 
 # Dimensions, type and persistency properties for the arrays
 shape = (100, 5000, 250)
 # pshape = (20, 500, 50)
-pshape = (1, 5000, 250)
+# pshape = (1, 5000, 250)
+pshape = None   # automatic pshape
 dtype = "float64"
 
 # Compression properties
@@ -44,13 +45,12 @@ print("Time for copying array in-memory (numpy): %.3fs" % (t1 - t0))
 
 # Create and fill a caterva array using a block iterator and an in-memory frame
 t0 = time()
-carr = cat.empty(shape, pshape=pshape, itemsize=arr.itemsize, memframe=True,
+carr = cat.empty(shape, dtype=dtype, pshape=pshape, memframe=True,
                  cname=cname, clevel=clevel, filters=[filter],
-                 cnthreads=nthreads, dnthreads=nthreads,
-                 metalayers={"numpy": dtype})
+                 cnthreads=nthreads, dnthreads=nthreads)
 for block, info in carr.iter_write():
     nparray = arr[info.slice]
-    block[:] = bytes(nparray)
+    block[:] = nparray
 acratio = carr.cratio
 t1 = time()
 print("Time for creating an array in-memory (caterva, iter): %.3fs ; CRatio: %.1fx" % ((t1 - t0), acratio))
@@ -118,7 +118,7 @@ t0 = time()
 for i in range(1):
     carr3 = cat.from_sframe(sframe)
     dtype_deserialized = carr3.get_metalayer("numpy")
-    arr2 = carr3.to_numpy(dtype=dtype_deserialized)
+    arr2 = carr3.to_numpy()
 t1 = time()
 print("Time for re-creating array in-memory (caterva -> numpy, copy): %.3fs" % (t1 - t0))
 

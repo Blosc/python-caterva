@@ -67,6 +67,9 @@ class TLArray(Container):
         self.pre_init(**kwargs)
         super(TLArray, self).__init__(**kwargs)
 
+    def pre_init(self, **kwargs):
+        pass
+
     @classmethod
     def cast(cls, some_cont):
         assert isinstance(some_cont, Container)
@@ -91,9 +94,6 @@ class TLArray(Container):
         key = process_key(key, self.ndim)
         buff = super(TLArray, self).__getitem__(key)
         return buff
-
-    def pre_init(self, **kwargs):
-        pass
 
     def iter_read(self, blockshape=None):
         """Iterate over data blocks whose dims are specified in `blockshape`.
