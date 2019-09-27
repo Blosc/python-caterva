@@ -10,13 +10,8 @@ import numpy as np
                              ([12, 13, 14, 15, 16], None, 8)
                          ])
 def test_buffer(shape, pshape, itemsize):
-
     size = int(np.prod(shape))
-
     buffer = bytes(size * itemsize)
-
     a = cat.from_buffer(buffer, shape, pshape=pshape, itemsize=itemsize)
-
     buffer2 = a.to_buffer()
-
     assert buffer == buffer2

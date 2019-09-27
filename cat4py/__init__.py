@@ -18,5 +18,4 @@ cnames = list(ext.cnames2codecs)
 from .container_ext import NOFILTER, SHUFFLE, BITSHUFFLE, DELTA, TRUNC_PREC
 # Public API for container module
 from .container import (Container, empty, from_buffer, from_numpy, from_file,
-                        WriteIter, ReadIter)
-from . import npcontainer
+                        from_sframe, WriteIter, ReadIter)

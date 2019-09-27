@@ -33,6 +33,9 @@ class Container(ext.Container):
             The partition shape.  If None, the store is a plain buffer (non-compressed).
         filename: str or None
             The name of the file to store data.  If `None`, data is stores in-memory.
+        memframe: bool
+            If True, the Container is backed by a frame in-memory.  Else, by a
+            super-chunk.  Default: False.
         metalayers: dict or None
             A dictionary with different metalayers.  One entry per metalayer:
                 key: bytes or str
@@ -156,7 +159,7 @@ class Container(ext.Container):
             A new container that contains the copy.
         """
         arr = Container(**kwargs)
-        ext.copy(self, arr)
+        super(Container, self).copy(arr)
         return arr
 
     def to_buffer(self):
@@ -167,7 +170,7 @@ class Container(ext.Container):
         bytes
             The buffer containing the data of the whole Container.
         """
-        return ext.to_buffer(self)
+        return super(Container, self).to_buffer()
 
     def to_numpy(self, dtype):
         """Return a NumPy array with the data contents and `dtype`.
@@ -182,6 +185,11 @@ class Container(ext.Container):
         ndarray
             The NumPy array object containing the data of the whole Container.
         """
+        # Alternate way to build a numpy array, but a bit slower
+        # arr = np.empty(self.shape, dtype)
+        # for block, info in self.iter_read(self.pshape):
+        #     arr[info.slice] = np.frombuffer(block, dtype=dtype).reshape(info.shape)
+        # return arr
         return np.frombuffer(self.to_buffer(), dtype=dtype).reshape(self.shape)
 
     def has_metalayer(self, name):
@@ -329,9 +337,6 @@ def from_numpy(nparray, **kwargs):
 def from_file(filename, copy=False):
     """Open a new container from `filename`.
 
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`Container.__init__` constructor.
-
     Parameters
     ----------
     filename: str
@@ -347,6 +352,29 @@ def from_file(filename, copy=False):
     """
     arr = Container()
     ext.from_file(arr, filename, copy)
+    # if arr.has_metalayer("numpy"):
+    #     arr.__class__ = Array
+    return arr
+
+
+def from_sframe(sframe, copy=False):
+    """Open a new container from `sframe`.
+
+    Parameters
+    ----------
+    sframe: bytes
+        The Blosc2 serialized frame with a Caterva metalayer on it.
+    copy: bool
+        If true, the container is backed by a new, sparse in-memory super-chunk.
+        Else, an in-memory, frame-backed one is created (i.e. no copies are made).
+
+    Returns
+    -------
+    Container
+        The new :py:class:`Container` object.
+    """
+    arr = Container()
+    ext.from_sframe(arr, sframe, copy)
     # if arr.has_metalayer("numpy"):
     #     arr.__class__ = Array
     return arr
