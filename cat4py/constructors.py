@@ -101,7 +101,7 @@ def from_file(filename, copy=False):
     arr = Container()
     ext.from_file(arr, filename, copy)
     if arr.has_metalayer("numpy"):
-        arr.__class__ = NPArray()
+        arr.__class__ = NPArray
         dtype = arr.get_metalayer("numpy")[b"dtype"]
         arr.pre_init(dtype)
     else:
@@ -130,12 +130,11 @@ def from_sframe(sframe, copy=False):
     arr = Container()
     ext.from_sframe(arr, sframe, copy)
     if arr.has_metalayer("numpy"):
-        arr.__class__ = NPArray
+        arr = NPArray.cast(arr)
         dtype = arr.get_metalayer("numpy")[b"dtype"]
         arr.pre_init(dtype)
     else:
         arr = TLArray.cast(arr)
-
         arr.pre_init()
 
     return arr

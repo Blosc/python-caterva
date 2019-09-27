@@ -75,6 +75,13 @@ class NPArray(ext.Container):
         self.pre_init(dtype, **kwargs)
         super(NPArray, self).__init__(**kwargs)
 
+    @classmethod
+    def cast(cls, some_cont):
+        assert isinstance(some_cont, Container)
+        some_cont.__class__ = cls
+        assert isinstance(some_cont, NPArray)
+        return some_cont
+
     def __getitem__(self, key):
         """Return a (multidimensional) slice as specified in `key`.
 
@@ -214,7 +221,7 @@ class NPArray(ext.Container):
         bool
             True if metalayer exists in `self`; else False.
         """
-        return ext.has_metalayer(self, name)
+        return super(TLArray, self).has_metalayer(name)
 
     def get_metalayer(self, name):
         """Return the `name` metalayer.
@@ -232,7 +239,8 @@ class NPArray(ext.Container):
         """
         if self.has_metalayer(name) is False:
             return None
-        content = ext.get_metalayer(self, name)
+        content = super(TLArray, self).get_metalayer(name)
+
         return msgpack.unpackb(content)
 
     def update_metalayer(self, name, content):
@@ -249,7 +257,7 @@ class NPArray(ext.Container):
 
         """
         content = msgpack.packb(content)
-        return ext.update_metalayer(self, name, content)
+        return super(TLArray, self).update_metalayer(name, content)
 
     def get_usermeta(self):
         """Return the `usermeta` section.
@@ -260,7 +268,7 @@ class NPArray(ext.Container):
             The buffer for the usermeta section (typically in msgpack format,
             but not necessarily).
         """
-        content = ext.get_usermeta(self)
+        content = super(TLArray, self).get_usermeta()
         return msgpack.unpackb(content)
 
     def update_usermeta(self, content):
@@ -275,99 +283,4 @@ class NPArray(ext.Container):
 
         """
         content = msgpack.packb(content)
-        return ext.update_usermeta(self, content)
-
-
-def empty(shape, dtype=np.float32, **kwargs):
-    """Create an empty container.
-
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`Container.__init__` constructor.
-
-    Parameters
-    ----------
-    shape: tuple or list
-        The shape for the final container.
-    dtype: numpy.dtype
-        The dtype of the container elements.  Default: np.float32.
-
-    Returns
-    -------
-    NPArray
-        The new :py:class:`NPContainer` object.
-    """
-    arr = NPArray(dtype, **kwargs)
-    arr.updateshape(shape)
-    return arr
-
-
-def from_buffer(buffer, shape, dtype=np.float32, **kwargs):
-    """Create a container out of a buffer.
-
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`NPContainer.__init__` constructor.
-
-    Parameters
-    ----------
-    buffer: bytes
-        The buffer of the data to populate the container.
-    shape: tuple or list
-        The shape for the final container.
-    dtype: numpy.dtype
-            The dtype of the container elements.  Default: np.float32.
-
-    Returns
-    -------
-    NPArray
-        The new :py:class:`NPContainer` object.
-    """
-    arr = NPArray(dtype, **kwargs)
-    ext.from_buffer(arr, shape, buffer)
-    return arr
-
-
-def from_numpy(nparray, **kwargs):
-    """Create a container out of a NumPy array.
-
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`NPContainer.__init__` constructor.
-
-    Parameters
-    ----------
-    nparray: numpy.ndarray
-        The NumPy array to populate the container with.
-
-    Returns
-    -------
-    NPArray
-        The new :py:class:`NPContainer` object.
-    """
-    arr = from_buffer(bytes(nparray), nparray.shape, dtype=nparray.dtype,
-                      itemsize=nparray.itemsize, **kwargs)
-    return arr
-
-
-def from_file(filename, copy=False):
-    """Open a new container from `filename`.
-
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`NPContainer.__init__` constructor.
-
-    Parameters
-    ----------
-    filename: str
-        The file having a Blosc2 frame format with a Caterva metalayer on it.
-    copy: bool
-        If true, the container is backed by a new, sparse in-memory super-chunk.
-        Else, an on-disk, frame-backed one is created (i.e. no copies are made).
-
-    Returns
-    -------
-    NPArray
-        The new :py:class:`Container` object.
-    """
-    arr = NPArray()
-    ext.from_file(arr, filename, copy)
-    dtype = arr.get_metalayer("numpy")[b"dtype"]
-    arr.dtype = np.dtype(dtype)
-    return arr
+        return super(TLArray, self).update_usermeta(content)
