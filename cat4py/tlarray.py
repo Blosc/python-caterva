@@ -92,23 +92,6 @@ class TLArray(Container):
         buff = super(TLArray, self).__getitem__(key)
         return buff
 
-    def __setitem__(self, key, item):
-        """Set a (multidimensional) slice as specified in `key`.
-
-        Currently, this only works on containers backed by a plain buffer
-        (i.e. pshape == None).
-
-        Parameters
-        ----------
-        key: int, slice or sequence of slices
-            The index for the slices to be updated.
-            Note that `step` parameter is not honored yet in slices.
-        item: bytes
-            The buffer with the values to be used for the update.
-        """
-        key = process_key(key, self.ndim)
-        super(TLArray, self).__setitem__(key, item)
-
     def pre_init(self, **kwargs):
         pass
 

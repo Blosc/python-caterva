@@ -616,16 +616,6 @@ cdef class Container:
         err = caterva_get_slice_buffer(<char *> buffer, self.array, &_start, &_stop, &_pshape)
         return buffer
 
-    def __setitem__(self, key, item):
-        if not self.array.filled:
-            raise NotImplementedError("The Container is not filled")
-        if self.array.storage == CATERVA_STORAGE_BLOSC:
-            raise NotImplementedError("The Container is not backed by a plain buffer")
-        cdef caterva_dims_t _start, _stop, _pshape
-        ndim = self.array.ndim
-        _start, _stop, _pshape, size = get_caterva_start_stop(ndim, key, self.shape)
-        caterva_set_slice_buffer(self.array, <void *> <char *> item, &_start, &_stop)
-
     def tocapsule(self):
         return PyCapsule_New(self.array, "caterva_array_t*", NULL)
 

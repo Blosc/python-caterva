@@ -2,6 +2,7 @@ from . import container_ext as ext
 from .container import Container
 from .tlarray import TLArray
 from .nparray import NPArray
+from .container import get_pshape_guess
 
 
 def empty(shape, dtype=None, **kwargs):
@@ -48,12 +49,19 @@ def from_buffer(buffer, shape, dtype=None, **kwargs):
         If dtype is None, a new :py:class:`Container` object is returned. If a
         dtype is passed, a new :py:class:`NPArray` is returned.
     """
+
+    itemsize = kwargs["itemsize"] if "itemsize" in kwargs else ext.cparams_dflts["itemsize"]
+    if "pshape" not in kwargs:
+        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
+    if kwargs["pshape"] is None:
+        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
+
     arr = TLArray(**kwargs) if dtype is None else NPArray(dtype, **kwargs)
     ext.from_buffer(arr, shape, buffer)
     return arr
 
 
-def from_numpy(nparray, dtype=None, **kwargs):
+def from_numpy(ndarray, dtype=None, **kwargs):
     """Create a container out of a NumPy array.
 
     In addition to regular arguments, you can pass any keyword argument that
@@ -61,7 +69,7 @@ def from_numpy(nparray, dtype=None, **kwargs):
 
     Parameters
     ----------
-    nparray: numpy.ndarray
+    ndarray: numpy.ndarray
         The NumPy array to populate the container with.
     dtype: numpy.dtype
         The dtype of the data.  Default: None.
@@ -72,16 +80,19 @@ def from_numpy(nparray, dtype=None, **kwargs):
         If dtype is None, a new :py:class:`Container` object is returned. If a
         dtype is passed, a new :py:class:`NPArray` is returned.
     """
-    arr = from_buffer(bytes(nparray), nparray.shape, dtype=dtype,
-                      itemsize=nparray.itemsize, **kwargs)
+    itemsize = ndarray.itemsize
+    if "pshape" not in kwargs:
+        kwargs["pshape"] = get_pshape_guess(ndarray.shape, itemsize)
+    if kwargs["pshape"] is None:
+        kwargs["pshape"] = get_pshape_guess(ndarray.shape, itemsize)
+
+    arr = from_buffer(bytes(ndarray), ndarray.shape, dtype=dtype,
+                      itemsize=ndarray.itemsize, **kwargs)
     return arr
 
 
 def from_file(filename, copy=False):
     """Open a new container from `filename`.
-
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`Container.__init__` constructor.
 
     Parameters
     ----------
