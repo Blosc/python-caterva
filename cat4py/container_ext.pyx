@@ -532,14 +532,24 @@ cdef class Container:
         return [self.array.ctx.cparams.filters[i] for i in range(BLOSC2_MAX_FILTERS)]
 
     @property
-    def size(self):
-        """The size (in items) for this container."""
-        return self.array.size
-
-    @property
     def psize(self):
         """The partition size (in items) for this container."""
         return self.array.psize
+
+    @property
+    def sframe(self):
+        """The serialized frame for this container (if it exists).  No copies are made."""
+        if self.array.sc.frame == NULL or self.array.sc.frame.fname != NULL:
+            raise AttributeError("Container does not have a serialized frame.  Use `.to_frame()`.")
+        data = <char*> self.array.sc.frame.sdata
+        size = self.array.sc.frame.len
+        cdef char[::1] mview = <char[:size:1]>data
+        return mview
+
+    @property
+    def size(self):
+        """The size (in items) for this container."""
+        return self.array.size
 
     @property
     def npart(self):
@@ -615,9 +625,6 @@ cdef class Container:
         buffer = bytes(bsize)
         err = caterva_get_slice_buffer(<char *> buffer, self.array, &_start, &_stop, &_pshape)
         return buffer
-
-    def tocapsule(self):
-        return PyCapsule_New(self.array, "caterva_array_t*", NULL)
 
     def slicebuffer(self, key):
         key = list(key)
@@ -736,10 +743,17 @@ def from_file(Container arr, filename, copy):
     arr.array = a_
 
 
-def from_sframe(Container arr, bytes sframe, copy):
+def from_sframe(Container arr, sframe, copy):
     ctx = Context()
     cdef caterva_ctx_t *ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.tocapsule(), "caterva_ctx_t*")
-    cdef uint8_t *frame_ = sframe
+    cdef char[::1] mview
+    cdef uint8_t *frame_
+    if type(sframe) is bytes:
+        frame_ = sframe
+    else:
+        # Try to get a memoryview from the sframe object
+        mview = sframe
+        frame_ = <uint8_t*>&mview[0]
     cdef caterva_array_t *a_ = caterva_from_sframe(ctx_, frame_, len(sframe), copy)
     arr.ctx = ctx
     arr.array = a_
