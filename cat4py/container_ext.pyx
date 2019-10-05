@@ -404,7 +404,7 @@ cdef class ReadIter:
 
     def __init__(self, arr, blockshape):
         if not arr.filled:
-            raise ValueError("Container is not filled")
+            raise ValueError("Container is not completely filled")
         self.arr = arr
         if blockshape is None:
             blockshape = arr.pshape
@@ -445,7 +445,7 @@ cdef class ReadIter:
         info = self.IterInfo(slice=sl, shape=sh, size=np.prod(sh))
         self.nparts += 1
 
-        buf = self.arr.slicebuffer(info.slice)
+        buf = self.arr._slicebuffer(info.slice)
         return buf, info
 
 
@@ -538,11 +538,12 @@ cdef class Container:
 
     @property
     def sframe(self):
-        """The serialized frame for this container (if it exists).  No copies are made."""
+        """The serialized frame for this container (if it exists).  *No copies* are made."""
         if self.array.sc.frame == NULL or self.array.sc.frame.fname != NULL:
-            raise AttributeError("Container does not have a serialized frame.  Use `.to_frame()`.")
-        data = <char*> self.array.sc.frame.sdata
-        size = self.array.sc.frame.len
+            raise AttributeError("Container does not have a serialized frame."
+                                 "  Use `.to_frame()` to get one.")
+        cdef char *data = <char*> self.array.sc.frame.sdata
+        cdef int64_t size = self.array.sc.frame.len
         cdef char[::1] mview = <char[:size:1]>data
         return mview
 
@@ -563,7 +564,7 @@ cdef class Container:
 
     @property
     def filled(self):
-        """Whether the container is filled or not."""
+        """Whether the container is completely filled or not."""
         return self.array.filled
 
     def __init__(self, **kwargs):
@@ -626,7 +627,7 @@ cdef class Container:
         err = caterva_get_slice_buffer(<char *> buffer, self.array, &_start, &_stop, &_pshape)
         return buffer
 
-    def slicebuffer(self, key):
+    def _slicebuffer(self, key):
         key = list(key)
         for i, sl in enumerate(key):
             if type(sl) is not slice:
@@ -647,6 +648,7 @@ cdef class Container:
         caterva_update_shape(self.array, &_shape)
 
     def squeeze(self):
+        """Remove the 1's in Container's shape."""
         caterva_squeeze(self.array)
 
     def to_buffer(self):
@@ -656,8 +658,19 @@ cdef class Container:
         return buffer
 
     def to_sframe(self):
+        """Return a serialized frame with data and metadata contents.
+
+        Returns
+        -------
+        bytes or MemoryView
+            A buffer containing a serial version of the whole Container.
+            When the Container is backed by an in-memory frame, a MemoryView
+            of it is returned.  If not, a bytes object with the frame is
+            returned.
+        """
+
         if not self.array.filled:
-            raise NotImplementedError("The Container is not filled")
+            raise NotImplementedError("The Container is not completely filled")
         if self.array.storage != CATERVA_STORAGE_BLOSC:
             raise NotImplementedError("The Container is backed by a plain buffer")
         cdef char* fname
@@ -667,8 +680,7 @@ cdef class Container:
         if self.array.sc.frame != NULL:
             fname = self.array.sc.frame.fname
             if fname == NULL:
-                data = <char*> self.array.sc.frame.sdata
-                sdata = data[:self.array.sc.frame.len]
+                return self.sframe
             else:
                 with open(fname, 'rb') as f:
                     sdata = f.read()

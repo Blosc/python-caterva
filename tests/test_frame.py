@@ -2,7 +2,6 @@ import cat4py as cat
 import pytest
 import numpy as np
 import os
-import copy
 
 
 @pytest.mark.parametrize("shape, pshape, itemsize, memframe, filename, copy_sframe",
@@ -39,7 +38,7 @@ def test_frame(shape, pshape, itemsize, memframe, filename, copy_sframe):
         sframe3 = c.to_sframe()
         if not copy_sframe:
             # When the frame is not copied, we *need* a copy for the next iteration
-            sframe3 = copy.deepcopy(sframe3)
+            sframe3 = bytes(sframe3)
     assert len(sframe3) == len(sframe2)
     buffer2 = b.to_buffer()
     assert buffer2 == buffer1

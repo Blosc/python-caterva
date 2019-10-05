@@ -18,7 +18,7 @@ The Container class
 ===================
 .. autoclass:: cat4py.Container
     :members:
-    :exclude-members: slicebuffer, squeeze, tocapsule, updateshape
+    :exclude-members: updateshape, slicebuffer
     :special-members: __init__, __getitem__, __setitem__
 
 
