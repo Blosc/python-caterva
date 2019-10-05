@@ -175,7 +175,7 @@ cdef extern from "caterva.h":
     caterva_dims_t caterva_new_dims(int64_t *dims, int8_t ndim)
     caterva_array_t *caterva_empty_array(caterva_ctx_t *ctx, blosc2_frame *fr, caterva_dims_t *pshape)
     int caterva_free_array(caterva_array_t *carr)
-    caterva_array_t *caterva_from_sframe(caterva_ctx_t *ctx, uint8_t *sframe, int64_t len, bool copy)
+    caterva_array_t *caterva_from_sframe(caterva_ctx_t *ctx, uint8_t *sframe, int64_t _len, bool copy)
     caterva_array_t *caterva_from_file(caterva_ctx_t *ctx, const char *filename, bool copy)
     int caterva_from_buffer(caterva_array_t *dest, caterva_dims_t *shape, void *src)
     int caterva_to_buffer(caterva_array_t *src, void *dest)
@@ -648,7 +648,6 @@ cdef class Container:
         caterva_update_shape(self.array, &_shape)
 
     def squeeze(self):
-        """Remove the 1's in Container's shape."""
         caterva_squeeze(self.array)
 
     def to_buffer(self):
@@ -658,17 +657,6 @@ cdef class Container:
         return buffer
 
     def to_sframe(self):
-        """Return a serialized frame with data and metadata contents.
-
-        Returns
-        -------
-        bytes or MemoryView
-            A buffer containing a serial version of the whole Container.
-            When the Container is backed by an in-memory frame, a MemoryView
-            of it is returned.  If not, a bytes object with the frame is
-            returned.
-        """
-
         if not self.array.filled:
             raise NotImplementedError("The Container is not completely filled")
         if self.array.storage != CATERVA_STORAGE_BLOSC:

@@ -17,11 +17,12 @@ def empty(shape, dtype=None, **kwargs):
         The shape for the final container.
     dtype: str or numpy.dtype
         The dtype of the data.  Default: None.
+
     Returns
     -------
     TLArray or NPArray
-        If dtype is None, a new :py:class:`Container` object is returned. If a
-        dtype is passed, a new :py:class:`NPArray` is returned.
+        If `dtype` is None, a new :py:class:`TLArray` object is returned.
+        If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
     itemsize = kwargs["itemsize"] if "itemsize" in kwargs else ext.cparams_dflts["itemsize"]
     if "pshape" not in kwargs:
@@ -46,14 +47,14 @@ def from_buffer(buffer, shape, dtype=None, **kwargs):
         The buffer of the data to populate the container.
     shape: tuple or list
         The shape for the final container.
-     dtype: numpy.dtype
+    dtype: numpy.dtype
         The dtype of the data.  Default: None.
 
     Returns
     -------
     TLArray or NPArray
-        If dtype is None, a new :py:class:`Container` object is returned. If a
-        dtype is passed, a new :py:class:`NPArray` is returned.
+        If `dtype` is None, a new :py:class:`TLArray` object is returned.
+        If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
 
     itemsize = kwargs["itemsize"] if "itemsize" in kwargs else ext.cparams_dflts["itemsize"]
@@ -75,7 +76,7 @@ def from_numpy(ndarray, dtype=None, **kwargs):
 
     Parameters
     ----------
-    ndarray: numpy.ndarray
+    ndarray: numpy.array
         The NumPy array to populate the container with.
     dtype: numpy.dtype
         The dtype of the data.  Default: None.
@@ -83,8 +84,8 @@ def from_numpy(ndarray, dtype=None, **kwargs):
     Returns
     -------
     TLArray or NPArray
-        If dtype is None, a new :py:class:`Container` object is returned. If a
-        dtype is passed, a new :py:class:`NPArray` is returned.
+        If `dtype` is None, a new :py:class:`TLArray` object is returned.
+        If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
     itemsize = ndarray.itemsize
     if "pshape" not in kwargs:
@@ -111,15 +112,15 @@ def from_file(filename, copy=False):
     Returns
     -------
     TLArray or NPArray
-        If dtype is None, a new :py:class:`Container` object is returned. If a
-        dtype is passed, a new :py:class:`NPArray` is returned.
+        If `dtype` is None, a new :py:class:`TLArray` object is returned.
+        If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
 
     arr = Container()
     ext.from_file(arr, filename, copy)
     if arr.has_metalayer("numpy"):
-        arr.__class__ = NPArray
-        dtype = arr.get_metalayer("numpy")[b"dtype"]
+        arr = NPArray.cast(arr)
+        dtype = arr.get_metalayer("numpy")[b'dtype']
         arr.pre_init(dtype)
     else:
         arr = TLArray.cast(arr)
@@ -141,8 +142,9 @@ def from_sframe(sframe, copy=False):
 
     Returns
     -------
-    Container
-        The new :py:class:`Container` object.
+    TLArray or NPArray
+        If `dtype` is None, a new :py:class:`TLArray` object is returned.
+        If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
     arr = Container()
     ext.from_sframe(arr, sframe, copy)
