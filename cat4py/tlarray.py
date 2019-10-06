@@ -29,11 +29,11 @@ class TLArray(Container):
         pass
 
     @classmethod
-    def cast(cls, some_cont):
-        assert isinstance(some_cont, Container)
-        some_cont.__class__ = cls
-        assert isinstance(some_cont, TLArray)
-        return some_cont
+    def cast(cls, cont):
+        assert isinstance(cont, Container)
+        cont.__class__ = cls
+        assert isinstance(cont, TLArray)
+        return cont
 
     def __getitem__(self, key):
         """Return a (multidimensional) slice as specified in `key`.

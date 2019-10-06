@@ -18,7 +18,7 @@ def test_persistency(shape, pshape, filename, dtype, copy):
     nparray = np.arange(size, dtype=dtype).reshape(shape)
     cat.from_numpy(nparray, pshape=pshape, filename=filename)
     b = cat.from_file(filename, copy)
-    nparray2 = b.to_numpy(dtype)
+    nparray2 = b.to_numpy()
     np.testing.assert_almost_equal(nparray, nparray2)
 
     os.remove(filename)

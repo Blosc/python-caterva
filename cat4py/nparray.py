@@ -56,11 +56,11 @@ class NPArray(Container):
         self.kwargs = kwargs
 
     @classmethod
-    def cast(cls, some_cont):
-        assert isinstance(some_cont, Container)
-        some_cont.__class__ = cls
-        assert isinstance(some_cont, NPArray)
-        return some_cont
+    def cast(cls, cont):
+        assert isinstance(cont, Container)
+        cont.__class__ = cls
+        assert isinstance(cont, NPArray)
+        return cont
 
     def __getitem__(self, key):
         """Return a (multidimensional) slice as specified in `key`.
@@ -73,7 +73,7 @@ class NPArray(Container):
 
         Returns
         -------
-        numpy.ndarray
+        numpy.array
             The NumPy array with the requested data.
         """
         key = process_key(key, self.ndim)
@@ -82,7 +82,7 @@ class NPArray(Container):
         # shape = [k.stop - k.start for k in key]   # not quite correct
         # Trick to get the slice easily and without a lot of memory consumption
         # Maybe there are more elegant ways for this, but meanwhile ...
-        a = np.lib.stride_tricks.as_strided(np.empty(0), self.shape, (0, 0))
+        a = np.lib.stride_tricks.as_strided(np.empty(0), self.shape, (0,) * len(self.shape))
         shape = a[key].shape
         return np.frombuffer(buff, dtype=self.dtype).reshape(shape)
 
@@ -102,7 +102,7 @@ class NPArray(Container):
         Yields
         ------
         tuple of (block, info)
-            block: NumPy.ndarray
+            block: NumPy.array
                 The numpy array with the data block.
             info: namedtuple
                 Info about the returned data block.  Its structure is:
@@ -124,7 +124,7 @@ class NPArray(Container):
         Yields
         ------
         tuple of (block, info)
-            block: numpy.ndarray
+            block: numpy.array
                 The NumPy array with the data block to be filled.
             info: namedtuple
                 Info about the data block to be filled.  Its structure is:
@@ -156,7 +156,7 @@ class NPArray(Container):
 
         Returns
         -------
-        numpy.ndarray
+        numpy.array
             The NumPy array object containing the data of the whole Container.
         """
         return np.frombuffer(self.to_buffer(), dtype=self.dtype).reshape(self.shape)
