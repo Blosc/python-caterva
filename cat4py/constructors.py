@@ -1,8 +1,24 @@
+import numpy as np
 from . import container_ext as ext
 from .container import Container
 from .tlarray import TLArray
 from .nparray import NPArray
 from .container import get_pshape_guess
+
+
+def update_kwargs(shape, dtype, kwargs):
+    """Compute some decent guesses for params not in `kwargs`."""
+    if "pshape" not in kwargs or kwargs["pshape"] is None:
+        if dtype is not None:
+            dtype = np.dtype(dtype)
+            itemsize = dtype.itemsize
+            kwargs["itemsize"] = itemsize
+        elif "itemsize" in kwargs:
+            itemsize = kwargs["itemsize"]
+        else:
+            itemsize = ext.cparams_dflts["itemsize"]
+        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
+    return kwargs
 
 
 def empty(shape, dtype=None, **kwargs):
@@ -24,11 +40,7 @@ def empty(shape, dtype=None, **kwargs):
         If `dtype` is None, a new :py:class:`TLArray` object is returned.
         If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
-    itemsize = kwargs["itemsize"] if "itemsize" in kwargs else ext.cparams_dflts["itemsize"]
-    if "pshape" not in kwargs:
-        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
-    if kwargs["pshape"] is None:
-        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
+    kwargs = update_kwargs(shape, dtype, kwargs)
 
     arr = TLArray(**kwargs) if dtype is None else NPArray(dtype, **kwargs)
     arr.updateshape(shape)
@@ -56,45 +68,30 @@ def from_buffer(buffer, shape, dtype=None, **kwargs):
         If `dtype` is None, a new :py:class:`TLArray` object is returned.
         If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
-
-    itemsize = kwargs["itemsize"] if "itemsize" in kwargs else ext.cparams_dflts["itemsize"]
-    if "pshape" not in kwargs:
-        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
-    if kwargs["pshape"] is None:
-        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
-
+    kwargs = update_kwargs(shape, dtype, kwargs)
     arr = TLArray(**kwargs) if dtype is None else NPArray(dtype, **kwargs)
     ext.from_buffer(arr, shape, buffer)
     return arr
 
 
-def from_numpy(ndarray, dtype=None, **kwargs):
-    """Create a container out of a NumPy array.
+def from_numpy(nparray, **kwargs):
+    """Create a NPArray container out of a NumPy array.
 
     In addition to regular arguments, you can pass any keyword argument that
     is supported by the :py:meth:`Container.__init__` constructor.
 
     Parameters
     ----------
-    ndarray: numpy.array
+    nparray: numpy.array
         The NumPy array to populate the container with.
-    dtype: numpy.dtype
-        The dtype of the data.  Default: None.
 
     Returns
     -------
-    TLArray or NPArray
-        If `dtype` is None, a new :py:class:`TLArray` object is returned.
-        If `dtype` is not None, a new :py:class:`NPArray` is returned.
+    NPArray
+        The new :py:class:`NPArray` object.
     """
-    itemsize = ndarray.itemsize
-    if "pshape" not in kwargs:
-        kwargs["pshape"] = get_pshape_guess(ndarray.shape, itemsize)
-    if kwargs["pshape"] is None:
-        kwargs["pshape"] = get_pshape_guess(ndarray.shape, itemsize)
-
-    arr = from_buffer(bytes(ndarray), ndarray.shape, dtype=dtype,
-                      itemsize=ndarray.itemsize, **kwargs)
+    kwargs = update_kwargs(nparray.shape, nparray.dtype, kwargs)
+    arr = from_buffer(bytes(nparray), nparray.shape, dtype=nparray.dtype, **kwargs)
     return arr
 
 
@@ -112,8 +109,6 @@ def from_file(filename, copy=False):
     Returns
     -------
     TLArray or NPArray
-        If `dtype` is None, a new :py:class:`TLArray` object is returned.
-        If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
 
     arr = Container()
@@ -143,8 +138,6 @@ def from_sframe(sframe, copy=False):
     Returns
     -------
     TLArray or NPArray
-        If `dtype` is None, a new :py:class:`TLArray` object is returned.
-        If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
     arr = Container()
     ext.from_sframe(arr, sframe, copy)
