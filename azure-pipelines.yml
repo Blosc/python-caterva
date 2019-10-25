@@ -47,15 +47,6 @@ jobs:
       testRunTitle: 'Python $(python.version)'
     condition: succeededOrFailed()
 
-  - script: |
-      bash <(curl https://codecov.io/bash) -t $CODECOV_TOKEN -f coverage.xml
-    displayName: 'codecov'
-
-  - task: PublishCodeCoverageResults@1
-    inputs:
-      codeCoverageTool: Cobertura
-      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-      reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
 
 - job: 'Windows'
   pool:
@@ -100,17 +91,6 @@ jobs:
       testRunTitle: 'Python $(python.version)'
     condition: succeededOrFailed()
 
-  - bash: |
-      bash <(curl https://codecov.io/bash) -t $CODECOV_TOKEN -f coverage.xml
-    displayName: 'codecov'
-
-  - task: PublishCodeCoverageResults@1
-    inputs:
-      codeCoverageTool: Cobertura
-      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-      reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
-
-
 - job: 'macOS'
   pool:
     vmImage: 'macOS-latest'
@@ -149,13 +129,3 @@ jobs:
       testResultsFiles: '**/test-results.xml'
       testRunTitle: 'Python $(python.version)'
     condition: succeededOrFailed()
-
-  - script: |
-      bash <(curl https://codecov.io/bash) -t $CODECOV_TOKEN -f coverage.xml
-    displayName: 'codecov'
-
-  - task: PublishCodeCoverageResults@1
-    inputs:
-      codeCoverageTool: Cobertura
-      summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-      reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
