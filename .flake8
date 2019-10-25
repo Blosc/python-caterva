@@ -1,1 +1,2 @@
 max-line-length 99
+exclude = __init__.py
