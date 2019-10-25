@@ -38,7 +38,7 @@ jobs:
 
   - script: |
     pip install pytest pytest-azurepipelines pytest-cov
-    PYTHONPATH=. python -m pytest tests/ --cov cat4py --cov-report html
+    PYTHONPATH=. pytest tests/ --cov cat4py --cov-report html
     displayName: 'pytest'
 
 
@@ -76,7 +76,8 @@ jobs:
 
   - bash: |
       pip install pytest pytest-azurepipelines pytest-cov
-      PYTHONPATH=. python -m pytest tests/ --cov cat4py --cov-report html
+      PYTHONPATH=. pytest tests/ --cov cat4py --cov-report html
+      displayName: 'pytest'
 
 - job: 'macOS'
   pool:
@@ -108,4 +109,5 @@ jobs:
 
   - script: |
       pip install pytest pytest-azurepipelines pytest-cov
-      PYTHONPATH=. python -m pytest tests/ --cov cat4py --cov-report html
+      PYTHONPATH=. pytest tests/ --cov cat4py --cov-report html
+      displayName: 'pytest'
