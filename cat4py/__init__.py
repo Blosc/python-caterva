@@ -12,13 +12,15 @@ from .version import version as __version__
 from . import container_ext as ext
 # Codecs
 from .container_ext import BLOSCLZ, LZ4, LZ4HC, ZLIB, ZSTD, LIZARD
-# Available compression library names
-cnames = list(ext.cnames2codecs)
+
 # Filters
 from .container_ext import NOFILTER, SHUFFLE, BITSHUFFLE, DELTA, TRUNC_PREC
-# Public API for container module
 
+# Public API for container module
 from .container import Container
 from .tlarray import TLArray
 from .nparray import NPArray
 from .constructors import (empty, from_buffer, from_numpy, from_file, from_sframe)
+
+# Available compression library names
+cnames = list(ext.cnames2codecs)
