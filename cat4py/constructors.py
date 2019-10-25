@@ -1,8 +1,24 @@
+import numpy as np
 from . import container_ext as ext
 from .container import Container
 from .tlarray import TLArray
 from .nparray import NPArray
 from .container import get_pshape_guess
+
+
+def update_kwargs(shape, dtype, kwargs):
+    """Compute some decent guesses for params not in `kwargs`."""
+    if "pshape" not in kwargs or kwargs["pshape"] is None:
+        if dtype is not None:
+            dtype = np.dtype(dtype)
+            itemsize = dtype.itemsize
+            kwargs["itemsize"] = itemsize
+        elif "itemsize" in kwargs:
+            itemsize = kwargs["itemsize"]
+        else:
+            itemsize = ext.cparams_dflts["itemsize"]
+        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
+    return kwargs
 
 
 def empty(shape, dtype=None, **kwargs):
@@ -15,14 +31,17 @@ def empty(shape, dtype=None, **kwargs):
     ----------
     shape: tuple or list
         The shape for the final container.
-    dtype: numpy.dtype
+    dtype: str or numpy.dtype
         The dtype of the data.  Default: None.
+
     Returns
     -------
     TLArray or NPArray
-        If dtype is None, a new :py:class:`Container` object is returned. If a
-        dtype is passed, a new :py:class:`NPArray` is returned.
+        If `dtype` is None, a new :py:class:`TLArray` object is returned.
+        If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
+    kwargs = update_kwargs(shape, dtype, kwargs)
+
     arr = TLArray(**kwargs) if dtype is None else NPArray(dtype, **kwargs)
     arr.updateshape(shape)
     return arr
@@ -40,54 +59,39 @@ def from_buffer(buffer, shape, dtype=None, **kwargs):
         The buffer of the data to populate the container.
     shape: tuple or list
         The shape for the final container.
-     dtype: numpy.dtype
-        The dtype of the data.  Default: None.
-
-    Returns
-    -------
-    TLArray or NPArray
-        If dtype is None, a new :py:class:`Container` object is returned. If a
-        dtype is passed, a new :py:class:`NPArray` is returned.
-    """
-
-    itemsize = kwargs["itemsize"] if "itemsize" in kwargs else ext.cparams_dflts["itemsize"]
-    if "pshape" not in kwargs:
-        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
-    if kwargs["pshape"] is None:
-        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
-
-    arr = TLArray(**kwargs) if dtype is None else NPArray(dtype, **kwargs)
-    ext.from_buffer(arr, shape, buffer)
-    return arr
-
-
-def from_numpy(ndarray, dtype=None, **kwargs):
-    """Create a container out of a NumPy array.
-
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`Container.__init__` constructor.
-
-    Parameters
-    ----------
-    ndarray: numpy.ndarray
-        The NumPy array to populate the container with.
     dtype: numpy.dtype
         The dtype of the data.  Default: None.
 
     Returns
     -------
     TLArray or NPArray
-        If dtype is None, a new :py:class:`Container` object is returned. If a
-        dtype is passed, a new :py:class:`NPArray` is returned.
+        If `dtype` is None, a new :py:class:`TLArray` object is returned.
+        If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
-    itemsize = ndarray.itemsize
-    if "pshape" not in kwargs:
-        kwargs["pshape"] = get_pshape_guess(ndarray.shape, itemsize)
-    if kwargs["pshape"] is None:
-        kwargs["pshape"] = get_pshape_guess(ndarray.shape, itemsize)
+    kwargs = update_kwargs(shape, dtype, kwargs)
+    arr = TLArray(**kwargs) if dtype is None else NPArray(dtype, **kwargs)
+    ext.from_buffer(arr, shape, buffer)
+    return arr
 
-    arr = from_buffer(bytes(ndarray), ndarray.shape, dtype=dtype,
-                      itemsize=ndarray.itemsize, **kwargs)
+
+def from_numpy(nparray, **kwargs):
+    """Create a NPArray container out of a NumPy array.
+
+    In addition to regular arguments, you can pass any keyword argument that
+    is supported by the :py:meth:`Container.__init__` constructor.
+
+    Parameters
+    ----------
+    nparray: numpy.array
+        The NumPy array to populate the container with.
+
+    Returns
+    -------
+    NPArray
+        The new :py:class:`NPArray` object.
+    """
+    kwargs = update_kwargs(nparray.shape, nparray.dtype, kwargs)
+    arr = from_buffer(bytes(nparray), nparray.shape, dtype=nparray.dtype, **kwargs)
     return arr
 
 
@@ -105,15 +109,13 @@ def from_file(filename, copy=False):
     Returns
     -------
     TLArray or NPArray
-        If dtype is None, a new :py:class:`Container` object is returned. If a
-        dtype is passed, a new :py:class:`NPArray` is returned.
     """
 
     arr = Container()
     ext.from_file(arr, filename, copy)
     if arr.has_metalayer("numpy"):
-        arr.__class__ = NPArray
-        dtype = arr.get_metalayer("numpy")[b"dtype"]
+        arr = NPArray.cast(arr)
+        dtype = arr.get_metalayer("numpy")[b'dtype']
         arr.pre_init(dtype)
     else:
         arr = TLArray.cast(arr)
@@ -135,14 +137,13 @@ def from_sframe(sframe, copy=False):
 
     Returns
     -------
-    Container
-        The new :py:class:`Container` object.
+    TLArray or NPArray
     """
     arr = Container()
     ext.from_sframe(arr, sframe, copy)
     if arr.has_metalayer("numpy"):
         arr = NPArray.cast(arr)
-        dtype = arr.get_metalayer("numpy")[b"dtype"]
+        dtype = arr.get_metalayer("numpy")[b'dtype']
         arr.pre_init(dtype)
     else:
         arr = TLArray.cast(arr)

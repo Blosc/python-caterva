@@ -175,7 +175,7 @@ cdef extern from "caterva.h":
     caterva_dims_t caterva_new_dims(int64_t *dims, int8_t ndim)
     caterva_array_t *caterva_empty_array(caterva_ctx_t *ctx, blosc2_frame *fr, caterva_dims_t *pshape)
     int caterva_free_array(caterva_array_t *carr)
-    caterva_array_t *caterva_from_sframe(caterva_ctx_t *ctx, uint8_t *sframe, int64_t len, bool copy)
+    caterva_array_t *caterva_from_sframe(caterva_ctx_t *ctx, uint8_t *sframe, int64_t _len, bool copy)
     caterva_array_t *caterva_from_file(caterva_ctx_t *ctx, const char *filename, bool copy)
     int caterva_from_buffer(caterva_array_t *dest, caterva_dims_t *shape, void *src)
     int caterva_to_buffer(caterva_array_t *src, void *dest)
@@ -404,7 +404,7 @@ cdef class ReadIter:
 
     def __init__(self, arr, blockshape):
         if not arr.filled:
-            raise ValueError("Container is not filled")
+            raise ValueError("Container is not completely filled")
         self.arr = arr
         if blockshape is None:
             blockshape = arr.pshape
@@ -445,7 +445,7 @@ cdef class ReadIter:
         info = self.IterInfo(slice=sl, shape=sh, size=np.prod(sh))
         self.nparts += 1
 
-        buf = self.arr.slicebuffer(info.slice)
+        buf = self.arr._slicebuffer(info.slice)
         return buf, info
 
 
@@ -532,14 +532,25 @@ cdef class Container:
         return [self.array.ctx.cparams.filters[i] for i in range(BLOSC2_MAX_FILTERS)]
 
     @property
-    def size(self):
-        """The size (in items) for this container."""
-        return self.array.size
-
-    @property
     def psize(self):
         """The partition size (in items) for this container."""
         return self.array.psize
+
+    @property
+    def sframe(self):
+        """The serialized frame for this container (if it exists).  *No copies* are made."""
+        if self.array.sc.frame == NULL or self.array.sc.frame.fname != NULL:
+            raise AttributeError("Container does not have a serialized frame."
+                                 "  Use `.to_frame()` to get one.")
+        cdef char *data = <char*> self.array.sc.frame.sdata
+        cdef int64_t size = self.array.sc.frame.len
+        cdef char[::1] mview = <char[:size:1]>data
+        return mview
+
+    @property
+    def size(self):
+        """The size (in items) for this container."""
+        return self.array.size
 
     @property
     def npart(self):
@@ -553,7 +564,7 @@ cdef class Container:
 
     @property
     def filled(self):
-        """Whether the container is filled or not."""
+        """Whether the container is completely filled or not."""
         return self.array.filled
 
     def __init__(self, **kwargs):
@@ -576,10 +587,10 @@ cdef class Container:
             if filename is not None:
                 raise NotImplementedError
             else:
+                # We are probably de-serializing
                 self.array = caterva_empty_array(ctx_, NULL, NULL)
         else:
             ndim = len(pshape)
-
             pshape_ = <int64_t*> malloc(ndim * sizeof(int64_t))
             for i in range(ndim):
                 pshape_[i] = pshape[i]
@@ -616,10 +627,7 @@ cdef class Container:
         err = caterva_get_slice_buffer(<char *> buffer, self.array, &_start, &_stop, &_pshape)
         return buffer
 
-    def tocapsule(self):
-        return PyCapsule_New(self.array, "caterva_array_t*", NULL)
-
-    def slicebuffer(self, key):
+    def _slicebuffer(self, key):
         key = list(key)
         for i, sl in enumerate(key):
             if type(sl) is not slice:
@@ -650,7 +658,7 @@ cdef class Container:
 
     def to_sframe(self):
         if not self.array.filled:
-            raise NotImplementedError("The Container is not filled")
+            raise NotImplementedError("The Container is not completely filled")
         if self.array.storage != CATERVA_STORAGE_BLOSC:
             raise NotImplementedError("The Container is backed by a plain buffer")
         cdef char* fname
@@ -660,8 +668,7 @@ cdef class Container:
         if self.array.sc.frame != NULL:
             fname = self.array.sc.frame.fname
             if fname == NULL:
-                data = <char*> self.array.sc.frame.sdata
-                sdata = data[:self.array.sc.frame.len]
+                return self.sframe
             else:
                 with open(fname, 'rb') as f:
                     sdata = f.read()
@@ -736,10 +743,17 @@ def from_file(Container arr, filename, copy):
     arr.array = a_
 
 
-def from_sframe(Container arr, bytes sframe, copy):
+def from_sframe(Container arr, sframe, copy):
     ctx = Context()
     cdef caterva_ctx_t *ctx_ = <caterva_ctx_t*> PyCapsule_GetPointer(ctx.tocapsule(), "caterva_ctx_t*")
-    cdef uint8_t *frame_ = sframe
+    cdef char[::1] mview
+    cdef uint8_t *frame_
+    if type(sframe) is bytes:
+        frame_ = sframe
+    else:
+        # Try to get a memoryview from the sframe object
+        mview = sframe
+        frame_ = <uint8_t*>&mview[0]
     cdef caterva_array_t *a_ = caterva_from_sframe(ctx_, frame_, len(sframe), copy)
     arr.ctx = ctx
     arr.array = a_

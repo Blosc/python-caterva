@@ -1,7 +1,6 @@
 from . import container_ext as ext
 import numpy as np
-import msgpack
-from .container import Container
+from .container import Container, process_key
 
 
 class ReadIter(ext.ReadIter):
@@ -14,65 +13,27 @@ class WriteIter(ext.WriteIter):
         super(WriteIter, self).__init__(arr)
 
 
-def process_key(key, ndim):
-    if not isinstance(key, (tuple, list)):
-        key = (key,)
-    key = tuple(k if isinstance(k, slice) else slice(k, k + 1) for k in key)
-    if len(key) < ndim:
-        key += tuple(slice(None) for _ in range(ndim - len(key)))
-    return key
-
-
 class TLArray(Container):
 
     def __init__(self, **kwargs):
-        """The basic and multidimensional and type-less data container.
+        """The basic, multidimensional and type-less data container.
 
-        Parameters
-        ----------
-        pshape: iterable object or None
-            The partition shape.  If None, the store is a plain buffer (non-compressed).
-        filename: str or None
-            The name of the file to store data.  If `None`, data is stores in-memory.
-        memframe: bool
-            If True, the Container is backed by a frame in-memory.  Else, by a
-            super-chunk.  Default: False.
-        metalayers: dict or None
-            A dictionary with different metalayers.  One entry per metalayer:
-                key: bytes or str
-                    The name of the metalayer.
-                value: object
-                    The metalayer object that will be (de-)serialized using msgpack.
-        itemsize: int
-            The number of bytes for the itemsize in container.  Default: 4.
-        cname: string
-            The name for the compressor codec.  Default: "lz4".
-        clevel: int (0 to 9)
-            The compression level.  0 means no compression, and 9 maximum compression.
-            Default: 5.
-        filters: list
-            The filter pipeline.  Default: [cat4py.SHUFFLE]
-        filters_meta: list
-            The meta info for each filter in pipeline.  An uint8 per slot. Default: [0]
-        cnthreads: int
-            The number of threads for compression.  Default: 1.
-        dnthreads: int
-            The number of threads for decompression.  Default: 1.
-        blocksize: int
-            The blocksize for every chunk in container.  The default is 0 (automatic).
-        use_dict: bool
-            If a dictionary should be used during compression.  Default: False.
-
+        As this inherits from the :py:class:`Container` class, you can pass any
+        keyword argument that is supported by the :py:meth:`Container.__init__`
+        constructor.
         """
         self.pre_init(**kwargs)
         super(TLArray, self).__init__(**kwargs)
 
+    def pre_init(self, **kwargs):
+        pass
+
     @classmethod
-    def cast(cls, some_cont):
-        assert isinstance(some_cont, Container)
-        some_cont.__class__ = cls
-        assert isinstance(some_cont, TLArray)
-        return some_cont
+    def cast(cls, cont):
+        assert isinstance(cont, Container)
+        cont.__class__ = cls
+        assert isinstance(cont, TLArray)
+        return cont
 
     def __getitem__(self, key):
         """Return a (multidimensional) slice as specified in `key`.
@@ -91,9 +52,6 @@ class TLArray(Container):
         key = process_key(key, self.ndim)
         buff = super(TLArray, self).__getitem__(key)
         return buff
-
-    def pre_init(self, **kwargs):
-        pass
 
     def iter_read(self, blockshape=None):
         """Iterate over data blocks whose dims are specified in `blockshape`.
@@ -146,26 +104,15 @@ class TLArray(Container):
         return WriteIter(self)
 
     def copy(self, **kwargs):
-        """Copy to a new container whose properties are specified in `kwargs`.
+        """Copy into a new container whose properties are specified in `kwargs`.
 
         Returns
         -------
         TLArray
-            A new container that contains the copy.
+            A new TLArray container that contains the copy.
         """
         arr = TLArray(**kwargs)
-        super(TLArray, self).copy(arr)
-        return arr
-
-    def to_buffer(self):
-        """Return a buffer with the data contents.
-
-        Returns
-        -------
-        bytes
-            The buffer containing the data of the whole Container.
-        """
-        return super(TLArray, self).to_buffer()
+        return super(TLArray, self).copy(arr)
 
     def to_numpy(self, dtype):
         """Return a NumPy array with the data contents and `dtype`.
@@ -186,80 +133,3 @@ class TLArray(Container):
         #     arr[info.slice] = np.frombuffer(block, dtype=dtype).reshape(info.shape)
         # return arr
         return np.frombuffer(self.to_buffer(), dtype=dtype).reshape(self.shape)
-
-    def has_metalayer(self, name):
-        """Whether `name` is an existing metalayer or not.
-
-        Parameters
-        ----------
-        name: str
-            The name of the metalayer to check.
-
-        Returns
-        -------
-        bool
-            True if metalayer exists in `self`; else False.
-        """
-        return super(TLArray, self).has_metalayer(name)
-
-    def get_metalayer(self, name):
-        """Return the `name` metalayer.
-
-        Parameters
-        ----------
-        name: str
-            The name of the metalayer to return.
-
-        Returns
-        -------
-        bytes
-            The buffer containing the metalayer info (typically in msgpack
-            format).
-        """
-        if self.has_metalayer(name) is False:
-            return None
-        content = super(TLArray, self).get_metalayer(name)
-
-        return msgpack.unpackb(content)
-
-    def update_metalayer(self, name, content):
-        """Update the `name` metalayer with `content`.
-
-        Parameters
-        ----------
-        name: str
-            The name of the metalayer to update.
-        content: bytes
-            The buffer containing the new content for the metalayer.
-            Note that the *length* of the metalayer cannot not change,
-            else an exception will be raised.
-
-        """
-        content = msgpack.packb(content)
-        return super(TLArray, self).update_metalayer(name, content)
-
-    def get_usermeta(self):
-        """Return the `usermeta` section.
-
-        Returns
-        -------
-        bytes
-            The buffer for the usermeta section (typically in msgpack format,
-            but not necessarily).
-        """
-        content = super(TLArray, self).get_usermeta()
-        return msgpack.unpackb(content)
-
-    def update_usermeta(self, content):
-        """Update the `usermeta` section.
-
-        Parameters
-        ----------
-        content: bytes
-            The buffer containing the new `usermeta` data that replaces the
-            previous one.  Note that the length of the new content can be
-            different from the existing one.
-
-        """
-        content = msgpack.packb(content)
-        return super(TLArray, self).update_usermeta(content)
