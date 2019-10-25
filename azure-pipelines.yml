@@ -37,15 +37,9 @@ jobs:
     displayName: 'Compile package'
 
   - script: |
-      pip install pytest pytest-azurepipelines pytest-cov
-      PYTHONPATH=. python -m pytest --junitxml=junit/test-results.xml --cov=cat4py --cov-report=xml --cov-report=html tests
+    pip install pytest pytest-azurepipelines pytest-cov
+    PYTHONPATH=. python -m pytest tests/ --cov cat4py --cov-report html
     displayName: 'pytest'
-
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFiles: '**/test-results.xml'
-      testRunTitle: 'Python $(python.version)'
-    condition: succeededOrFailed()
 
 
 - job: 'Windows'
@@ -82,14 +76,7 @@ jobs:
 
   - bash: |
       pip install pytest pytest-azurepipelines pytest-cov
-      PYTHONPATH=. python -m pytest --junitxml=junit/test-results.xml --cov=cat4py --cov-report=xml --cov-report=html tests
-    displayName: 'pytest'
-
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFiles: '**/test-results.xml'
-      testRunTitle: 'Python $(python.version)'
-    condition: succeededOrFailed()
+      PYTHONPATH=. python -m pytest tests/ --cov cat4py --cov-report html
 
 - job: 'macOS'
   pool:
@@ -121,11 +108,4 @@ jobs:
 
   - script: |
       pip install pytest pytest-azurepipelines pytest-cov
-      PYTHONPATH=. python -m pytest --junitxml=junit/test-results.xml --cov=cat4py --cov-report=xml --cov-report=html tests
-    displayName: 'pytest'
-
-  - task: PublishTestResults@2
-    inputs:
-      testResultsFiles: '**/test-results.xml'
-      testRunTitle: 'Python $(python.version)'
-    condition: succeededOrFailed()
+      PYTHONPATH=. python -m pytest tests/ --cov cat4py --cov-report html
