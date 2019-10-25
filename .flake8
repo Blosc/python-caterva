@@ -1,2 +1,3 @@
 max-line-length 99
-exclude = cat4py/__init__.py
+exclude =
+    __init__.py
