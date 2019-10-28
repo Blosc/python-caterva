@@ -1,10 +1,16 @@
-# Announcing cat4py 0.2.3
+# Announcing cat4py 0.3.0
 
 
 ## What is new?
 
-This release just rename the `MANINFEST.in` file to `MANIFEST.in`. Also fix the
-list of available cnames.
+In this realease the development status has changed to alpha and the instructions about
+installing cat4py from pip has been added.
+
+A new class, named `NPArray`, has been created for better integration with numpy arrays.
+
+Another functionality to consider is that now the containers can be serialized/deserialized
+to/from frames (bytes).
+
 
 For more info, you can have a look at the release notes in:
 

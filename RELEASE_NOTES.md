@@ -6,9 +6,25 @@
 | Date | 2019-09-17 |
 
 
-## Changes from 0.2.3 to 0.2.4
+## Changes from 0.2.3 to 0.3.0
 
-XXX version-specific blurb XXX
+* Set the development status to alpha.
+
+* Add instructions about installing cat4py from pip.
+
+* `getitem` and `setitem` are now special methods in `ext.Container`.
+
+* Add new class from numpy arrays `NPArray`.
+
+* Support for serializing/deserializing Containers to/from serialized frames (bytes).
+
+* The `pshape` is calculated automatically if is `None`.
+
+* Add a `.sframe` attribute for the serialized frame.
+
+* Big refactor for more consistent inheritance among classes.
+
+* The `from_numpy()` function always return a `NPArray` now.
 
 
 ## Changes from 0.2.2 to 0.2.3
