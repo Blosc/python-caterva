@@ -73,7 +73,7 @@ Do a quick check that the tarball is sane.
 
 It takes about 15 minutes for it to be installed using:
 ```
-$pip install cat4py
+$ CFLAGS="" pip install cat4py
 ```
 
 
@@ -99,7 +99,7 @@ $pip install cat4py
 
 * Commit your changes with:
 ```
-  $ git commit -a -m"Post X.Y.Z release actions done"
+  $ git commit -a -m "Post X.Y.Z release actions done"
   $ git push
 ```
 

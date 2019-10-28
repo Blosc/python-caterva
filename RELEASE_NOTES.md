@@ -5,6 +5,10 @@
 | Contact | blosc@blosc.org |
 | Date | 2019-09-17 |
 
+## Changes from 0.3.0 to 0.3.1
+
+  XXX version-specific blurb XXX
+
 
 ## Changes from 0.2.3 to 0.3.0
 
