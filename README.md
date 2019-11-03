@@ -1,6 +1,7 @@
 [![Build Status](https://dev.azure.com/blosc/caterva/_apis/build/status/Blosc.cat4py?branchName=master)](https://dev.azure.com/blosc/caterva/_build/latest?definitionId=1&branchName=master)
 ![Coverage](https://img.shields.io/azure-devops/coverage/blosc/caterva/1)
 [![Documentation Status](https://readthedocs.org/projects/cat4py/badge/?version=latest)](https://cat4py.readthedocs.io/en/latest/?badge=latest)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Blosc/cat4py/master?filepath=notebooks%2Fcaterva-demo.ipynb)
 # cat4py
 
 Python wrapper for Caterva.  Still on development.
