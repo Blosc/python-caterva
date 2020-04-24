@@ -130,8 +130,8 @@ cdef extern from "blosc2.h":
 
 cdef extern from "caterva.h":
     ctypedef enum:
-        CATERVA_MAXDIM
-
+        CATERVA_MAX_DIM
+        CATERVA_MAX_METALAYERS
 
     ctypedef struct caterva_config_t:
         void *(*alloc)(size_t)
@@ -154,12 +154,17 @@ cdef extern from "caterva.h":
         CATERVA_STORAGE_BLOSC
         CATERVA_STORAGE_PLAINBUFFER
 
+    ctypedef struct caterva_metalayer_t:
+        char *name
+        uint8_t *sdata
+        int32_t size
 
     ctypedef struct caterva_storage_properties_blosc_t:
-        int32_t chunkshape[CATERVA_MAXDIM]
+        int32_t chunkshape[CATERVA_MAX_DIM]
         bool enforceframe
         char* filename
-
+        caterva_metalayer_t metalayers[CATERVA_MAX_METALAYERS]
+        int32_t nmetalayers
 
     ctypedef struct caterva_storage_properties_plainbuffer_t:
         char* filename
@@ -176,7 +181,7 @@ cdef extern from "caterva.h":
 
 
     ctypedef struct caterva_params_t:
-        int64_t shape[CATERVA_MAXDIM]
+        int64_t shape[CATERVA_MAX_DIM]
         uint8_t ndim
         uint8_t itemsize
 
@@ -189,9 +194,9 @@ cdef extern from "caterva.h":
         caterva_storage_backend_t storage
         blosc2_schunk *sc
         uint8_t *buf
-        int64_t shape[CATERVA_MAXDIM]
-        int32_t chunkshape[CATERVA_MAXDIM]
-        int64_t extendedshape[CATERVA_MAXDIM]
+        int64_t shape[CATERVA_MAX_DIM]
+        int32_t chunkshape[CATERVA_MAX_DIM]
+        int64_t extendedshape[CATERVA_MAX_DIM]
         int64_t size
         int32_t chunksize
         int64_t extendedesize
@@ -483,10 +488,39 @@ cdef get_caterva_start_stop(ndim, key, shape):
 
     return start, stop, chunkshape, size
 
+cdef create_caterva_storage(kwargs, caterva_storage_t *storage):
+    itemsize = kwargs['itemsize'] if 'chunkshape' in kwargs else None
+    chunkshape = kwargs['chunkshape'] if 'chunkshape' in kwargs else None
+    filename = kwargs['filename'] if 'filename' in kwargs else None
+    enforceframe = kwargs['enforceframe'] if 'enforceframe' in kwargs else False
+    metalayers = kwargs['metalayers'] if 'metalayers' in kwargs else False
+
+    if filename is True and enforceframe is False:
+        raise ValueError("You cannot specify a `filename` and set `enforceframe` to False at once.")
+
+    storage.backend = CATERVA_STORAGE_PLAINBUFFER if chunkshape is None else CATERVA_STORAGE_BLOSC
+    if storage.backend is CATERVA_STORAGE_BLOSC:
+        storage.properties.blosc.filename = filename
+        storage.properties.blosc.enforceframe = enforceframe
+        for i in range(len(chunkshape)):
+            storage.properties.blosc.chunkshape[i] = chunkshape[i]
+    else:
+        storage.properties.plainbuffer.filename = NULL  # Not implemented yet
+
+    if metalayers:
+        metalayers = kwargs['metalayers']
+        storage.properties.blosc.nmetalayers = len(metalayers)
+        for i, name, content in enumerate(metalayers.items()):
+            name = name.encode("utf-8") if isinstance(name, str) else name
+            content = msgpack.packb(content)
+            storage.properties.blosc.metalayers[i].name = name
+            storage.properties.blosc.metalayers[i].sdata = content
+            storage.properties.blosc.metalayers[i].size = len(content)
+
 
 cdef class Container:
     cdef caterva_array_t *array
-    cdef kargs
+    cdef kwargs
     cdef usermeta_len
 
     @property
@@ -554,7 +588,7 @@ cdef class Container:
     @property
     def nchunks(self):
         """The number of chunks in this container."""
-        return int(self.array.esize / self.array.psize)
+        return int(self.array.extendedesize / self.array.chunksize)
 
     @property
     def ndim(self):
@@ -567,19 +601,12 @@ cdef class Container:
         return self.array.filled
 
     def __init__(self, shape, **kwargs):
-        self.ctx = Context(**kwargs)
-
+        ctx = Context(**kwargs)
+        self.kwargs = kwargs
         self.usermeta_len = 0
 
         ndim = len(shape)
-        itemsize = kwargs['itemsize'] if 'itemsize' in kargs else 8
-
-        chunkshape = kwargs['chunkshape'] if 'chunkshape' in kwargs else None
-        filename = kwargs['filename'] if 'filename' in kwargs else None
-        enforceframe = kwargs['enforceframe'] if 'enforceframe' in kwargs else False
-
-        if filename is not None and enforceframe is True:
-            raise ValueError("You cannot specify a `filename` and set `enforceframe` to True at once.")
+        itemsize = kwargs['itemsize'] if 'itemsize' in kwargs else 8
 
         cdef caterva_params_t params
         params.itemsize = itemsize
@@ -588,69 +615,42 @@ cdef class Container:
             params.shape[i] = shape[i]
 
         cdef caterva_storage_t storage;
-        storage.backend = CATERVA_STORAGE_PLAINBUFFER if pshape is None else CATERVA_STORAGE_BLOSC
-        if storage.backend is CATERVA_STORAGE_BLOSC:
-            storage.properties.blosc.filename = filename
-            storage.properties.blosc.enforceframe = enforceframe
-            for i in range(ndim):
-                storage.properties.blosc.chunkshape[i] = chunkshape[i]
-        else:
-            storage.properties.plainbuffer.filename = None  # Not implemented yet
+        create_caterva_storage(kwargs, &storage)
 
-        caterva_empty_array(ctx._context, &params, &storage, &self.array)
-
-        if 'metalayers' in kwargs:
-            metalayers = kwargs['metalayers']
-            for name, content in metalayers.items():
-                name = name.encode("utf-8") if isinstance(name, str) else name
-                content = msgpack.packb(content)
-                blosc2_add_metalayer(self.array.sc, name, content, len(content))
-
-        self.kargs = kargs
+        caterva_array_empty(ctx._context, &params, &storage, &self.array)
 
 
     def __getitem__(self, key):
         ndim = self.ndim
         start, stop, shape, size = get_caterva_start_stop(ndim, key, self.shape)
-        buflen = size * self.itemsize
-        buffer = bytes(buflen)
+        buffersize = size * self.itemsize
+        buffer = bytes(buffersize)
+        cdef int64_t[self.ndim] start_, stop_, shape_
+        for i in range(self.ndim):
+            start_[i], stop_[i], shape_[i] = start[i], stop[i], shape[i]
 
-        ctx = Context(self.kargs)
-        caterva_get_slice_buffer(ctx._context, self.array, start, stop, shape, <char *> buffer, buflen)
-        return buffer
-
-    def _slicebuffer(self, key, **kwargs):
-        key = list(key)
-        for i, sl in enumerate(key):
-            if type(sl) is not slice:
-                key[i] = slice(sl, sl+1, None)
-
-        ndim = self.array.ndim
-        start, stop, shape, size = get_caterva_start_stop(ndim, key, self.shape)
-
-        blen = size * self.itemsize
-        buffer = bytes(blen)
-
-        ctx = Context(**kwargs)
-        caterva_get_slice_buffer(ctx._context, self.array, start, stop, shape, <char *> buffer, buflen)
+        ctx = Context(self.kwargs)
+        caterva_array_get_slice_buffer(ctx._context, self.array, start_, stop_, shape_, <char *> buffer, buffersize)
 
         return buffer
 
     def squeeze(self, **kwargs):
         ctx = Context(**kwargs)
-        caterva_squeeze(ctx._context, self.array)
+        caterva_array_squeeze(ctx._context, self.array)
 
-    def to_buffer(self):
-        size = self.size * self.itemsize
-        buffer = bytes(size)
-        caterva_to_buffer(self.array, <void *> <char *> buffer)
+    def to_buffer(self, **kwargs):
+        ctx = Context(**kwargs)
+        buffersize = self.size * self.itemsize
+        buffer = bytes(buffersize)
+        caterva_array_to_buffer(ctx._context, self.array, <void *> <char *> buffer, buffersize)
         return buffer
 
-    def to_sframe(self):
+    def to_sframe(self, **kwargs):
         if not self.array.filled:
             raise NotImplementedError("The Container is not completely filled")
         if self.array.storage != CATERVA_STORAGE_BLOSC:
             raise NotImplementedError("The Container is backed by a plain buffer")
+        ctx = Context(**kwargs)
         cdef char* fname
         cdef char* data
         cdef bytes sdata
@@ -672,8 +672,12 @@ cdef class Container:
             blosc2_free_frame(frame)
         return sdata
 
-    def copy(self, Container dest):
-        caterva_copy(dest.array, self.array)
+    def copy(self, **kargs):
+        ctx = Context(**kwargs)
+        cdef caterva_storage_t storage
+        create_caterva_storage(kwargs, &storage)
+
+        caterva_array_copy(ctx._context, self.array, &storage, )
 
     def has_metalayer(self, name):
         if  self.array.storage != CATERVA_STORAGE_BLOSC and self.array.sc.frame == NULL:
@@ -721,6 +725,8 @@ cdef class Container:
         if self.array != NULL:
             caterva_free_array(self.array)
 
+
+def empty(Container arr, filename, copy):
 
 def from_file(Container arr, filename, copy):
     ctx = Context()
