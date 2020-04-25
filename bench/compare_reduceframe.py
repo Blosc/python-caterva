@@ -50,7 +50,7 @@ a = cat.empty(shape, pshape=pshape, itemsize=content.itemsize, filename=fname_ca
 for block, info in a.iter_write():
     nparray = content[info.slice]
     block[:] = bytes(nparray)
-acratio = a.cratio
+acratio = a.compratio
 del a
 t1 = time()
 print("Time for storing array on-disk (caterva, iter): %.3fs ; CRatio: %.1fx" % ((t1 - t0), acratio))

@@ -4,19 +4,19 @@ import numpy as np
 import os
 
 
-@pytest.mark.parametrize("shape, pshape, filename, dtype",
+@pytest.mark.parametrize("shape, chunkshape, filename, dtype",
                          [
                              ([2], [2], "testmeta00.cat", np.float64),
                              ([20, 134, 13], [3, 13, 5], "testmeta01.cat", np.int32),
                              ([12, 13, 14, 15, 16], [2, 6, 4, 5, 4], "testmeta02.cat", np.float32)
                          ])
-def test_metalayers(shape, pshape, filename, dtype):
+def test_metalayers(shape, chunkshape, filename, dtype):
     if os.path.exists(filename):
         os.remove(filename)
 
     # Create an empty caterva array (on disk)
     itemsize = np.dtype(dtype).itemsize
-    a = cat.empty(shape, pshape=pshape, filename=filename, itemsize=itemsize,
+    a = cat.empty(shape, chunkshape=chunkshape, enforceframe=True, filename=filename, itemsize=itemsize,
                   metalayers={"numpy": {b"dtype": str(np.dtype(dtype))},
                               "test": {b"lorem": 1234}})
 

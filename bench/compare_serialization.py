@@ -51,7 +51,7 @@ carr = cat.empty(shape, dtype=dtype, pshape=pshape, memframe=True,
 for block, info in carr.iter_write():
     nparray = arr[info.slice]
     block[:] = nparray
-acratio = carr.cratio
+acratio = carr.compratio
 t1 = time()
 print("Time for creating an array in-memory (numpy -> caterva, copy): %.3fs ; CRatio: %.1fx" % ((t1 - t0), acratio))
 

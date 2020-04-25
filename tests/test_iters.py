@@ -4,6 +4,7 @@ import numpy as np
 from itertools import zip_longest as lzip
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize("shape, pshape1, pshape2, dtype",
                          [
                              ([4], [2], [2], np.int32),
@@ -26,6 +27,7 @@ def test_iters(shape, pshape1, pshape2, dtype):
     np.testing.assert_equal(nparray, nparray2)
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize("shape, pshape1, pshape2, dtype",
                          [
                              ([4], [2], [2], np.int32),

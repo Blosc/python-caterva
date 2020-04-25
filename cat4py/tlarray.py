@@ -3,18 +3,7 @@ import numpy as np
 from .container import Container, process_key
 
 
-class ReadIter(ext.ReadIter):
-    def __init__(self, arr, blockshape=None):
-        super(ReadIter, self).__init__(arr, blockshape)
-
-
-class WriteIter(ext.WriteIter):
-    def __init__(self, arr):
-        super(WriteIter, self).__init__(arr)
-
-
 class TLArray(Container):
-
     def __init__(self, **kwargs):
         """The basic, multidimensional and type-less data container.
 
@@ -26,7 +15,7 @@ class TLArray(Container):
         super(TLArray, self).__init__(**kwargs)
 
     def pre_init(self, **kwargs):
-        pass
+        self.kwargs = kwargs
 
     @classmethod
     def cast(cls, cont):
@@ -112,7 +101,7 @@ class TLArray(Container):
             A new TLArray container that contains the copy.
         """
         arr = TLArray(**kwargs)
-        return super(TLArray, self).copy(arr)
+        return super(TLArray, self).copy(arr, **kwargs)
 
     def to_numpy(self, dtype):
         """Return a NumPy array with the data contents and `dtype`.

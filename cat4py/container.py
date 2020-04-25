@@ -1,7 +1,7 @@
 # This module is only useful to been able to change the Container class to different subclasses.
 # This can't be done on a Cython extension (ext.Container).
 
-from functools import reduce
+
 import operator
 import math
 import msgpack
@@ -58,11 +58,11 @@ class Container(ext.Container):
         """
         super(Container, self).__init__(**kwargs)
 
-    def squeeze(self):
+    def squeeze(self, **kwargs):
         """Remove the 1's in Container's shape."""
-        super(Container, self).squeeze()
+        super(Container, self).squeeze(**kwargs)
 
-    def to_buffer(self):
+    def to_buffer(self, **kwargs):
         """Returns a buffer with the data contents.
 
         Returns
@@ -70,9 +70,9 @@ class Container(ext.Container):
         bytes
             The buffer containing the data of the whole Container.
         """
-        return super(Container, self).to_buffer()
+        return super(Container, self).to_buffer(**kwargs)
 
-    def to_sframe(self):
+    def to_sframe(self, **kwargs):
         """Return a serialized frame with data and metadata contents.
 
         Returns
@@ -83,23 +83,17 @@ class Container(ext.Container):
             of it is returned.  If not, a bytes object with the frame is
             returned.
         """
-        return super(Container, self).to_sframe()
+        return super(Container, self).to_sframe(**kwargs)
 
-    def copy(self, arr):
+    def copy(self, arr, **kwargs):
         """Copy into a new container.
-
-        Parameters
-        ----------
-        arr: TLArray or NPArray
-            The container to copy data into.
 
         Returns
         -------
         Container
             The `arr` object containing the copy.
         """
-        super(Container, self).copy(arr)
-        return arr
+        return super(Container, self).copy(arr, **kwargs)
 
     def has_metalayer(self, name):
         """Whether `name` is an existing metalayer or not.
@@ -177,41 +171,3 @@ class Container(ext.Container):
         """
         content = msgpack.packb(content)
         return super(Container, self).update_usermeta(content)
-
-
-def prod(iterable):
-    return reduce(operator.mul, iterable, 1)
-
-
-def get_pshape_guess(shape, itemsize=4, suggested_size=2**20):
-    """Get a guess for a reasonable pshape that is compliant with shape.
-
-    Parameters
-    ----------
-    shape: tuple or list
-        The shape for the underlying array.
-    itemsize: int
-        The itemsize of the underlying array.
-    suggested_size: int
-        A suggestion for the partition size.
-
-    Returns
-    -------
-    tuple
-        The guessed pshape.
-    """
-    goal = math.trunc(suggested_size / itemsize)
-    pshape = [1] * len(shape)
-    shape = shape[::-1]
-    for i, shape_i in enumerate(shape):
-        current_goal = prod(pshape)
-        if current_goal * shape[i] < goal:
-            pshape[i] = shape[i]
-            continue
-        ratio = math.trunc(goal / current_goal)
-        if ratio > 0:
-            pshape[i] = ratio
-        break
-    pshape = tuple(pshape[::-1])
-    # print("->", pshape)
-    return pshape

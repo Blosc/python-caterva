@@ -75,7 +75,7 @@ a = cat.empty(shape, pshape=pshape, itemsize=content.itemsize, filename=fname_ca
 for block, info in a.iter_write():
     nparray = content[info.slice]
     block[:] = bytes(nparray)
-acratio = a.cratio
+acratio = a.compratio
 if persistent:
     del a
 t1 = time()

@@ -3,22 +3,7 @@ from . import container_ext as ext
 from .container import Container
 from .tlarray import TLArray
 from .nparray import NPArray
-from .container import get_pshape_guess
 
-
-def update_kwargs(shape, dtype, kwargs):
-    """Compute some decent guesses for params not in `kwargs`."""
-    if "pshape" not in kwargs or kwargs["pshape"] is None:
-        if dtype is not None:
-            dtype = np.dtype(dtype)
-            itemsize = dtype.itemsize
-            kwargs["itemsize"] = itemsize
-        elif "itemsize" in kwargs:
-            itemsize = kwargs["itemsize"]
-        else:
-            itemsize = ext.cparams_dflts["itemsize"]
-        kwargs["pshape"] = get_pshape_guess(shape, itemsize)
-    return kwargs
 
 
 def empty(shape, dtype=None, **kwargs):
@@ -40,10 +25,10 @@ def empty(shape, dtype=None, **kwargs):
         If `dtype` is None, a new :py:class:`TLArray` object is returned.
         If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
-    kwargs = update_kwargs(shape, dtype, kwargs)
 
     arr = TLArray(**kwargs) if dtype is None else NPArray(dtype, **kwargs)
-    arr.updateshape(shape)
+    kwargs = arr.kwargs
+    ext.empty(arr, shape, **kwargs)
     return arr
 
 
@@ -68,30 +53,10 @@ def from_buffer(buffer, shape, dtype=None, **kwargs):
         If `dtype` is None, a new :py:class:`TLArray` object is returned.
         If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
-    kwargs = update_kwargs(shape, dtype, kwargs)
     arr = TLArray(**kwargs) if dtype is None else NPArray(dtype, **kwargs)
-    ext.from_buffer(arr, shape, buffer)
-    return arr
+    kwargs = arr.kwargs
 
-
-def from_numpy(nparray, **kwargs):
-    """Create a NPArray container out of a NumPy array.
-
-    In addition to regular arguments, you can pass any keyword argument that
-    is supported by the :py:meth:`Container.__init__` constructor.
-
-    Parameters
-    ----------
-    nparray: numpy.array
-        The NumPy array to populate the container with.
-
-    Returns
-    -------
-    NPArray
-        The new :py:class:`NPArray` object.
-    """
-    kwargs = update_kwargs(nparray.shape, nparray.dtype, kwargs)
-    arr = from_buffer(bytes(nparray), nparray.shape, dtype=nparray.dtype, **kwargs)
+    ext.from_buffer(arr, buffer, shape, **kwargs)
     return arr
 
 
@@ -124,7 +89,7 @@ def from_file(filename, copy=False):
     return arr
 
 
-def from_sframe(sframe, copy=False):
+def from_sframe(sframe, copy=False, **kwargs):
     """Open a new container from `sframe`.
 
     Parameters
@@ -140,7 +105,7 @@ def from_sframe(sframe, copy=False):
     TLArray or NPArray
     """
     arr = Container()
-    ext.from_sframe(arr, sframe, copy)
+    ext.from_sframe(arr, sframe, copy, **kwargs)
     if arr.has_metalayer("numpy"):
         arr = NPArray.cast(arr)
         dtype = arr.get_metalayer("numpy")[b'dtype']
@@ -149,4 +114,18 @@ def from_sframe(sframe, copy=False):
         arr = TLArray.cast(arr)
         arr.pre_init()
 
+    return arr
+
+
+def from_array(array, **kwargs):
+    array_interface = array.__array_interface__
+    if array_interface["strides"] is not None:
+        raise NotImplementedError
+    dtype = np.dtype(array_interface["typestr"])
+    arr = NPArray(dtype, **kwargs)
+    kwargs = arr.kwargs
+    if "chunkshape" not in kwargs or kwargs["chunkshape"] is None:
+        ext.from_array(arr, array_interface, **kwargs)
+    else:
+        ext.from_buffer(arr, bytes(array), array.shape, **kwargs)
     return arr
