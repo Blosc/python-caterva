@@ -5,15 +5,25 @@ from .container import Container, process_key
 
 
 class ReadIter(ext.ReadIter):
-    def __init__(self, arr, blockshape):
+    def __init__(self, arr, itershape):
         self.arr = arr
-        super(ReadIter, self).__init__(arr, blockshape)
+        super(ReadIter, self).__init__(arr, itershape)
 
     def __next__(self):
         buff, info = ext.ReadIter.__next__(self)
         arr = np.frombuffer(buff, dtype=self.arr.dtype).reshape(info.shape)
         return arr, info
 
+
+class WriteIter(ext.WriteIter):
+    def __init__(self, arr):
+        self.arr = arr
+        super(WriteIter, self).__init__(arr)
+
+    def __next__(self):
+        buff, info = ext.WriteIter.__next__(self)
+        arr = np.frombuffer(buff, dtype=self.arr.dtype).reshape(info.shape)
+        return arr, info
 
 class NPArray(Container):
 

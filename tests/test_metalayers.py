@@ -7,8 +7,8 @@ import os
 @pytest.mark.parametrize("shape, chunkshape, filename, dtype",
                          [
                              ([2], [2], "testmeta00.cat", np.float64),
-                             ([20, 134, 13], [3, 13, 5], "testmeta01.cat", np.int32),
-                             ([12, 13, 14, 15, 16], [2, 6, 4, 5, 4], "testmeta02.cat", np.float32)
+                             # ([20, 134, 13], [3, 13, 5], "testmeta01.cat", np.int32),
+                             # ([12, 13, 14, 15, 16], [2, 6, 4, 5, 4], "testmeta02.cat", np.float32)
                          ])
 def test_metalayers(shape, chunkshape, filename, dtype):
     if os.path.exists(filename):

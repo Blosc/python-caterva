@@ -18,6 +18,7 @@ from libcpp cimport bool
 from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer
 from collections import namedtuple
 from libc.stdint cimport uintptr_t
+from libc.string cimport strdup
 from .container import Container as HLContainer
 
 import os.path
@@ -344,20 +345,88 @@ cdef class Context:
         return PyCapsule_New(self.context_, "caterva_ctx_t*", NULL)
 
 
+cdef class WriteIter:
+    cdef Container arr
+    cdef Context ctx
+    cdef buffer
+    cdef dtype
+    cdef buffer_shape
+    cdef int32_t buffer_len
+    cdef int32_t part_len
+
+    # TODO: is np.dtype really necessary here?  Container does not have this notion, so...
+    def __init__(self, Container arr):
+        self.arr = arr
+        self.dtype = np.dtype(f"S{arr.itemsize}")
+        self.part_len = self.arr.array.chunksize * self.arr.itemsize
+        self.ctx = Context()  # TODO: Use **kwargs
+
+    def __iter__(self):
+        self.buffer_shape = None
+        self.buffer_len = 0
+        self.buffer = None
+        self.memview = None
+        return self
+
+    def __next__(self):
+        cdef char* data_pointer
+
+        if self.buffer is not None:
+            if self.part_len != self.buffer_len:
+                # Extended partition; pad with zeros
+                item = np.frombuffer(self.memview[:self.buffer_len], self.dtype).reshape(self.buffer_shape)
+                item = np.pad(item, [(0, self.arr.array.chunkshape[i] - item.shape[i]) for i in range(self.arr.ndim)],
+                              mode='constant', constant_values=0)
+                item = item.tobytes()
+                data_pointer = <char*> item
+            else:
+                data_pointer = <char*> self.buffer
+            caterva_array_append(self.ctx.context_, self.arr.array, data_pointer, self.part_len)
+
+        if self.arr.array.filled:
+            raise StopIteration
+
+        aux = [self.arr.array.extendedshape[i] // self.arr.array.chunkshape[i] for i in range(self.arr.array.ndim)]
+        start_ = [0 for _ in range(self.arr.array.ndim)]
+        inc = 1
+        for i in range(self.arr.array.ndim - 1, -1, -1):
+            start_[i] = self.arr.array.nparts % (aux[i] * inc) // inc
+            start_[i] *= self.arr.array.chunkshape[i]
+            inc *= aux[i]
+
+        stop_ = [start_[i] + self.arr.array.chunkshape[i] for i in range(self.arr.array.ndim)]
+        for i in range(self.arr.array.ndim):
+            if stop_[i] > self.arr.array.shape[i]:
+                stop_[i] = self.arr.array.shape[i]
+
+        sl = tuple([slice(start_[i], stop_[i]) for i in range(self.arr.array.ndim)])
+        shape = [s.stop - s.start for s in sl]
+        IterInfo = namedtuple("IterInfo", "slice, shape, size")
+        info = IterInfo(slice=sl, shape=shape, size=np.prod(shape))
+
+        # Allocate a new buffer if needed
+        self.buffer_shape = shape
+        self.buffer_len = np.prod(shape) * self.arr.itemsize
+        if self.buffer is None:
+            self.buffer = bytearray(self.part_len)
+            self.memview = memoryview(self.buffer)
+        return self.memview[:self.buffer_len], info
+
+
 cdef class ReadIter:
     cdef Container arr
-    cdef blockshape
+    cdef itershape
     cdef dtype
     cdef nparts
     cdef object IterInfo
 
-    def __init__(self, arr, blockshape):
+    def __init__(self, Container arr, itershape):
         if not arr.filled:
             raise ValueError("Container is not completely filled")
         self.arr = arr
-        if blockshape is None:
-            blockshape = arr.pshape
-        self.blockshape = blockshape
+        if itershape is None:
+            itershape = arr.pshape
+        self.itershape = itershape
         self.nparts = 0
         self.IterInfo = namedtuple("IterInfo", "slice, shape, size")
 
@@ -369,11 +438,11 @@ cdef class ReadIter:
         shape = tuple(self.arr.shape)
         eshape = [0 for i in range(ndim)]
         for i in range(ndim):
-            if shape[i] % self.blockshape[i] == 0:
-                eshape[i] = self.blockshape[i] * (shape[i] // self.blockshape[i])
+            if shape[i] % self.itershape[i] == 0:
+                eshape[i] = self.itershape[i] * (shape[i] // self.itershape[i])
             else:
-                eshape[i] = self.blockshape[i] * (shape[i] // self.blockshape[i] + 1)
-        aux = [eshape[i] // self.blockshape[i] for i in range(ndim)]
+                eshape[i] = self.itershape[i] * (shape[i] // self.itershape[i] + 1)
+        aux = [eshape[i] // self.itershape[i] for i in range(ndim)]
         if self.nparts >= np.prod(aux):
             raise StopIteration
 
@@ -381,10 +450,10 @@ cdef class ReadIter:
         inc = 1
         for i in range(ndim - 1, -1, -1):
             start_[i] = self.nparts % (aux[i] * inc) // inc
-            start_[i] *= self.blockshape[i]
+            start_[i] *= self.itershape[i]
             inc *= aux[i]
 
-        stop_ = [start_[i] + self.blockshape[i] for i in range(ndim)]
+        stop_ = [start_[i] + self.itershape[i] for i in range(ndim)]
         for i in range(ndim):
             if stop_[i] > shape[i]:
                 stop_[i] = shape[i]
@@ -394,7 +463,7 @@ cdef class ReadIter:
         info = self.IterInfo(slice=sl, shape=sh, size=np.prod(sh))
         self.nparts += 1
 
-        buf = self.arr._slicebuffer(info.slice)
+        buf = self.arr.__getitem__(info.slice)
         return buf, info
 
 
@@ -440,11 +509,12 @@ cdef create_caterva_storage(caterva_storage_t *storage, kwargs):
         else:
             storage.properties.blosc.nmetalayers = len(metalayers)
             for i, (name, content) in enumerate(metalayers.items()):
-                name = name.encode("utf-8") if isinstance(name, str) else name
+                name2 = name.encode("utf-8") if isinstance(name, str) else name # do a copy
                 content = msgpack.packb(content)
-                storage.properties.blosc.metalayers[i].name = name
-                storage.properties.blosc.metalayers[i].sdata = content
+                storage.properties.blosc.metalayers[i].name = strdup(name2)
+                storage.properties.blosc.metalayers[i].sdata = <uint8_t *> strdup(content)
                 storage.properties.blosc.metalayers[i].size = len(content)
+
     else:
         storage.properties.plainbuffer.filename = NULL  # Not implemented yet
 
@@ -610,12 +680,9 @@ cdef class Container:
         return sdata
 
     def has_metalayer(self, name):
-        print("Has metalayer")
         if self.array.storage != CATERVA_STORAGE_BLOSC:
             raise NotImplementedError("Invalid backend")
-        print("Name")
         name = name.encode("utf-8") if isinstance(name, str) else name
-        print("blosc metalayer")
         n = blosc2_has_metalayer(self.array.sc, name)
         return False if n < 0 else True
 

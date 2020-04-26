@@ -3,6 +3,16 @@ import numpy as np
 from .container import Container, process_key
 
 
+class ReadIter(ext.ReadIter):
+    def __init__(self, arr, itershape=None):
+        super(ReadIter, self).__init__(arr, itershape)
+
+
+class WriteIter(ext.WriteIter):
+    def __init__(self, arr):
+        super(WriteIter, self).__init__(arr)
+
+
 class TLArray(Container):
     def __init__(self, **kwargs):
         """The basic, multidimensional and type-less data container.
@@ -12,7 +22,7 @@ class TLArray(Container):
         constructor.
         """
         self.pre_init(**kwargs)
-        super(TLArray, self).__init__(**kwargs)
+        super(TLArray, self).__init__(**self.kwargs)
 
     def pre_init(self, **kwargs):
         self.kwargs = kwargs
