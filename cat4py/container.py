@@ -2,8 +2,6 @@
 # This can't be done on a Cython extension (ext.Container).
 
 
-import operator
-import math
 import msgpack
 from . import container_ext as ext
 

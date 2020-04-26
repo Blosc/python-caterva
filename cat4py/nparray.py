@@ -25,6 +25,7 @@ class WriteIter(ext.WriteIter):
         arr = np.frombuffer(buff, dtype=self.arr.dtype).reshape(info.shape)
         return arr, info
 
+
 class NPArray(Container):
 
     @property
@@ -55,8 +56,7 @@ class NPArray(Container):
     def pre_init(self, dtype, **kwargs):
         self.dtype = np.dtype(dtype)
         kwargs["itemsize"] = self.dtype.itemsize
-        kwargs["metalayers"] = {
-            "numpy": {
+        kwargs["metalayers"] = {"numpy": {
             # TODO: adding "version" does not deserialize well
             # "version": 0,    # can be any number up to 127
             "dtype": str(self.dtype),

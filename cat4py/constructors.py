@@ -5,7 +5,6 @@ from .tlarray import TLArray
 from .nparray import NPArray
 
 
-
 def empty(shape, dtype=None, **kwargs):
     """Create an empty container.
 
