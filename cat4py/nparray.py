@@ -168,4 +168,3 @@ class NPArray(Container):
             The NumPy array object containing the data of the whole Container.
         """
         return np.frombuffer(self.to_buffer(), dtype=self.dtype).reshape(self.shape)
-
