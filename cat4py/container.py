@@ -126,7 +126,7 @@ class Container(ext.Container):
             return None
         content = super(Container, self).get_metalayer(name)
 
-        return msgpack.unpackb(content)
+        return msgpack.unpackb(content, raw=True)
 
     def update_metalayer(self, name, content):
         """Update the `name` metalayer with `content`.
