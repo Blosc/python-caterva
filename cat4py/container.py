@@ -154,7 +154,7 @@ class Container(ext.Container):
             but not necessarily).
         """
         content = super(Container, self).get_usermeta()
-        return msgpack.unpackb(content)
+        return msgpack.unpackb(content, raw=True)
 
     def update_usermeta(self, content):
         """Update the `usermeta` section.
