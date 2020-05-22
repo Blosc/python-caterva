@@ -32,7 +32,7 @@ jobs:
   - script: |
       git submodule init
       git submodule update
-      CFLAGS="" python setup.py build_ext -i
+      python setup.py build_ext -j 4 --build-type=RelWithDebInfo
     displayName: 'Compile package'
 
   - script: |
