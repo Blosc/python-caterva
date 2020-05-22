@@ -795,28 +795,6 @@ def from_buffer(Container arr, buf, shape, **kwargs):
     arr.array = array_
 
 
-def from_array(Container arr, arr_interface, **kwargs):  #TODO: Fix this
-    ctx = Context(**kwargs)
-
-    cdef caterva_params_t params_
-    create_caterva_params(&params_, arr_interface["shape"], np.dtype(arr_interface["typestr"]).itemsize)
-
-    cdef caterva_storage_t storage_
-    create_caterva_storage(&storage_, kwargs)
-
-    cdef caterva_array_t *array_
-    caterva_array_empty(ctx.context_, &params_, &storage_, &array_)
-
-    arr.array = array_
-    arr.array.empty = False
-    arr.array.filled = True
-    ctx.context_.cfg.free(arr.array.buf)
-    pointer = arr_interface["data"][0]
-    cdef uintptr_t pointer_ = <uintptr_t> pointer
-    arr.array.buf = <uint8_t *> pointer_
-    arr.view = True
-
-
 def get_pointer(Container arr, **kwargs):
     cdef uintptr_t pointer_ = <uintptr_t> arr.array.buf
     return pointer_

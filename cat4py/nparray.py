@@ -28,15 +28,6 @@ class WriteIter(ext.WriteIter):
 
 class NPArray(Container):
 
-    @property
-    def __array_interface__(self):
-        if self.chunkshape is None:
-            typestr = str(self.dtype)
-            shape = self.shape
-            data = (ext.get_pointer(self), False)
-            version = 3
-            return dict({"typestr": typestr, "shape": shape, "data": data, "version": version})
-
     def __init__(self, dtype, **kwargs):
         """The multidimensional data container that plays well with NumPy.
 
