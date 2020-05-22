@@ -378,16 +378,8 @@ cdef class WriteIter:
         cdef char* data_pointer
 
         if self.buffer is not None:
-            if self.part_len != self.buffer_len:
-                # Extended partition; pad with zeros
-                item = np.frombuffer(self.memview[:self.buffer_len], self.dtype).reshape(self.buffer_shape)
-                item = np.pad(item, [(0, self.arr.array.chunkshape[i] - item.shape[i]) for i in range(self.arr.ndim)],
-                              mode='constant', constant_values=0)
-                item = item.tobytes()
-                data_pointer = <char*> item
-            else:
-                data_pointer = <char*> self.buffer
-            caterva_array_append(self.ctx.context_, self.arr.array, data_pointer, self.part_len)
+            data_pointer = <char*> self.buffer
+            caterva_array_append(self.ctx.context_, self.arr.array, data_pointer, self.buffer_len)
 
         if self.arr.array.filled:
             raise StopIteration
