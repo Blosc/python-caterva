@@ -117,15 +117,19 @@ def from_sframe(sframe, copy=False, **kwargs):
     return arr
 
 
-def from_array(array, **kwargs):
-    array_interface = array.__array_interface__
-    if array_interface["strides"] is not None:
-        raise NotImplementedError
-    dtype = np.dtype(array_interface["typestr"])
-    arr = NPArray(dtype, **kwargs)
-    kwargs = arr.kwargs
-    if "chunkshape" not in kwargs or kwargs["chunkshape"] is None:
-        ext.from_array(arr, array_interface, **kwargs)
-    else:
-        ext.from_buffer(arr, bytes(array), array.shape, **kwargs)
-    return arr
+def from_numpy(array, **kwargs):
+    """Create a NPArray container out of a NumPy array.
+    In addition to regular arguments, you can pass any keyword argument that
+    is supported by the :py:meth:`Container.__init__` constructor.
+
+    Parameters
+    ----------
+    array: numpy.array
+        The NumPy array to populate the container with.
+    Returns
+    -------
+    NPArray
+        The new :py:class:`NPArray` object.
+    """
+
+    return from_buffer(bytes(array), array.shape, array.dtype, **kwargs)

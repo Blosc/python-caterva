@@ -27,7 +27,7 @@ def test_copy(shape, chunkshape1, chunkshape2, itemsize):
 def test_copy_numpy(shape, chunkshape1, chunkshape2, dtype):
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_array(nparray)
+    a = cat.from_numpy(nparray)
     b = a.copy(chunkshape=chunkshape2, complevel=5, filters=[2])
     if chunkshape2 is not None:
         nparray2 = b.to_numpy()

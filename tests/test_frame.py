@@ -63,7 +63,7 @@ def test_frame_numpy(shape, chunkshape, dtype, enforceframe, filename, copy_sfra
 
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_array(nparray, chunkshape=chunkshape, enforceframe=enforceframe, filename=filename)
+    a = cat.from_numpy(nparray, chunkshape=chunkshape, enforceframe=enforceframe, filename=filename)
     sframe1 = a.to_sframe()
     buffer1 = a.to_buffer()
     # Size of a compressed frame should be less than the plain buffer for the cases here
