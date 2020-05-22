@@ -105,7 +105,6 @@ def from_sframe(sframe, copy=False, **kwargs):
     arr = Container()
     ext.from_sframe(arr, sframe, copy, **kwargs)
     if arr.has_metalayer("numpy"):
-        print(arr.get_metalayer("numpy"))
         arr = NPArray.cast(arr)
         dtype = arr.get_metalayer("numpy")[b'dtype']
         arr.pre_init(dtype)

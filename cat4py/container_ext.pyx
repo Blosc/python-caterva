@@ -423,7 +423,7 @@ cdef class ReadIter:
             raise ValueError("Container is not completely filled")
         self.arr = arr
         if itershape is None:
-            itershape = arr.pshape
+            itershape = arr.chunkshape
         self.itershape = itershape
         self.nparts = 0
         self.IterInfo = namedtuple("IterInfo", "slice, shape, size")
