@@ -32,7 +32,7 @@ jobs:
   - script: |
       git submodule init
       git submodule update
-      python setup.py build_ext -j 4 --build-type RelWithDebInfo
+      python setup.py build_ext --build-type RelWithDebInfo
     displayName: 'Compile package'
 
   - script: |
@@ -86,7 +86,7 @@ jobs:
   - bash: |
       git submodule init
       git submodule update
-      python setup.py build_ext -j 4 --build-type RelWithDebInfo --generator "NMake Makefiles" -- -DWINGEN="NMake Makefiles"
+      python setup.py build_ext --build-type RelWithDebInfo --generator "NMake Makefiles" -- -DWINGEN="NMake Makefiles"
     displayName: 'Compile package'
 
   - bash: |
@@ -130,7 +130,7 @@ jobs:
   - script: |
       git submodule init
       git submodule update
-      python setup.py build_ext -j 4 --build-type RelWithDebInfo
+      python setup.py build_ext --build-type RelWithDebInfo
     displayName: 'Compile package'
 
   - script: |
