@@ -102,7 +102,8 @@ if __name__ == '__main__':
             'msgpack>=0.6.1'
         ],
         tests_require=['numpy', 'psutil'],
-        packages = ['cat4py'],
+        packages=['cat4py'],
+        package_dir={'cat4py': 'cat4py'},
         )
 elif __name__ == '__mp_main__':
     # This occurs from `cpuinfo 4.0.0` using multiprocessing to interrogate the

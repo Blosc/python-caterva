@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.11.0)
 project(cat4py)
 find_package(PythonExtensions REQUIRED)
+find_package(Cython REQUIRED)
+find_package(NumPy REQUIRED)
 
 # if(NOT blosc_FOUND)
 set(BUILD_STATIC ON CACHE BOOL "Build a static version of the blosc library.")
