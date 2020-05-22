@@ -1,4 +1,3 @@
-import numpy as np
 from . import container_ext as ext
 from .container import Container
 from .tlarray import TLArray

@@ -98,7 +98,6 @@ if __name__ == '__main__':
             'cython>=0.29',
             'numpy>=1.16',
             'scikit-build',
-            'setuptools_scm>=3.2.0',
             'pytest>=3.4.2',
             'msgpack>=0.6.1'
         ],
