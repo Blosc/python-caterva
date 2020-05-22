@@ -3,15 +3,15 @@ import pytest
 import numpy as np
 
 
-@pytest.mark.parametrize("shape, chunkshape, itemsize",
+@pytest.mark.parametrize("shape, chunkshape, blockshape, itemsize",
                          [
-                             ([24], [3], 8),
-                             ([20, 134, 13], [3, 13, 5], 4),
-                             ([12, 13, 14, 15, 16], None, 8)
+                             ([450], [128], [25], 8),
+                             ([20, 134, 13], [3, 13, 5], [3, 10, 5], 4),
+                             ([12, 13, 14, 15, 16], None, None, 8)
                          ])
-def test_buffer(shape, chunkshape, itemsize):
+def test_buffer(shape, chunkshape, blockshape, itemsize):
     size = int(np.prod(shape))
     buffer = bytes(size * itemsize)
-    a = cat.from_buffer(buffer, shape, chunkshape=chunkshape, itemsize=itemsize)
+    a = cat.from_buffer(buffer, shape, chunkshape=chunkshape, blockshape=blockshape, itemsize=itemsize)
     buffer2 = a.to_buffer()
     assert buffer == buffer2

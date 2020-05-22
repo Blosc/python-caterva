@@ -164,6 +164,7 @@ cdef extern from "caterva.h":
 
     ctypedef struct caterva_storage_properties_blosc_t:
         int32_t chunkshape[CATERVA_MAX_DIM]
+        int32_t blockshape[CATERVA_MAX_DIM]
         bool enforceframe
         char* filename
         caterva_metalayer_t metalayers[CATERVA_MAX_METALAYERS]
@@ -199,10 +200,16 @@ cdef extern from "caterva.h":
         uint8_t *buf
         int64_t shape[CATERVA_MAX_DIM]
         int32_t chunkshape[CATERVA_MAX_DIM]
-        int64_t extendedshape[CATERVA_MAX_DIM]
+        int64_t extshape[CATERVA_MAX_DIM]
+        int32_t blockshape[CATERVA_MAX_DIM]
+        int64_t extchunkshape[CATERVA_MAX_DIM]
+        int32_t next_chunkshape[CATERVA_MAX_DIM]
         int64_t size
         int32_t chunksize
-        int64_t extendedesize
+        int64_t extsize
+        int32_t blocksize
+        int64_t extchunksize
+        int64_t next_chunksize
         int8_t ndim
         int8_t itemsize
         bool empty
@@ -290,7 +297,6 @@ config_dflts = {
     'complevel': 5,
     'usedict': False,
     'nthreads': 1,
-    'blocksize': 0,
     'filters': [BLOSC_SHUFFLE],
     'filtersmeta': [0],  # no actual meta info for SHUFFLE, but anyway...
     }
@@ -386,7 +392,7 @@ cdef class WriteIter:
         if self.arr.array.filled:
             raise StopIteration
 
-        aux = [self.arr.array.extendedshape[i] // self.arr.array.chunkshape[i] for i in range(self.arr.array.ndim)]
+        aux = [self.arr.array.extshape[i] // self.arr.array.chunkshape[i] for i in range(self.arr.array.ndim)]
         start_ = [0 for _ in range(self.arr.array.ndim)]
         inc = 1
         for i in range(self.arr.array.ndim - 1, -1, -1):
@@ -487,12 +493,17 @@ cdef create_caterva_params(caterva_params_t *params, shape, itemsize):
 
 cdef create_caterva_storage(caterva_storage_t *storage, kwargs):
     chunkshape = kwargs.get('chunkshape', None)
+    blockshape = kwargs.get('blockshape', None)
     filename = kwargs.get('filename', None)
     enforceframe = kwargs.get('enforceframe', False)
     metalayers = kwargs.get('metalayers', None)
     if filename is not None and enforceframe is False:
         raise ValueError("You cannot specify a `filename` and set `enforceframe` to False at once.")
-    storage.backend = CATERVA_STORAGE_PLAINBUFFER if chunkshape is None else CATERVA_STORAGE_BLOSC
+
+    if chunkshape is not None and blockshape is not None:
+        storage.backend = CATERVA_STORAGE_BLOSC
+    else:
+        storage.backend = CATERVA_STORAGE_PLAINBUFFER
 
     if storage.backend is CATERVA_STORAGE_BLOSC:
         if filename is not None:
@@ -503,6 +514,7 @@ cdef create_caterva_storage(caterva_storage_t *storage, kwargs):
         storage.properties.blosc.enforceframe = enforceframe
         for i in range(len(chunkshape)):
             storage.properties.blosc.chunkshape[i] = chunkshape[i]
+            storage.properties.blosc.blockshape[i] = blockshape[i]
 
         if metalayers is None:
             storage.properties.blosc.nmetalayers = 0
@@ -537,6 +549,13 @@ cdef class Container:
         if self.array.storage is CATERVA_STORAGE_PLAINBUFFER:
             return None
         return tuple([self.array.chunkshape[i] for i in range(self.array.ndim)])
+
+    @property
+    def blockshape(self):
+        """The block shape of this container."""
+        if self.array.storage is CATERVA_STORAGE_PLAINBUFFER:
+            return None
+        return tuple([self.array.blockshape[i] for i in range(self.array.ndim)])
 
     @property
     def compratio(self):
@@ -579,6 +598,11 @@ cdef class Container:
         return self.array.chunksize
 
     @property
+    def chunksize(self):
+        """The block size (in items) for this container."""
+        return self.array.blocksize
+
+    @property
     def sframe(self):
         """The serialized frame for this container (if it exists).  *No copies* are made."""
         if self.array.sc.frame == NULL or self.array.sc.frame.fname != NULL:
@@ -597,7 +621,7 @@ cdef class Container:
     @property
     def nchunks(self):
         """The number of chunks in this container."""
-        return int(self.array.extendedesize / self.array.chunksize)
+        return int(self.array.extsize / self.array.chunksize)
 
     @property
     def ndim(self):

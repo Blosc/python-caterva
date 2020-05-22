@@ -4,22 +4,24 @@ import numpy as np
 import os
 
 
-@pytest.mark.parametrize("shape, chunkshape, itemsize, enforceframe, filename, copy_sframe",
+@pytest.mark.parametrize("shape, chunkshape, blockshape, itemsize, enforceframe, filename, copy_sframe",
                          [
-                             ([200], [20], 8, True, None, False),
-                             ([200], [20], 8, True, None, True),
-                             ([20, 134, 13], [3, 13, 5], 4, False, None, True),
-                             ([20, 134, 13], [3, 13, 5], 4, True, 'test_frame.cat', True),
-                             ([12, 13, 14, 15, 16], [2, 3, 4, 4, 4], 8, True, None, False)
+                             ([200], [66], [20], 8, True, None, False),
+                             ([200], [66], [20], 8, True, None, True),
+                             ([20, 134, 13], [15, 54, 10], [3, 13, 5], 4, False, None, True),
+                             ([20, 134, 13], [15, 54, 10], [3, 13, 5], 4, True, 'test_frame.cat',
+                              True),
+                             ([12, 13, 14, 15, 16], [8, 5, 6, 7, 7], [2, 3, 4, 4, 4], 8, True, None,
+                              False)
                          ])
-def test_frame(shape, chunkshape, itemsize, enforceframe, filename, copy_sframe):
+def test_frame(shape, chunkshape, blockshape, itemsize, enforceframe, filename, copy_sframe):
     if filename is not None and os.path.exists(filename):
         os.remove(filename)
 
     size = int(np.prod(shape))
     buffer = bytes(size * itemsize)
-    a = cat.from_buffer(buffer, shape, chunkshape=chunkshape, itemsize=itemsize,
-                        enforceframe=enforceframe, filename=filename)
+    a = cat.from_buffer(buffer, shape, chunkshape=chunkshape, blockshape=blockshape,
+                        itemsize=itemsize, enforceframe=enforceframe, filename=filename)
     sframe1 = a.to_sframe()
     buffer1 = a.to_buffer()
     # Size of a compressed frame should be less than the plain buffer for the cases here
@@ -49,21 +51,25 @@ def test_frame(shape, chunkshape, itemsize, enforceframe, filename, copy_sframe)
         os.remove(filename)
 
 
-@pytest.mark.parametrize("shape, chunkshape, dtype, enforceframe, filename, copy_sframe",
+@pytest.mark.parametrize("shape, chunkshape, blockshape, dtype, enforceframe, filename, copy_sframe",
                          [
-                             ([200], [20], np.float64, True, None, True),
-                             ([200], [20], np.float64, True, None, False),
-                             #([20, 134, 13], [3, 13, 5], np.int32, True, None, True),
-                             #([20, 134, 13], [3, 13, 5], np.int16, True, 'test_frame.cat', True),
-                             ([12, 13, 14, 15, 16], [2, 3, 4, 4, 4], np.int64, True, None, False)
+                             ([200], [66], [20], np.float64, True, None, False),
+                             ([200], [66], [20], np.float64, True, None, True),
+                             ([20, 134, 13], [15, 54, 10], [3, 13, 5], np.float32, False, None,
+                              True),
+                             ([20, 134, 13], [15, 54, 10], [3, 13, 5], np.int32, True,
+                              'test_frame.cat', True),
+                             ([12, 13, 14, 15, 16], [8, 5, 6, 7, 7], [2, 3, 4, 4, 4], np.int64,
+                              True, None, False)
                          ])
-def test_frame_numpy(shape, chunkshape, dtype, enforceframe, filename, copy_sframe):
+def test_frame_numpy(shape, chunkshape, blockshape, dtype, enforceframe, filename, copy_sframe):
     if filename is not None and os.path.exists(filename):
         os.remove(filename)
 
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_numpy(nparray, chunkshape=chunkshape, enforceframe=enforceframe, filename=filename)
+    a = cat.from_numpy(nparray, chunkshape=chunkshape, blockshape=blockshape,
+                       enforceframe=enforceframe, filename=filename)
     sframe1 = a.to_sframe()
     buffer1 = a.to_buffer()
     # Size of a compressed frame should be less than the plain buffer for the cases here

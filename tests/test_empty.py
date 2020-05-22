@@ -3,24 +3,27 @@ import cat4py as cat
 import pytest
 
 
-@pytest.mark.parametrize("shape, chunkshape, itemsize, compname, complevel, use_dict, nthreads, blocksize, filters",
+@pytest.mark.parametrize("shape, chunkshape, blockshape, itemsize, compname, complevel, use_dict, nthreads, filters",
                          [
-                             ((100, 1230), (20, 10), 4, "lz4", 4, 0, 1, 0, [1]),
-                             ((23, 34), None, 8, "lz4hc", 8, 0, 2, 256 * 1024, [2, 1]),
-                             ((400, 399, 401), (20, 10, 130), 3, "blosclz", 5, 1, 2, 128 * 1024, [4, 3, 0, 2, 1])
+                             ((100, 1230), (200, 100), (55, 3), 4, "lz4", 4, 0, 1, [1]),
+                             ((23, 34), None, None, 8, "lz4hc", 8, 0, 2, [2, 1]),
+                             ((400, 399, 401), (20, 10, 130), (6, 6, 26), 3, "blosclz", 5, 1, 2,
+                              [4, 3, 0, 2, 1])
                          ])
-def test_empty(shape, chunkshape, itemsize, compname, complevel, use_dict, nthreads, blocksize, filters):
+def test_empty(shape, chunkshape, blockshape, itemsize, compname, complevel, use_dict, nthreads,
+               filters):
     a = cat.empty(shape, chunkshape=chunkshape,
+                  blockshape=blockshape,
                   itemsize=itemsize,
                   compname=compname,
                   complevel=complevel,
                   use_dict=use_dict,
                   nthreads=nthreads,
-                  blocksize=blocksize,
                   filters=filters)
 
     if chunkshape is not None:
         assert a.chunkshape == chunkshape
+        assert a.blockshape == blockshape
     assert a.shape == shape
     assert a.itemsize == itemsize
     assert a.compname == (compname if chunkshape is not None else None)
@@ -31,24 +34,27 @@ def test_empty(shape, chunkshape, itemsize, compname, complevel, use_dict, nthre
         assert a.filters is None
 
 
-@pytest.mark.parametrize("shape, chunkshape, dtype, compname, complevel, use_dict, nthreads, blocksize, filters",
+@pytest.mark.parametrize("shape, chunkshape, blockshape, dtype, compname, complevel, use_dict, nthreads, filters",
                          [
-                             ((100, 1230), (20, 10), np.float32, "lz4", 4, 0, 1, 0, [1]),
-                             ((23, 34), None, np.int64, "lz4hc", 8, 0, 2, 256 * 1024, [2, 1]),
-                             ((400, 399, 401), (20, 10, 130), np.int8, "blosclz", 5, 1, 2, 128 * 1024, [4, 3, 0, 2, 1])
+                             ((100, 1230), (200, 100), (55, 3), np.float32, "lz4", 4, 0, 1, [1]),
+                             ((23, 34), None, None, np.int64, "lz4hc", 8, 0, 2, [2, 1]),
+                             ((400, 399, 401), (20, 10, 130), (6, 6, 26), np.int8, "blosclz",
+                              5, 1, 2, [4, 3, 0, 2, 1])
                          ])
-def test_empty_numpy(shape, chunkshape, dtype, compname, complevel, use_dict, nthreads, blocksize, filters):
+def test_empty_numpy(shape, chunkshape, blockshape, dtype, compname, complevel, use_dict, nthreads,
+                     filters):
     a = cat.empty(shape, chunkshape=chunkshape,
+                  blockshape=blockshape,
                   dtype=dtype,
                   compname=compname,
                   complevel=complevel,
                   use_dict=use_dict,
                   nthreads=nthreads,
-                  blocksize=blocksize,
                   filters=filters)
 
     if chunkshape is not None:
         assert a.chunkshape == chunkshape
+        assert a.blockshape == blockshape
     assert a.shape == shape
     assert a.dtype == dtype
     assert a.itemsize == np.dtype(dtype).itemsize
