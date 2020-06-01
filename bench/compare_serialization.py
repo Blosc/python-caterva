@@ -18,9 +18,8 @@ check_roundtrip = False  # set this to True to check for roundtrip validity
 
 # Dimensions, type and persistency properties for the arrays
 shape = (100, 5000, 250)
-# pshape = (20, 500, 50)
-# pshape = (1, 5000, 250)
-pshape = None   # automatic pshape
+chunkshape = (20, 500, 100)
+blockshape = (10, 50, 50)
 dtype = "float64"
 
 # Compression properties
@@ -45,7 +44,8 @@ print("Time for copying array in-memory (numpy): %.3fs" % (t1 - t0))
 
 # Create and fill a caterva array using a block iterator and an in-memory frame
 t0 = time()
-carr = cat.empty(shape, dtype=dtype, pshape=pshape, memframe=True,
+carr = cat.empty(shape, dtype=dtype, chunkshape=chunkshape, blockshape=blockshape,
+                 enforceframe=True,
                  cname=cname, clevel=clevel, filters=[filter],
                  cnthreads=nthreads, dnthreads=nthreads)
 for block, info in carr.iter_write():

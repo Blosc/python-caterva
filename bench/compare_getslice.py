@@ -25,7 +25,8 @@ else:
 # Dimensions and type properties for the arrays
 # 'Small' arrays config follows...
 shape = (100, 5000, 250)
-pshape = (20, 500, 50)
+chunkshape = (20, 100, 50)
+blockshape = (10, 50, 25)
 # This config generates containers of more than 2 GB in size
 # shape = (250, 4000, 350)
 # pshape = (200, 100, 100)
@@ -35,7 +36,7 @@ dtype = np.float64
 cname = "zstd"
 clevel = 6
 filter = cat.SHUFFLE
-nthreads = 4
+nthreads = 2
 
 fname_cat = None
 fname_zarr = None
@@ -69,9 +70,9 @@ content = np.linspace(0, 10, int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create and fill a caterva array using a block iterator
 t0 = time()
-a = cat.empty(shape, pshape=pshape, itemsize=content.itemsize, filename=fname_cat,
-              cname=cname, clevel=clevel, filters=[filter],
-              cnthreads=nthreads, dnthreads=nthreads)
+a = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape,
+              itemsize=content.itemsize, enforceframe=persistent, filename=fname_cat,
+              cname=cname, clevel=clevel, filters=[filter], nthreads=nthreads)
 for block, info in a.iter_write():
     nparray = content[info.slice]
     block[:] = bytes(nparray)
@@ -86,9 +87,9 @@ t0 = time()
 compressor = numcodecs.Blosc(cname=cname, clevel=clevel, shuffle=filter)
 numcodecs.blosc.set_nthreads(nthreads)
 if persistent:
-    z = zarr.open(fname_zarr, mode='w', shape=shape, chunks=pshape, dtype=dtype, compressor=compressor)
+    z = zarr.open(fname_zarr, mode='w', shape=shape, chunks=chunkshape, dtype=dtype, compressor=compressor)
 else:
-    z = zarr.empty(shape=shape, chunks=pshape, dtype=dtype, compressor=compressor)
+    z = zarr.empty(shape=shape, chunks=chunkshape, dtype=dtype, compressor=compressor)
 z[:] = content
 zratio = z.nbytes / z.nbytes_stored
 if persistent:
@@ -104,7 +105,7 @@ if persistent:
     h5f = tables.open_file(fname_h5, 'w')
 else:
     h5f = tables.open_file(fname_h5, 'w', driver='H5FD_CORE', driver_core_backing_store=0)
-h5ca = h5f.create_carray(h5f.root, 'carray', filters=filters, chunkshape=pshape, obj=content)
+h5ca = h5f.create_carray(h5f.root, 'carray', filters=filters, chunkshape=chunkshape, obj=content)
 h5f.flush()
 h5ratio = h5ca.size_in_memory / h5ca.size_on_disk
 if persistent:
@@ -119,7 +120,7 @@ if persistent:
     z = zarr.open(fname_zarr, mode='r')
     h5f = tables.open_file(fname_h5, 'r', filters=filters)
     h5ca = h5f.root.carray
-for block, info in a.iter_read(pshape):
+for block, info in a.iter_read(chunkshape):
     block_cat = np.frombuffer(block, dtype=dtype).reshape(info.shape)
     block_zarr = z[info.slice]
     np.testing.assert_array_almost_equal(block_cat, block_zarr)
@@ -140,7 +141,7 @@ t0 = time()
 if persistent:
     a = cat.from_file(fname_cat, copy=False)  # reopen
 for i in planes_idx:
-    rbytes = a[:,i,:]
+    rbytes = a[:, i, :]
     block = np.frombuffer(rbytes, dtype=dtype).reshape((shape[0], shape[2]))
 del a
 t1 = time()
@@ -151,7 +152,7 @@ t0 = time()
 if persistent:
     z = zarr.open(fname_zarr, mode='r')
 for i in planes_idx:
-    block = z[:,i,:]
+    block = z[:, i, :]
 del z
 t1 = time()
 print("Time for reading with getitem (zarr): %.3fs" % (t1 - t0))
@@ -162,13 +163,13 @@ if persistent:
     h5f = tables.open_file(fname_h5, 'r', filters=filters)
 h5ca = h5f.root.carray
 for i in planes_idx:
-    block = h5ca[:,i,:]
+    block = h5ca[:, i, :]
 h5f.close()
 t1 = time()
 print("Time for reading with getitem (hdf5): %.3fs" % (t1 - t0))
 
 
 if persistent:
-    print("File for caterva is available at:", os.path.abspath(fname_cat))
-    print("Storage for zarr is available at:", os.path.abspath(fname_zarr))
-    print("File for hdf5 is available at:", os.path.abspath(fname_h5))
+    os.remove(fname_cat)
+    os.remove(fname_zarr)
+    os.remove(fname_h5)

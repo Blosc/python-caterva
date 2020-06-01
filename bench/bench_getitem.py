@@ -6,7 +6,9 @@ from time import time
 
 # Dimensions, type and persistency properties for the arrays
 shape = (500, 1000)
-pshape = (100, 100)
+chunkshape = (100, 100)
+blockshape = (25, 25)
+
 dtype = np.float64
 persistent = False
 
@@ -21,7 +23,8 @@ else:
 itemsize = np.dtype(dtype).itemsize
 
 # Create an empty caterva array
-a = cat.empty(shape, pshape=pshape, dtype=dtype, filename=filename, compcode=0)
+a = cat.empty(shape, dtype=dtype, chunkshape=chunkshape, blockshape=blockshape,
+              enforceframe=persistent, filename=filename, compcode=0)
 
 # Fill an empty caterva array using a block iterator
 t0 = time()
@@ -36,7 +39,7 @@ print("Time for filling: %.3fs" % (t1 - t0))
 # Check that the retrieved items are correct
 t0 = time()
 count = 0
-for block, info in a.iter_read(pshape):
+for block, info in a.iter_read(chunkshape):
     nparray = np.arange(count, count + info.size, dtype=dtype).reshape(info.shape)
     np.testing.assert_allclose(block, nparray)
     count += info.size
@@ -47,10 +50,9 @@ print("Time for reading with iterator: %.3fs" % (t1 - t0))
 t0 = time()
 for i in range(shape[0]):
     rbytes = a[i]
-    # print(np.frombuffer(rbytes, dtype=dtype).reshape((1, shape[1])))
 t1 = time()
 print("Time for reading with getitem: %.3fs" % (t1 - t0))
 
 
 if persistent:
-    print("File is available at:", os.path.abspath(filename))
+    os.remove(filename)

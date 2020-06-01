@@ -293,8 +293,8 @@ for cname in _cnames2codecs:
 
 # Defaults for compression params
 config_dflts = {
-    'compname': 'lz4',
-    'complevel': 5,
+    'cname': 'lz4',
+    'clevel': 5,
     'usedict': False,
     'nthreads': 1,
     'filters': [BLOSC_SHUFFLE],
@@ -315,7 +315,7 @@ cdef class Context:
     cdef blosc2_prefilter_params* pparams
 
     def __init__(self, **kwargs):
-        compname = kwargs.get('compname', config_dflts['compname'])
+        compname = kwargs.get('cname', config_dflts['cname'])
         if isinstance(compname, bytes):
             compname = compname.decode()
         if compname not in cnames2codecs:
@@ -324,7 +324,7 @@ cdef class Context:
         config.free = free
         config.alloc = malloc
         config.compcodec = cnames2codecs[compname]
-        config.complevel = kwargs.get('complevel', config_dflts['complevel'])
+        config.complevel = kwargs.get('clevel', config_dflts['clevel'])
         config.usedict =  kwargs.get('usedict', config_dflts['usedict'])
         config.nthreads = kwargs.get('nthreads', config_dflts['nthreads'])
         config.prefilter = NULL
@@ -562,14 +562,14 @@ cdef class Container:
         return self.array.itemsize
 
     @property
-    def complevel(self):
+    def clevel(self):
         """The compression level for this container."""
         if self.chunkshape is None:
             return 1
         return self.array.sc.clevel
 
     @property
-    def compname(self):
+    def cname(self):
         """The compression codec name for this container."""
         if self.chunkshape is None:
             return None
