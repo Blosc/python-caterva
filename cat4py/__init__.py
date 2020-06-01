@@ -19,5 +19,9 @@ from .container_ext import NOFILTER, SHUFFLE, BITSHUFFLE, DELTA, TRUNC_PREC
 # Public API for container module
 from .constructors import (empty, from_buffer, from_file, from_sframe, from_numpy)
 
+from .nparray import NPArray
+from .tlarray import TLArray
+from .container import Container
+
 # Available compression library names
 cnames = list(ext.cnames2codecs)
