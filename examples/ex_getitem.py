@@ -2,8 +2,11 @@ import cat4py as cat
 import numpy as np
 
 
-shape = (13, 20)
-slices = (slice(3, 10), slice(5, 13))
+shape = (200, 132)
+chunkshape = (55, 23)
+blockshape = (5, 11)
+
+slices = (slice(30, 111), slice(2, 13))
 
 dtype = np.float64
 itemsize = np.dtype(dtype).itemsize
@@ -12,10 +15,10 @@ itemsize = np.dtype(dtype).itemsize
 nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create a caterva array from a numpy array
-a = cat.from_numpy(nparray)
+a = cat.from_numpy(nparray, chunkshape=chunkshape, blockshape=blockshape)
 
 # Get a slice
 buffer = a[slices]
-buffer2 = bytes(nparray[slices])
+buffer2 = nparray[slices]
 
-assert buffer == buffer2
+np.testing.assert_almost_equal(buffer, buffer2)

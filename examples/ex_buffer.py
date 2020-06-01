@@ -2,8 +2,9 @@ import cat4py as cat
 import numpy as np
 
 
-pshape = (5, 7)
-shape = (13, 20)
+shape = (100, 77)
+chunkshape = (13, 20)
+blockshape = (10, 10)
 
 itemsize = 4
 
@@ -11,9 +12,8 @@ itemsize = 4
 buffer = bytes(np.prod(shape) * itemsize)
 
 # Create a caterva array from a buffer
-a = cat.from_buffer(buffer, shape, pshape=pshape, itemsize=itemsize)
+a = cat.from_buffer(buffer, shape, chunkshape=chunkshape, blockshape=blockshape, itemsize=itemsize)
 
 # Convert a caterva array to a buffer
 buffer2 = a.to_buffer()
-
 assert buffer == buffer2

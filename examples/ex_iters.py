@@ -3,14 +3,15 @@ import numpy as np
 import os
 from itertools import zip_longest as lzip
 
-pshape = (5, 5)
-shape = (10, 10)
+
+shape = (156, 223)
+chunkshape = (22, 32)
+blockshape = (12, 7)
+
 filename = "ex_iters.cat"
 if os.path.exists(filename):
     # Remove file on disk
     os.remove(filename)
-
-blockshape = (5, 5)
 
 dtype = np.complex128
 itemsize = np.dtype(dtype).itemsize
@@ -19,17 +20,23 @@ itemsize = np.dtype(dtype).itemsize
 nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create a caterva array from a numpy array
-a = cat.from_numpy(nparray, pshape=pshape)
+a = cat.from_numpy(nparray)
 
 # Create an empty caterva array (on disk)
-b = cat.empty(shape, pshape=pshape, filename=filename, itemsize=itemsize)
+b = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape,
+              enforceframe=True, filename=filename, itemsize=itemsize)
 
 # Fill an empty caterva array using a block iterator
 for block, info in b.iter_write():
     block[:] = bytes(nparray[info.slice])
 
-# Assert both caterva arrays
-for (block1, info1), (block2, info2) in lzip(a.iter_read(blockshape), b.iter_read(blockshape)):
-    assert block1 == block2
+# Load file
+c = cat.from_file(filename)
 
-print("File is available at:", os.path.abspath(filename))
+# Assert both caterva arrays
+itershape = (5, 5)
+for (block1, info1), (block2, info2) in lzip(a.iter_read(itershape), c.iter_read(itershape)):
+    assert bytes(block1) == block2
+
+# Remove file on disk
+os.remove(filename)
