@@ -1,4 +1,4 @@
-# Benchmark for comparing loading on-disk frames for
+# Benchmark for comparing reducing on-disk frames for
 # multidimensional arrays using different methods:
 # * Opening an on-disk frame without copying
 # * Loading the frame in-memory

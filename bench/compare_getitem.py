@@ -5,9 +5,9 @@ from time import time
 
 
 # Dimensions, type and persistency properties for the arrays
-shape = (500, 1000)
-chunkshape = (100, 100)
-blockshape = (25, 25)
+shape = (1000 * 1000,)
+chunkshape = (100,)
+blockshape = (25,)
 
 dtype = np.float64
 persistent = False
@@ -38,20 +38,30 @@ print("Time for filling: %.3fs" % (t1 - t0))
 
 # Check that the retrieved items are correct
 t0 = time()
+for block, info in a.iter_read(chunkshape):
+    pass
+t1 = time()
+print("Time for reading with iterator: %.3fs" % (t1 - t0))
+
+# Asserting results
 count = 0
 for block, info in a.iter_read(chunkshape):
     nparray = np.arange(count, count + info.size, dtype=dtype).reshape(info.shape)
     np.testing.assert_allclose(block, nparray)
     count += info.size
-t1 = time()
-print("Time for reading with iterator: %.3fs" % (t1 - t0))
 
 # Use getitem
 t0 = time()
-for i in range(shape[0]):
-    rbytes = a[i]
+for i in range(shape[0] // chunkshape[0]):
+    _ = a[i * 100: (i+1) * 100]
 t1 = time()
 print("Time for reading with getitem: %.3fs" % (t1 - t0))
+
+count = 0
+for i in range(shape[0] // chunkshape[0]):
+    nparray = np.arange(count, count + chunkshape[0], dtype=dtype).reshape(chunkshape)
+    np.testing.assert_allclose(a[i * chunkshape[0]: (i+1) * chunkshape[0]], nparray)
+    count += chunkshape[0]
 
 
 if persistent:
