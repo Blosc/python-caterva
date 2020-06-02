@@ -550,7 +550,7 @@ cdef class Container:
         return tuple([self.array.blockshape[i] for i in range(self.array.ndim)])
 
     @property
-    def compratio(self):
+    def cratio(self):
         """The compression ratio for this container."""
         if self.array.storage is CATERVA_STORAGE_PLAINBUFFER:
             return 1

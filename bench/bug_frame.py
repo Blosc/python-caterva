@@ -33,7 +33,7 @@ for block, info in a.iter_write():
     nparray = content[info.slice]
     block[:] = bytes(nparray)
 t1 = time()
-print("Time for filling array (caterva): %.3fs ; CRatio: %.1fx" % ((t1 - t0), a.compratio))
+print("Time for filling array (caterva): %.3fs ; CRatio: %.1fx" % ((t1 - t0), a.cratio))
 
 # Setup the coordinates for random planes
 planes_idx = np.random.randint(0, shape[1], 50)
