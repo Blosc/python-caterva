@@ -25,8 +25,8 @@ else:
 # Dimensions and type properties for the arrays
 # 'Small' arrays config follows...
 shape = (100, 5000, 250)
-chunkshape = (20, 100, 50)
-blockshape = (10, 50, 25)
+chunkshape = (20, 500, 50)
+blockshape = (10, 200, 25)
 # This config generates containers of more than 2 GB in size
 # shape = (250, 4000, 350)
 # pshape = (200, 100, 100)
@@ -37,6 +37,7 @@ cname = "zstd"
 clevel = 6
 filter = cat.SHUFFLE
 nthreads = 2
+blocksize = int(np.prod(blockshape))
 
 fname_cat = None
 fname_zarr = None
@@ -53,7 +54,7 @@ if persistent:
         os.remove(fname_h5)
 
 # Create content for populating arrays
-content = np.linspace(0, 10, int(np.prod(shape)), dtype=dtype).reshape(shape)
+content = np.random.normal(0, 1, int(np.prod(shape))).reshape(shape)
 
 # Create and fill a caterva array using a buffer
 # t0 = time()
@@ -84,7 +85,7 @@ print("Time for filling array (caterva, iter): %.3fs ; CRatio: %.1fx" % ((t1 - t
 
 # Create and fill a zarr array
 t0 = time()
-compressor = numcodecs.Blosc(cname=cname, clevel=clevel, shuffle=filter)
+compressor = numcodecs.Blosc(cname=cname, clevel=clevel, shuffle=filter, blocksize=blocksize)
 numcodecs.blosc.set_nthreads(nthreads)
 if persistent:
     z = zarr.open(fname_zarr, mode='w', shape=shape, chunks=chunkshape, dtype=dtype, compressor=compressor)
@@ -171,5 +172,5 @@ print("Time for reading with getitem (hdf5): %.3fs" % (t1 - t0))
 
 if persistent:
     os.remove(fname_cat)
-    os.remove(fname_zarr)
+    shutil.rmtree(fname_zarr)
     os.remove(fname_h5)
