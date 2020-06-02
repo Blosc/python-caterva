@@ -1,4 +1,4 @@
-# Benchmark for comparing loading on-disk frames for
+# Benchmark for comparing reducing on-disk frames for
 # multidimensional arrays using different methods:
 # * Opening an on-disk frame without copying
 # * Loading the frame in-memory
@@ -14,7 +14,9 @@ linux = 'Linux' in platform.platform()
 
 # Dimensions, type and persistency properties for the arrays
 shape = (100, 5000, 250)
-pshape = (20, 500, 50)
+chunkshape = (20, 100, 50)
+blockshape = (10, 50, 25)
+
 dtype = np.float64
 
 # Compression properties
@@ -44,9 +46,11 @@ print("Time for storing array on-disk (numpy): %.3fs" % (t1 - t0))
 
 # Create and fill a caterva array using a block iterator
 t0 = time()
-a = cat.empty(shape, pshape=pshape, itemsize=content.itemsize, filename=fname_cat,
+a = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape, itemsize=content.itemsize,
+              enforceframe=True, filename=fname_cat,
               cname=cname, clevel=clevel, filters=[filter],
-              cnthreads=nthreads, dnthreads=nthreads)
+              nthreads=nthreads)
+
 for block, info in a.iter_write():
     nparray = content[info.slice]
     block[:] = bytes(nparray)
@@ -100,6 +104,5 @@ np.testing.assert_allclose(acc_cat1, acc_npy1)
 acc_cat2 = bench_read_caterva(fname_cat, copy=True)
 np.testing.assert_allclose(acc_cat1, acc_npy2)
 
-print()
-print("File for numpy is available at:", os.path.abspath(fname_npy))
-print("File for caterva is available at:", os.path.abspath(fname_cat))
+os.remove(fname_npy)
+os.remove(fname_cat)

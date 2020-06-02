@@ -5,9 +5,9 @@ from .container import Container, process_key
 
 
 class ReadIter(ext.ReadIter):
-    def __init__(self, arr, blockshape):
+    def __init__(self, arr, itershape):
         self.arr = arr
-        super(ReadIter, self).__init__(arr, blockshape)
+        super(ReadIter, self).__init__(arr, itershape)
 
     def __next__(self):
         buff, info = ext.ReadIter.__next__(self)
@@ -40,9 +40,8 @@ class NPArray(Container):
         dtype: numpy.dtype
             The data type for the container.
         """
-        self.dtype = np.dtype(dtype)
-        self.kwargs = kwargs
-        self.pre_init(self.dtype, **kwargs)
+
+        self.pre_init(dtype, **kwargs)
         super(NPArray, self).__init__(**self.kwargs)
 
     def pre_init(self, dtype, **kwargs):
@@ -52,7 +51,8 @@ class NPArray(Container):
             # TODO: adding "version" does not deserialize well
             # "version": 0,    # can be any number up to 127
             "dtype": str(self.dtype),
-        }}
+            }
+        }
         self.kwargs = kwargs
 
     @classmethod
@@ -78,7 +78,6 @@ class NPArray(Container):
         """
         key = process_key(key, self.ndim)
         buff = super(NPArray, self).__getitem__(key)
-
         # shape = [k.stop - k.start for k in key]   # not quite correct
         # Trick to get the slice easily and without a lot of memory consumption
         # Maybe there are more elegant ways for this, but meanwhile ...
@@ -149,7 +148,7 @@ class NPArray(Container):
             A new NPArray container that contains the copy.
         """
         arr = NPArray(self.dtype, **kwargs)
-        return super(NPArray, self).copy(arr)
+        return super(NPArray, self).copy(arr, **kwargs)
 
     def to_numpy(self):
         """Returns a NumPy array with the data contents and `dtype`.

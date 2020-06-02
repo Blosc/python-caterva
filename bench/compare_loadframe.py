@@ -10,7 +10,9 @@ from time import time
 
 # Dimensions, type and persistency properties for the arrays
 shape = (100, 5000, 250)
-pshape = (20, 500, 50)
+chunkshape = (20, 100, 50)
+blockshape = (10, 50, 25)
+
 dtype = np.float64
 
 # Compression properties
@@ -40,9 +42,10 @@ print("Time for storing array on-disk (numpy): %.3fs" % (t1 - t0))
 
 # Create and fill a caterva array using a block iterator
 t0 = time()
-a = cat.empty(shape, pshape=pshape, itemsize=content.itemsize, filename=fname_cat,
-              cname=cname, clevel=clevel, filters=[filter],
-              cnthreads=nthreads, dnthreads=nthreads)
+a = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape, itemsize=content.itemsize,
+              enforceframe=True, filename=fname_cat,
+              compname=cname, complevel=clevel, filters=[filter],
+              nthreads=nthreads)
 for block, info in a.iter_write():
     nparray = content[info.slice]
     block[:] = bytes(nparray)
@@ -67,6 +70,7 @@ def bench_read_numpy(fname, planes_idx, copy):
     for i in planes_idx:
         block = a[:, i, :]
         if not copy:
+            # Do an actual read for memory mapped files
             # Do an actual read for memory mapped files
             block = block.copy()
     del a
@@ -93,6 +97,5 @@ print()
 bench_read_caterva(fname_cat, planes_idx, copy=False)
 bench_read_caterva(fname_cat, planes_idx, copy=True)
 
-print()
-print("File for numpy is available at:", os.path.abspath(fname_npy))
-print("File for caterva is available at:", os.path.abspath(fname_cat))
+os.remove(fname_npy)
+os.remove(fname_cat)

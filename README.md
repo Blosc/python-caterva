@@ -9,9 +9,7 @@ Python wrapper for Caterva.  Still on development.
 ## Clone repo and submodules
 
 ```sh
-$ git clone https://github.com/Blosc/cat4py
-$ git submodule init
-$ git submodule update --recursive --remote 
+$ git clone --recurse-submodules https://github.com/Blosc/cat4py
 ```
 
 ## Development workflow
@@ -19,15 +17,7 @@ $ git submodule update --recursive --remote
 ### Compile
 
 ```sh
-$ CFLAGS='' python setup.py build_ext -i
-```
-
-**Please note**: If the CFLAGS environment variable is not passed, Anaconda Python (maybe other distributions too) will inject their own paths there. As a result, it will find possible incompatible headers/libs for Blosc, LZ4 or Zstd.  We understand packagers trying to re-use shared libraries in their setups, but this can create issues when normal users try to compile extensions by themselves.
-
-Compiling the extension implies re-compiling C-Blosc2 and Caterva sources everytime, so a trick for accelerating the process during the development process is to direct the compiler to not optimize the code, and use pre-installed Blosc2 and Caterva libraries:
-
-```sh
-$ CFLAGS=-O0 python setup.py build_ext -i --blosc2=/usr/local --caterva=/usr/local
+$ python setup.py build_ext --build-type=RelWithDebInfo
 ```
 
 ### Run tests
@@ -36,10 +26,10 @@ $ CFLAGS=-O0 python setup.py build_ext -i --blosc2=/usr/local --caterva=/usr/loc
 $ PYTHONPATH=. pytest
 ```
 
-### Run example
+### Run bench
 
 ```sh
-$ PYTHONPATH=. python examples/ex_persistency.py
+$ PYTHONPATH=. python bench/compare_getslice.py
 ```
 
 ### Installing

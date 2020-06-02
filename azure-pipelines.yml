@@ -26,14 +26,13 @@ jobs:
     displayName: 'Use Python $(python.version)'
 
   - script: |
-      python -m pip install --retries 3 -U pip setuptools setuptools-scm
       pip install --retries 3 -r requirements.txt
     displayName: 'Install dependencies'
 
   - script: |
       git submodule init
       git submodule update
-      CFLAGS="" python setup.py build_ext -i
+      python setup.py build_ext --build-type RelWithDebInfo
     displayName: 'Compile package'
 
   - script: |
@@ -81,14 +80,13 @@ jobs:
     displayName: 'Add Python paths to PATH'
 
   - bash: |
-      python -m pip install --retries 3 -U pip setuptools setuptools-scm
       pip install --retries 3 -r requirements.txt
     displayName: 'Install dependencies'
 
   - bash: |
       git submodule init
       git submodule update
-      CFLAGS="" python setup.py build_ext -i
+      python setup.py build_ext --build-type RelWithDebInfo --generator "NMake Makefiles" -- -DWINGEN="NMake Makefiles"
     displayName: 'Compile package'
 
   - bash: |
@@ -126,14 +124,13 @@ jobs:
     displayName: 'Use Python $(python.version)'
 
   - script: |
-      python -m pip install --retries 3 -U pip setuptools setuptools-scm
       pip install --retries 3 -r requirements.txt
     displayName: 'Install dependencies'
 
   - script: |
       git submodule init
       git submodule update
-      CFLAGS="" python setup.py build_ext -i
+      python setup.py build_ext --build-type RelWithDebInfo
     displayName: 'Compile package'
 
   - script: |

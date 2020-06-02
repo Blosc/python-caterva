@@ -1,13 +1,10 @@
 import cat4py as cat
 import numpy as np
-import os
 
-pshape = (5, 5)
-shape = (10, 10)
-filename = "ex_usermeta.cat"
-if os.path.exists(filename):
-    # Remove file on disk
-    os.remove(filename)
+
+shape = (100, 100)
+chunkshape = (25, 25)
+blockshape = (15, 15)
 
 dtype = np.int32
 itemsize = np.dtype(dtype).itemsize
@@ -16,7 +13,7 @@ itemsize = np.dtype(dtype).itemsize
 nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create a caterva array from a numpy array
-a = cat.from_numpy(nparray, pshape=pshape, filename=filename)
+a = cat.from_numpy(nparray, chunkshape=chunkshape, blockshape=blockshape)
 
 # Add some usermeta info
 usermeta = {b"author": b"cat4py example",
@@ -27,5 +24,3 @@ assert(a.get_usermeta() == usermeta)
 usermeta.update({b"author": b"usermeta example"})
 assert(a.update_usermeta(usermeta) >= 0)
 assert(a.get_usermeta() == usermeta)
-
-print("File is available at:", os.path.abspath(filename))

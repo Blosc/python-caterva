@@ -1,4 +1,6 @@
 [flake8]
 exclude =
-    __init__.py
+    __init__.py,
+    c-blosc2,
+    Caterva
 max-line-length = 99

@@ -3,8 +3,10 @@ import numpy as np
 import os
 
 
-pshape = (5, 7)
-shape = (13, 20)
+shape = (128, 128)
+chunkshape = (32, 32)
+blockshape = (8, 8)
+
 filename = "ex_persistency.cat"
 if os.path.exists(filename):
     # Remove file on disk
@@ -17,7 +19,8 @@ itemsize = np.dtype(dtype).itemsize
 nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create a caterva array from a numpy array (on disk)
-a = cat.from_numpy(nparray, pshape=pshape, filename=filename)
+a = cat.from_buffer(bytes(nparray), nparray.shape, chunkshape=chunkshape, blockshape=blockshape,
+                    enforceframe=True, filename=filename, itemsize=itemsize)
 
 # Read a caterva array from disk
 b = cat.from_file(filename)
@@ -27,4 +30,5 @@ nparray2 = b.to_numpy(dtype=dtype)
 
 np.testing.assert_almost_equal(nparray, nparray2)
 
-print("File is available at:", os.path.abspath(filename))
+# Remove file on disk
+os.remove(filename)
