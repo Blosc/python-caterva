@@ -72,7 +72,7 @@ content = np.random.normal(0, 1, int(np.prod(shape))).reshape(shape)
 # Create and fill a caterva array using a block iterator
 t0 = time()
 a = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape,
-              itemsize=content.itemsize, enforceframe=persistent, filename=fname_cat,
+              itemsize=content.itemsize, filename=fname_cat,
               cname=cname, clevel=clevel, filters=[filter], nthreads=nthreads)
 for block, info in a.iter_write():
     nparray = content[info.slice]

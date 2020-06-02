@@ -27,7 +27,7 @@ metalayers = {"numpy": {b"dtype": str(np.dtype(dtype))},
               "test": {b"lorem": 1234}
               }
 b = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape,
-                  enforceframe=True, filename=filename, itemsize=itemsize,
+                  enforceframe=True, itemsize=itemsize,
                   metalayers=metalayers)
 
 assert(b.has_metalayer("numpy") is True)
@@ -52,5 +52,3 @@ assert(b.get_usermeta() == {b"author": b"cat4py example", b"description": b"lore
 assert(b.update_usermeta({b"author": b"cat4py example"}) >= 0)
 assert(b.get_usermeta() == {b"author": b"cat4py example"})
 
-# Remove file on disk
-os.remove(filename)

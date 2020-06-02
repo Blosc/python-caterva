@@ -17,7 +17,7 @@ def test_metalayers(shape, chunkshape, blockshape, filename, dtype):
     # Create an empty caterva array (on disk)
     itemsize = np.dtype(dtype).itemsize
     a = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape,
-                  enforceframe=True, filename=filename, itemsize=itemsize,
+                  filename=filename, itemsize=itemsize,
                   metalayers={"numpy": {b"dtype": str(np.dtype(dtype))},
                               "test": {b"lorem": 1234}})
 

@@ -23,7 +23,7 @@ nparray = np.linspace(0, 1, int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create a caterva array from a numpy array
 a = cat.from_numpy(nparray, chunkshape=chunkshape, blockshape=blockshape,
-                   enforceframe=persistent, filename=filename)
+                   enforceframe=True, filename=filename)
 
 # Create an empty caterva array (on disk)
 b = cat.empty(shape, dtype=dtype, itemsize=itemsize)

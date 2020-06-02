@@ -24,7 +24,7 @@ a = cat.from_numpy(nparray)
 
 # Create an empty caterva array (on disk)
 b = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape,
-              enforceframe=True, filename=filename, itemsize=itemsize)
+              filename=filename, itemsize=itemsize)
 
 # Fill an empty caterva array using a block iterator
 for block, info in b.iter_write():
@@ -38,5 +38,3 @@ itershape = (5, 5)
 for (block1, info1), (block2, info2) in lzip(a.iter_read(itershape), c.iter_read(itershape)):
     assert bytes(block1) == block2
 
-# Remove file on disk
-os.remove(filename)
