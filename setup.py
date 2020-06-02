@@ -11,7 +11,6 @@ from __future__ import print_function
 import os
 import sys
 import io
-import numpy
 
 from skbuild import setup
 from textwrap import dedent
