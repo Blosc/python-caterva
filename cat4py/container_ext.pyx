@@ -487,10 +487,11 @@ cdef create_caterva_storage(caterva_storage_t *storage, kwargs):
     chunkshape = kwargs.get('chunkshape', None)
     blockshape = kwargs.get('blockshape', None)
     filename = kwargs.get('filename', None)
-    enforceframe = kwargs.get('enforceframe', False)
+    if (filename is not None):
+        enforceframe = True
+    else:
+        enforceframe = kwargs.get('enforceframe', False)
     metalayers = kwargs.get('metalayers', None)
-    if filename is not None and enforceframe is False:
-        raise ValueError("You cannot specify a `filename` and set `enforceframe` to False at once.")
 
     if chunkshape is not None and blockshape is not None:
         storage.backend = CATERVA_STORAGE_BLOSC
