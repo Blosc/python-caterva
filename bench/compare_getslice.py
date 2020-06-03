@@ -72,11 +72,10 @@ content = np.random.normal(0, 1, int(np.prod(shape))).reshape(shape)
 # Create and fill a caterva array using a block iterator
 t0 = time()
 a = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape,
-              itemsize=content.itemsize, filename=fname_cat,
+              dtype=content.dtype, filename=fname_cat,
               cname=cname, clevel=clevel, filters=[filter], nthreads=nthreads)
 for block, info in a.iter_write():
-    nparray = content[info.slice]
-    block[:] = bytes(nparray)
+    block[:] = content[info.slice]
 acratio = a.cratio
 if persistent:
     del a
@@ -122,7 +121,7 @@ if persistent:
     h5f = tables.open_file(fname_h5, 'r', filters=filters)
     h5ca = h5f.root.carray
 for block, info in a.iter_read(chunkshape):
-    block_cat = np.frombuffer(block, dtype=dtype).reshape(info.shape)
+    block_cat = block
     block_zarr = z[info.slice]
     np.testing.assert_array_almost_equal(block_cat, block_zarr)
     block_h5 = h5ca[info.slice]
@@ -143,7 +142,6 @@ if persistent:
     a = cat.from_file(fname_cat, copy=False)  # reopen
 for i in planes_idx:
     rbytes = a[:, i, :]
-    block = np.frombuffer(rbytes, dtype=dtype).reshape((shape[0], shape[2]))
 del a
 t1 = time()
 print("Time for reading with getitem (caterva): %.3fs" % (t1 - t0))
