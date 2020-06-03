@@ -47,7 +47,7 @@ print("Time for storing array on-disk (numpy): %.3fs" % (t1 - t0))
 # Create and fill a caterva array using a block iterator
 t0 = time()
 a = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape, itemsize=content.itemsize,
-              enforceframe=True, filename=fname_cat,
+              filename=fname_cat,
               cname=cname, clevel=clevel, filters=[filter],
               nthreads=nthreads)
 

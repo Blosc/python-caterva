@@ -27,7 +27,7 @@ metalayers = {"numpy": {b"dtype": str(np.dtype(dtype))},
               "test": {b"lorem": 1234}
               }
 b = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape,
-                  enforceframe=True, filename=filename, itemsize=itemsize,
+                  filename=filename, itemsize=itemsize,
                   metalayers=metalayers)
 
 assert(b.has_metalayer("numpy") is True)

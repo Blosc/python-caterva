@@ -26,7 +26,7 @@ else:
 # 'Small' arrays config follows...
 shape = (100, 5000, 250)
 chunkshape = (20, 500, 50)
-blockshape = (10, 200, 25)
+blockshape = (10, 100, 25)
 # This config generates containers of more than 2 GB in size
 # shape = (250, 4000, 350)
 # pshape = (200, 100, 100)
@@ -72,7 +72,7 @@ content = np.random.normal(0, 1, int(np.prod(shape))).reshape(shape)
 # Create and fill a caterva array using a block iterator
 t0 = time()
 a = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape,
-              itemsize=content.itemsize, enforceframe=persistent, filename=fname_cat,
+              itemsize=content.itemsize, filename=fname_cat,
               cname=cname, clevel=clevel, filters=[filter], nthreads=nthreads)
 for block, info in a.iter_write():
     nparray = content[info.slice]

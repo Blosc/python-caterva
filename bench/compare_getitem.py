@@ -1,6 +1,7 @@
 import cat4py as cat
 import numpy as np
 import os
+import sys
 from time import time
 
 
@@ -10,7 +11,7 @@ chunkshape = (100,)
 blockshape = (25,)
 
 dtype = np.float64
-persistent = False
+persistent = bool(sys.argv[1]) if len(sys.argv) > 1 else False
 
 if persistent:
     filename = "bench_getitem.cat"
@@ -24,7 +25,7 @@ itemsize = np.dtype(dtype).itemsize
 
 # Create an empty caterva array
 a = cat.empty(shape, dtype=dtype, chunkshape=chunkshape, blockshape=blockshape,
-              enforceframe=persistent, filename=filename, compcode=0)
+              filename=filename, compcode=0)
 
 # Fill an empty caterva array using a block iterator
 t0 = time()

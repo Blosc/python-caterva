@@ -24,7 +24,7 @@ a = cat.from_numpy(nparray)
 
 # Create an empty caterva array (on disk)
 b = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape,
-              enforceframe=True, filename=filename, itemsize=itemsize)
+              filename=filename, itemsize=itemsize)
 
 # Fill an empty caterva array using a block iterator
 for block, info in b.iter_write():

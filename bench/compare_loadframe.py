@@ -19,7 +19,7 @@ dtype = np.float64
 cname = "zstd"
 clevel = 6
 filter = cat.SHUFFLE
-nthreads = 4
+nthreads = 2
 
 fname_npy = "compare_loadframe.npy"
 if os.path.exists(fname_npy):
@@ -43,8 +43,8 @@ print("Time for storing array on-disk (numpy): %.3fs" % (t1 - t0))
 # Create and fill a caterva array using a block iterator
 t0 = time()
 a = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape, itemsize=content.itemsize,
-              enforceframe=True, filename=fname_cat,
-              compname=cname, complevel=clevel, filters=[filter],
+              filename=fname_cat,
+              cname=cname, clevel=clevel, filters=[filter],
               nthreads=nthreads)
 for block, info in a.iter_write():
     nparray = content[info.slice]
