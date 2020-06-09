@@ -14,6 +14,12 @@ $ git clone --recurse-submodules https://github.com/Blosc/cat4py
 
 ## Development workflow
 
+### Install requirements
+
+```sh
+pip install -r requirements.txt
+```
+
 ### Compile
 
 ```sh
