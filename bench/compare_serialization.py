@@ -148,7 +148,7 @@ if check_roundtrip:
     print("ok!")
 
 print()
-arrsize = arr.size * arr.itemsize
+arrsize = arr.nitems * arr.itemsize
 time_100Mbps = arrsize / (10 * 2 ** 20)
 print("Time to transmit array at 100 Mbps (no compression):\t%6.3fs" % time_100Mbps)
 ctime_100Mbps = (arrsize / acratio) / (10 * 2**20)

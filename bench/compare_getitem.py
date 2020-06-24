@@ -31,9 +31,9 @@ a = cat.empty(shape, dtype=dtype, chunkshape=chunkshape, blockshape=blockshape,
 t0 = time()
 count = 0
 for block, info in a.iter_write():
-    nparray = np.arange(count, count + info.size, dtype=dtype).reshape(info.shape)
+    nparray = np.arange(count, count + info.nitems, dtype=dtype).reshape(info.shape)
     block[:] = nparray
-    count += info.size
+    count += info.nitems
 t1 = time()
 print("Time for filling: %.3fs" % (t1 - t0))
 
@@ -47,9 +47,9 @@ print("Time for reading with iterator: %.3fs" % (t1 - t0))
 # Asserting results
 count = 0
 for block, info in a.iter_read(chunkshape):
-    nparray = np.arange(count, count + info.size, dtype=dtype).reshape(info.shape)
+    nparray = np.arange(count, count + info.nitems, dtype=dtype).reshape(info.shape)
     np.testing.assert_allclose(block, nparray)
-    count += info.size
+    count += info.nitems
 
 # Use getitem
 t0 = time()

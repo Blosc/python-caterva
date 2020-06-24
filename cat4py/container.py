@@ -21,8 +21,10 @@ class Container(ext.Container):
 
         Parameters
         ----------
-        pshape: iterable object or None
-            The partition shape.  If None, the store is a plain buffer (non-compressed).
+        chunkshape: iterable object or None
+            The chunk shape.  If None, the store is a plain buffer (non-compressed).
+        blockshape: iterable object or None
+            The block shape.  If None, the store is a plain buffer (non-compressed).
         filename: str or None
             The name of the file to store data.  If `None`, data is stores in-memory.
         memframe: bool
@@ -43,15 +45,11 @@ class Container(ext.Container):
             Default: 5.
         filters: list
             The filter pipeline.  Default: [cat4py.SHUFFLE]
-        filters_meta: list
+        filtersmeta: list
             The meta info for each filter in pipeline.  An uint8 per slot. Default: [0]
-        cnthreads: int
-            The number of threads for compression.  Default: 1.
-        dnthreads: int
-            The number of threads for decompression.  Default: 1.
-        blocksize: int
-            The blocksize for every chunk in container.  The default is 0 (automatic).
-        use_dict: bool
+        nthreads: int
+            The number of threads.  Default: 1.
+        usedict: bool
             If a dictionary should be used during compression.  Default: False.
         """
         super(Container, self).__init__(**kwargs)

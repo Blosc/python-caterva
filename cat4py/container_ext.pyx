@@ -190,7 +190,7 @@ cdef extern from "caterva.h":
         uint8_t itemsize
 
 
-    cdef struct part_cache_s:
+    cdef struct chunk_cache_s:
         uint8_t *data
         int32_t nchunk
 
@@ -204,18 +204,18 @@ cdef extern from "caterva.h":
         int32_t blockshape[CATERVA_MAX_DIM]
         int64_t extchunkshape[CATERVA_MAX_DIM]
         int32_t next_chunkshape[CATERVA_MAX_DIM]
-        int64_t size
-        int32_t chunksize
-        int64_t extsize
-        int32_t blocksize
-        int64_t extchunksize
-        int64_t next_chunksize
+        int64_t nitems
+        int32_t chunknitems
+        int64_t extnitems
+        int32_t blocknitems
+        int64_t extchunknitems
+        int64_t next_chunknitems
         int8_t ndim
         int8_t itemsize
         bool empty
         bool filled
-        int64_t nparts
-        part_cache_s part_cache
+        int64_t nchunks
+        chunk_cache_s chunk_cache
 
 
     int caterva_context_new(caterva_config_t *cfg, caterva_context_t **ctx)
@@ -359,13 +359,15 @@ cdef class WriteIter:
     cdef buffer_shape
     cdef int32_t buffer_len
     cdef int32_t part_len
+    cdef object IterInfo
 
-    # TODO: is np.dtype really necessary here?  Container does not have this notion, so...
-    def __init__(self, Container arr):
+    def __init__(self, Container arr, **kwargs):
         self.arr = arr
         self.dtype = np.dtype(f"S{arr.itemsize}")
-        self.part_len = self.arr.array.chunksize * self.arr.itemsize
-        self.ctx = Context()  # TODO: Use **kwargs
+        self.part_len = self.arr.array.chunknitems * self.arr.itemsize
+        self.ctx = Context(**kwargs)
+        self.IterInfo = namedtuple("IterInfo", "slice, shape, nitems")
+
 
     def __iter__(self):
         self.buffer_shape = None
@@ -388,7 +390,7 @@ cdef class WriteIter:
         start_ = [0 for _ in range(self.arr.array.ndim)]
         inc = 1
         for i in range(self.arr.array.ndim - 1, -1, -1):
-            start_[i] = self.arr.array.nparts % (aux[i] * inc) // inc
+            start_[i] = self.arr.array.nchunks % (aux[i] * inc) // inc
             start_[i] *= self.arr.array.chunkshape[i]
             inc *= aux[i]
 
@@ -399,8 +401,7 @@ cdef class WriteIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(self.arr.array.ndim)])
         shape = [s.stop - s.start for s in sl]
-        IterInfo = namedtuple("IterInfo", "slice, shape, size")
-        info = IterInfo(slice=sl, shape=shape, size=np.prod(shape))
+        info = self.IterInfo(slice=sl, shape=shape, nitems=np.prod(shape))
 
         # Allocate a new buffer if needed
         self.buffer_shape = shape
@@ -426,7 +427,7 @@ cdef class ReadIter:
             itershape = arr.chunkshape
         self.itershape = itershape
         self.nparts = 0
-        self.IterInfo = namedtuple("IterInfo", "slice, shape, size")
+        self.IterInfo = namedtuple("IterInfo", "slice, shape, nitems")
 
     def __iter__(self):
         return self
@@ -458,7 +459,7 @@ cdef class ReadIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(ndim)])
         sh = [s.stop - s.start for s in sl]
-        info = self.IterInfo(slice=sl, shape=sh, size=np.prod(sh))
+        info = self.IterInfo(slice=sl, shape=sh, nitems=np.prod(sh))
         self.nparts += 1
 
         buf = self.arr.__getitem__(info.slice)
@@ -558,11 +559,6 @@ cdef class Container:
         return self.array.sc.nbytes / self.array.sc.cbytes
 
     @property
-    def itemsize(self):
-        """The itemsize of this container."""
-        return self.array.itemsize
-
-    @property
     def clevel(self):
         """The compression level for this container."""
         if self.chunkshape is None:
@@ -586,14 +582,24 @@ cdef class Container:
         return [self.array.sc.filters[i] for i in range(BLOSC2_MAX_FILTERS)]
 
     @property
-    def chunksize(self):
-        """The chunk size (in items) for this container."""
-        return self.array.chunksize
+    def itemsize(self):
+        """The itemsize of this container."""
+        return self.array.itemsize
 
     @property
     def chunksize(self):
-        """The block size (in items) for this container."""
-        return self.array.blocksize
+        """The chunk size (in bytes) for this container."""
+        return self.array.chunknitems * self.itemsize
+
+    @property
+    def blocksize(self):
+        """The block size (in bytes) for this container."""
+        return self.array.blocknitems * self.itemsize
+
+    @property
+    def size(self):
+        """The size (in bytes) for this container."""
+        return self.array.nitems * self.itemsize
 
     @property
     def sframe(self):
@@ -606,15 +612,11 @@ cdef class Container:
         cdef char[::1] mview = <char[:size:1]>data
         return mview
 
-    @property
-    def size(self):
-        """The size (in items) for this container."""
-        return self.array.size
 
     @property
     def nchunks(self):
         """The number of chunks in this container."""
-        return int(self.array.extsize / self.array.chunksize)
+        return int(self.array.extnitems / self.array.chunknitems)
 
     @property
     def ndim(self):
@@ -664,7 +666,7 @@ cdef class Container:
 
     def to_buffer(self, **kwargs):
         ctx = Context(**kwargs)
-        buffersize = self.size * self.itemsize
+        buffersize = self.size
         buffer = bytes(buffersize)
         caterva_array_to_buffer(ctx.context_, self.array, <void *> <char *> buffer, buffersize)
         return buffer
