@@ -19,7 +19,7 @@ from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer
 from collections import namedtuple
 from libc.stdint cimport uintptr_t
 from libc.string cimport strdup
-from .container import Container as HLContainer
+from cpython cimport Py_buffer
 
 import os.path
 
@@ -531,6 +531,9 @@ cdef class Container:
     cdef usermeta_len
     cdef view
     cdef sdata
+    cdef Py_ssize_t py_shape[2]
+    cdef Py_ssize_t py_strides[2]
+    cdef int view_count
 
     @property
     def shape(self):
@@ -634,6 +637,37 @@ cdef class Container:
         self.view = False
         self.sdata = False
         self.array = NULL
+        self.view_count = 0
+
+    def __getbuffer__(self, Py_buffer *buffer, int flags):
+        if self.array.storage is CATERVA_STORAGE_BLOSC:
+            raise AttributeError("Invalid storage")
+        ndim = self.ndim
+
+        cdef Py_ssize_t itemsize = self.itemsize
+        for i in range(ndim):
+            self.py_shape[i] = self.shape[i]
+
+        self.py_strides[ndim - 1] = itemsize
+        for i in range(ndim - 2, -1, -1):
+            self.py_strides[i] = self.py_strides[i+1] * self.py_shape[i]
+
+        buffer.buf = <char *> &(self.array.buf[0])
+        buffer.obj = self
+        buffer.format = "V"
+        buffer.internal = NULL
+        buffer.itemsize = self.itemsize
+        buffer.len = self.size
+        buffer.ndim = ndim
+        buffer.readonly = 0
+        buffer.shape = self.py_shape
+        buffer.strides = self.py_strides
+        buffer.suboffsets = NULL
+
+        self.view_count += 1
+
+    def __releasebuffer__(self, Py_buffer *buffer):
+        self.view_count -= 1
 
     def __getitem__(self, key):
         ndim = self.ndim
