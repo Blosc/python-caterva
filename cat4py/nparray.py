@@ -85,6 +85,17 @@ class NPArray(Container):
         shape = a[key].shape
         return np.frombuffer(buff, dtype=self.dtype).reshape(shape)
 
+    @property
+    def __array_interface__(self):
+        print("Array interface")
+        interface = {
+            "data": self,
+            "shape": self.shape,
+            "typestr": str(self.dtype),
+            "version": 3
+        }
+        return interface
+
     def __array__(self):
         """Convert into a NumPy object via the array protocol."""
         return self.to_numpy()
@@ -105,14 +116,14 @@ class NPArray(Container):
                 The numpy array with the data block.
             info: namedtuple
                 Info about the returned data block.  Its structure is:
-                namedtuple("IterInfo", "slice, shape, size")
+                namedtuple("IterInfo", "slice, shape, nitems")
                 IterInfo:
                     slice: tuple
                         The coordinates where the data block starts.
                     shape: tuple
                         The shape of the actual data block (it can be
                         smaller than `blockshape` at the edges of the array).
-                    size: int
+                    nitems: int
                         The size, in elements, of the block.
         """
         return ReadIter(self, blockshape)
@@ -127,14 +138,14 @@ class NPArray(Container):
                 The NumPy array with the data block to be filled.
             info: namedtuple
                 Info about the data block to be filled.  Its structure is:
-                namedtuple("IterInfo", "slice, shape, size")
+                namedtuple("IterInfo", "slice, shape, nitems")
                 IterInfo:
                     slice: tuple
                         The coordinates where the data block starts.
                     shape: tuple
                         The shape of the actual data block (it can be
                         smaller than `blockshape` at the edges of the array).
-                    size: int
+                    nitems: int
                         The size, in elements, of the block.
         """
         return WriteIter(self)
@@ -158,4 +169,4 @@ class NPArray(Container):
         numpy.array
             The NumPy array object containing the data of the whole Container.
         """
-        return np.frombuffer(self.to_buffer(), dtype=self.dtype).reshape(self.shape)
+        return np.fromstring(self.to_buffer(), dtype=self.dtype).reshape(self.shape)

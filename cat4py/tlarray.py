@@ -52,6 +52,17 @@ class TLArray(Container):
         buff = super(TLArray, self).__getitem__(key)
         return buff
 
+    @property
+    def __array_interface__(self):
+        print("Array interface")
+        interface = {
+            "data": self,
+            "shape": self.shape,
+            "typestr": f'S{self.itemsize}',
+            "version": 3
+        }
+        return interface
+
     def iter_read(self, blockshape=None):
         """Iterate over data blocks whose dims are specified in `blockshape`.
 

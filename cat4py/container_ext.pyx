@@ -19,7 +19,11 @@ from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer
 from collections import namedtuple
 from libc.stdint cimport uintptr_t
 from libc.string cimport strdup
-from cpython cimport Py_buffer
+from cpython cimport (
+    PyObject_GetBuffer, PyBuffer_Release,
+    PyBUF_SIMPLE, PyBUF_WRITABLE, Py_buffer,
+    PyBytes_FromStringAndSize
+)
 
 import os.path
 
@@ -531,8 +535,7 @@ cdef class Container:
     cdef usermeta_len
     cdef view
     cdef sdata
-    cdef Py_ssize_t py_shape[2]
-    cdef Py_ssize_t py_strides[2]
+    cdef Py_buffer *py_buf
     cdef int view_count
 
     @property
@@ -631,6 +634,7 @@ cdef class Container:
         """Whether the container is completely filled or not."""
         return self.array.filled
 
+
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         self.usermeta_len = 0
@@ -638,36 +642,25 @@ cdef class Container:
         self.sdata = False
         self.array = NULL
         self.view_count = 0
+        self.py_buf = NULL
 
     def __getbuffer__(self, Py_buffer *buffer, int flags):
+        if flags != PyBUF_WRITABLE or PyBUF_SIMPLE:
+            raise BufferError
         if self.array.storage is CATERVA_STORAGE_BLOSC:
             raise AttributeError("Invalid storage")
-        ndim = self.ndim
-
-        cdef Py_ssize_t itemsize = self.itemsize
-        for i in range(ndim):
-            self.py_shape[i] = self.shape[i]
-
-        self.py_strides[ndim - 1] = itemsize
-        for i in range(ndim - 2, -1, -1):
-            self.py_strides[i] = self.py_strides[i+1] * self.py_shape[i]
 
         buffer.buf = <char *> &(self.array.buf[0])
         buffer.obj = self
-        buffer.format = "V"
-        buffer.internal = NULL
         buffer.itemsize = self.itemsize
         buffer.len = self.size
-        buffer.ndim = ndim
-        buffer.readonly = 0
-        buffer.shape = self.py_shape
-        buffer.strides = self.py_strides
-        buffer.suboffsets = NULL
+        buffer.ndim = 1
 
         self.view_count += 1
 
     def __releasebuffer__(self, Py_buffer *buffer):
         self.view_count -= 1
+
 
     def __getitem__(self, key):
         ndim = self.ndim
@@ -781,6 +774,10 @@ cdef class Container:
         return content
 
     def __dealloc__(self):
+        if self.py_buf != NULL:
+            PyBuffer_Release(self.py_buf)
+            free(self.py_buf)
+
         if self.array != NULL:
             ctx = Context(**self.kwargs)
             if self.view:
@@ -846,6 +843,28 @@ def from_buffer(Container arr, buf, shape, **kwargs):
     cdef caterva_array_t *array_
     caterva_array_from_buffer(ctx.context_, <void*> <char *> buf, len(buf), &params_, &storage_, &array_)
     arr.array = array_
+
+
+def asarray(Container arr, ndarray, **kwargs):
+    ctx = Context(**kwargs)
+
+    interface = ndarray.__array_interface__
+    cdef Py_buffer *buf = <Py_buffer *> malloc(sizeof(Py_buffer))
+    PyObject_GetBuffer(ndarray, buf, PyBUF_SIMPLE)
+
+    shape = interface["shape"]
+    itemsize = buf.itemsize
+
+    cdef caterva_params_t params_
+    create_caterva_params(&params_, shape, itemsize)
+
+    cdef caterva_storage_t storage_
+    create_caterva_storage(&storage_, kwargs)
+
+    cdef caterva_array_t *array_
+    caterva_array_from_buffer(ctx.context_, <void*> <char *> buf.buf, buf.len, &params_, &storage_, &array_)
+    arr.array = array_
+    arr.py_buf = buf
 
 
 def get_pointer(Container arr, **kwargs):

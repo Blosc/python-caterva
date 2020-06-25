@@ -131,3 +131,27 @@ def from_numpy(array, **kwargs):
     """
 
     return from_buffer(bytes(array), array.shape, array.dtype, **kwargs)
+
+
+def asarray(ndarray, **kwargs):
+    """Create a NPArray container out of a array interface.
+        In addition to regular arguments, you can pass any keyword argument that
+        is supported by the :py:meth:`Container.__init__` constructor.
+
+        Parameters
+        ----------
+        array: array supporting `__array_interface__`
+            The array to populate the container with.
+        Returns
+        -------
+        NPArray
+            The new :py:class:`NPArray` object.
+        """
+    interface = ndarray.__array_interface__
+
+    arr = NPArray(interface["typestr"], **kwargs)
+    kwargs = arr.kwargs
+
+    ext.asarray(arr, ndarray, **kwargs)
+
+    return arr
