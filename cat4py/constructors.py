@@ -1,7 +1,6 @@
 from . import container_ext as ext
-from .container import Container
-from .tlarray import TLArray
-from .nparray import NPArray
+from .ndarray import NDArray
+from .ndtarray import NDTArray
 
 
 def empty(shape, dtype=None, **kwargs):
@@ -19,12 +18,12 @@ def empty(shape, dtype=None, **kwargs):
 
     Returns
     -------
-    TLArray or NPArray
-        If `dtype` is None, a new :py:class:`TLArray` object is returned.
+    NDArray or NPArray
+        If `dtype` is None, a new :py:class:`NDArray` object is returned.
         If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
 
-    arr = TLArray(**kwargs) if dtype is None else NPArray(dtype, **kwargs)
+    arr = NDArray(**kwargs) if dtype is None else NDTArray(dtype, **kwargs)
     kwargs = arr.kwargs
     ext.empty(arr, shape, **kwargs)
     return arr
@@ -47,14 +46,23 @@ def from_buffer(buffer, shape, dtype=None, **kwargs):
 
     Returns
     -------
-    TLArray or NPArray
-        If `dtype` is None, a new :py:class:`TLArray` object is returned.
+    NDArray or NPArray
+        If `dtype` is None, a new :py:class:`NDArray` object is returned.
         If `dtype` is not None, a new :py:class:`NPArray` is returned.
     """
-    arr = TLArray(**kwargs) if dtype is None else NPArray(dtype, **kwargs)
+    arr = NDArray(**kwargs) if dtype is None else NDTArray(dtype, **kwargs)
     kwargs = arr.kwargs
 
     ext.from_buffer(arr, buffer, shape, **kwargs)
+    return arr
+
+
+def copy(array, **kwargs):
+    arr = NDArray(**kwargs) if array.dtype is None else NDTArray(array.dtype, **kwargs)
+    kwargs = arr.kwargs
+
+    ext.copy(arr, array, **kwargs)
+
     return arr
 
 
@@ -71,17 +79,17 @@ def from_file(filename, copy=False):
 
     Returns
     -------
-    TLArray or NPArray
+    NDArray or NPArray
     """
 
-    arr = Container()
+    arr = NDArray()
     ext.from_file(arr, filename, copy)
     if arr.has_metalayer("numpy"):
-        arr = NPArray.cast(arr)
+        arr = NDTArray.cast(arr)
         dtype = arr.get_metalayer("numpy")[b'dtype']
         arr.pre_init(dtype)
     else:
-        arr = TLArray.cast(arr)
+        arr = NDArray.cast(arr)
         arr.pre_init()
 
     return arr
@@ -100,16 +108,16 @@ def from_sframe(sframe, copy=False, **kwargs):
 
     Returns
     -------
-    TLArray or NPArray
+    NDArray or NPArray
     """
-    arr = Container()
+    arr = NDArray()
     ext.from_sframe(arr, sframe, copy, **kwargs)
     if arr.has_metalayer("numpy"):
-        arr = NPArray.cast(arr)
+        arr = NDTArray.cast(arr)
         dtype = arr.get_metalayer("numpy")[b'dtype']
         arr.pre_init(dtype)
     else:
-        arr = TLArray.cast(arr)
+        arr = NDArray.cast(arr)
         arr.pre_init()
 
     return arr
@@ -126,7 +134,7 @@ def from_numpy(array, **kwargs):
         The NumPy array to populate the container with.
     Returns
     -------
-    NPArray
+    NDTArray
         The new :py:class:`NPArray` object.
     """
 
@@ -144,12 +152,12 @@ def asarray(ndarray, **kwargs):
             The array to populate the container with.
         Returns
         -------
-        NPArray
+        NDTArray
             The new :py:class:`NPArray` object.
         """
     interface = ndarray.__array_interface__
 
-    arr = NPArray(interface["typestr"], **kwargs)
+    arr = NDTArray(interface["typestr"], **kwargs)
     kwargs = arr.kwargs
 
     ext.asarray(arr, ndarray, **kwargs)

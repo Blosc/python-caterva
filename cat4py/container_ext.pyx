@@ -472,13 +472,14 @@ cdef class ReadIter:
 
 
 cdef get_caterva_start_stop(ndim, key, shape):
+
+    print(key)
     start = tuple(s.start if s.start is not None else 0 for s in key)
     stop = tuple(s.stop if s.stop is not None else sh for s, sh in zip(key, shape))
-    chunkshape = tuple(sp - st for st, sp in zip(start, stop))
 
     size = np.prod([stop[i] - start[i] for i in range(ndim)])
 
-    return start, stop, chunkshape, size
+    return start, stop, size
 
 
 cdef create_caterva_params(caterva_params_t *params, shape, itemsize):
@@ -661,35 +662,9 @@ cdef class Container:
     def __releasebuffer__(self, Py_buffer *buffer):
         self.view_count -= 1
 
-
-    def __getitem__(self, key):
-        ndim = self.ndim
-        start, stop, shape, size = get_caterva_start_stop(ndim, key, self.shape)
-        buffersize = size * self.itemsize
-        buffer = bytes(buffersize)
-        cdef int64_t[CATERVA_MAX_DIM] start_, stop_, shape_
-
-        for i in range(self.ndim):
-            start_[i] = start[i]
-            stop_[i] = stop[i]
-            shape_[i] = shape[i]
-        ctx = Context(**self.kwargs)
-        caterva_array_get_slice_buffer(ctx.context_, self.array, start_, stop_, shape_, <void *> <char *> buffer, buffersize)
-        return buffer
-
     def squeeze(self, **kwargs):
         ctx = Context(**kwargs)
         caterva_array_squeeze(ctx.context_, self.array)
-
-    def copy(self, Container arr, **kwargs):
-        ctx = Context(**kwargs)
-        cdef caterva_storage_t storage_
-        create_caterva_storage(&storage_, kwargs)
-
-        cdef caterva_array_t *array_
-        caterva_array_copy(ctx.context_, self.array, &storage_, &array_)
-        arr.array = array_
-        return arr
 
     def to_buffer(self, **kwargs):
         ctx = Context(**kwargs)
@@ -785,6 +760,38 @@ cdef class Container:
             if self.sdata:
                 self.array.sc.frame.sdata = NULL
             caterva_array_free(ctx.context_, &self.array)
+
+
+def get_slice(Container arr, Container src, key, **kwargs):
+    ctx = Context(**kwargs)
+    ndim = src.ndim
+    start, stop, size = get_caterva_start_stop(ndim, key, src.shape)
+
+    cdef int64_t[CATERVA_MAX_DIM] start_, stop_
+
+    for i in range(src.ndim):
+        start_[i] = start[i]
+        stop_[i] = stop[i]
+
+    cdef caterva_storage_t storage_
+    create_caterva_storage(&storage_, kwargs)
+
+    cdef caterva_array_t *array_
+    caterva_array_get_slice(ctx.context_, src.array, start_, stop_, &storage_, &array_)
+    arr.array = array_
+    return arr
+
+
+
+def copy(Container arr, Container src, **kwargs):
+    ctx = Context(**kwargs)
+    cdef caterva_storage_t storage_
+    create_caterva_storage(&storage_, kwargs)
+
+    cdef caterva_array_t *array_
+    caterva_array_copy(ctx.context_, src.array, &storage_, &array_)
+    arr.array = array_
+    return arr
 
 
 def from_file(Container arr, filename, copy, **kwargs):

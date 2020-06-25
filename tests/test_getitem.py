@@ -17,7 +17,7 @@ def test_getitem(shape, chunkshape, blockshape, slices, dtype):
     a = cat.from_buffer(bytes(nparray), nparray.shape, itemsize=nparray.itemsize,
                         chunkshape=chunkshape, blockshape=blockshape)
     nparray_slice = nparray[slices]
-    buffer_slice = a[slices]
+    buffer_slice = np.asarray(a[slices])
     a_slice = np.frombuffer(buffer_slice, dtype=dtype).reshape(nparray_slice.shape)
     np.testing.assert_almost_equal(a_slice, nparray_slice)
 

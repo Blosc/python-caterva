@@ -33,7 +33,7 @@ def test_copy_numpy(shape, chunkshape1, blockshape1, chunkshape2, blockshape2, d
     a = cat.from_numpy(nparray, chunkshape1=chunkshape1, blockshape=blockshape1)
     b = a.copy(chunkshape=chunkshape2, blockshape=blockshape2, complevel=5, filters=[2])
     if chunkshape2 is not None:
-        nparray2 = b.to_numpy()
+        nparray2 = np.asarray(b.copy())
     else:
         nparray2 = b
     np.testing.assert_almost_equal(nparray, nparray2)

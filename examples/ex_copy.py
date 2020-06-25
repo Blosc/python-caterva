@@ -15,7 +15,7 @@ buffer = bytes(np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape))
 a = cat.from_buffer(buffer, shape, dtype=dtype.type, chunkshape=chunkshape, blockshape=blockshape, itemsize=dtype.itemsize)
 
 # Get a copy of a caterva array (plainbuffer)
-b = a.copy()
+b = cat.copy(a)
 d = b.copy()
 
 aux = b.to_numpy()

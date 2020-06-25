@@ -24,7 +24,9 @@ def test_iters(shape, chunkshape1, blockshape1, chunkshape2, blockshape2, dtype)
     itershape = chunkshape2 if chunkshape2 is not None else b.shape
 
     for (block_r, info_r), (block_w, info_w) in lzip(a.iter_read(itershape), b.iter_write()):
-        block_w[:] = block_r
+        print(block_w)
+        print(memoryview(block_r))
+        block_w[:] = bytearray(block_r)
 
     nparray2 = b.to_numpy(dtype)
     np.testing.assert_equal(nparray, nparray2)
