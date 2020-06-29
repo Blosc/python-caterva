@@ -10,7 +10,6 @@
 #######################################################################
 
 import msgpack
-import math
 
 from libc.stdlib cimport malloc, free
 from libcpp cimport bool
@@ -305,6 +304,13 @@ config_dflts = {
     }
 
 
+def prod(list):
+    prod = 1
+    for l in list:
+        prod *= l
+    return prod
+
+
 cdef class Context:
     cdef caterva_context_t *context_
     cdef uint8_t compcode
@@ -403,11 +409,11 @@ cdef class WriteIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(self.arr.array.ndim)])
         shape = [s.stop - s.start for s in sl]
-        info = self.IterInfo(slice=sl, shape=shape, nitems=math.prod(shape))
+        info = self.IterInfo(slice=sl, shape=shape, nitems=prod(shape))
 
         # Allocate a new buffer if needed
         self.buffer_shape = shape
-        self.buffer_len = math.prod(shape) * self.arr.itemsize
+        self.buffer_len = prod(shape) * self.arr.itemsize
         if self.buffer is None:
             self.buffer = bytearray(self.part_len)
             self.memview = memoryview(self.buffer)
@@ -444,7 +450,7 @@ cdef class ReadIter:
             else:
                 eshape[i] = self.itershape[i] * (shape[i] // self.itershape[i] + 1)
         aux = [eshape[i] // self.itershape[i] for i in range(ndim)]
-        if self.nparts >= math.prod(aux):
+        if self.nparts >= prod(aux):
             raise StopIteration
 
         start_ = [0 for _ in range(ndim)]
@@ -461,7 +467,7 @@ cdef class ReadIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(ndim)])
         sh = [s.stop - s.start for s in sl]
-        info = self.IterInfo(slice=sl, shape=sh, nitems=math.prod(sh))
+        info = self.IterInfo(slice=sl, shape=sh, nitems=prod(sh))
         self.nparts += 1
 
         buf = self.arr.__getitem__(info.slice)
@@ -473,7 +479,7 @@ cdef get_caterva_start_stop(ndim, key, shape):
     start = tuple(s.start if s.start is not None else 0 for s in key)
     stop = tuple(s.stop if s.stop is not None else sh for s, sh in zip(key, shape))
 
-    size = math.prod([stop[i] - start[i] for i in range(ndim)])
+    size = prod([stop[i] - start[i] for i in range(ndim)])
 
     return start, stop, size
 
