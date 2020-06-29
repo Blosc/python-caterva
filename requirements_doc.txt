@@ -2,6 +2,7 @@ numpydoc==0.9.1
 gitpython==3.0.2
 sphinx==2.1.2
 cython>=0.29
+numpy>=1.16
 scikit-build>=0.11.1
 pytest>=3.4.2
 msgpack>=0.6.1
