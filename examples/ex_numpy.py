@@ -12,9 +12,9 @@ dtype = np.bool
 nparray = np.random.choice(a=[True, False], size=np.prod(shape)).reshape(shape)
 
 # Create a caterva array from a numpy array
-a = cat.from_numpy(nparray, chunkshape=chunkshape, blockshape=blockshape)
+a = cat.asarray(nparray, chunkshape=chunkshape, blockshape=blockshape)
 
 # Convert a caterva array to a numpy array
-nparray2 = a.to_numpy()
+nparray2 = np.asarray(a.copy())
 
 np.testing.assert_almost_equal(nparray, nparray2)

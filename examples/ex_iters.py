@@ -23,8 +23,7 @@ nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 a = cat.asarray(nparray)
 
 # Create an empty caterva array (on disk)
-print(str(dtype))
-b = cat.empty(shape, dtype=str(dtype), itemsize=itemsize, chunkshape=chunkshape, blockshape=blockshape,
+b = cat.empty(shape, itemsize, dtype=str(dtype), chunkshape=chunkshape, blockshape=blockshape,
               filename=filename)
 
 # Fill an empty caterva array using a block iterator

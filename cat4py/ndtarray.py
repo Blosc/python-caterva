@@ -13,12 +13,15 @@ class NDTArray(NDArray):
 
     def pre_init(self, dtype, **kwargs):
         self._dtype = dtype
-        kwargs["metalayers"] = {"type": {
-            # TODO: adding "version" does not deserialize well
-            # "version": 0,    # can be any number up to 127
-            "dtype": self._dtype,
+        if "metalayers" in kwargs:
+            kwargs["metalayers"]["type"] = {
+                "dtype": self._dtype,
+                }
+        else:
+            kwargs["metalayers"] = {"type": {
+                "dtype": self._dtype,
             }
-        }
+            }
         self.kwargs = kwargs
 
     @classmethod

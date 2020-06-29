@@ -12,13 +12,14 @@ dtype = np.dtype(np.float64)
 buffer = bytes(np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape))
 
 # Create a caterva array from a buffer
-a = cat.from_buffer(buffer, shape, dtype=dtype.type, chunkshape=chunkshape, blockshape=blockshape, itemsize=dtype.itemsize)
+a = cat.from_buffer(buffer, shape, dtype.itemsize, dtype=str(dtype),
+                    chunkshape=chunkshape, blockshape=blockshape)
 
 # Get a copy of a caterva array (plainbuffer)
 b = cat.copy(a)
 d = b.copy()
 
-aux = b.to_numpy()
+aux = np.asarray(b)
 aux[1, 2] = 0
 aux2 = cat.asarray(aux)
 
