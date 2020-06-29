@@ -10,9 +10,12 @@ def empty(shape, dtype=None, **kwargs):
     ----------
     shape: tuple or list
         The shape for the final array.
-    dtype: str or numpy.dtype
+    dtype: str, optional
         The dtype of the data. (Default: None)
-    kwargs: dict or None
+
+    Other Parameters
+    ----------------
+    kwargs: dict, optional
         Keyword arguments supported:
 
             chunkshape: iterable object or None
@@ -69,9 +72,12 @@ def from_buffer(buffer, shape, dtype=None, **kwargs):
         The buffer of the data to populate the container.
     shape: tuple or list
         The shape for the final container.
-    dtype: numpy.dtype
+    dtype: str, optional
         The dtype of the data.  Default: None.
-    kwargs: dict or None
+
+    Other Parameters
+    ----------------
+    kwargs: dict, optional
         Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
 
     Returns
@@ -93,7 +99,10 @@ def copy(array, **kwargs):
     ----------
     array: NDArray or NDTArray
         The array to be copied.
-    kwargs: dict or None
+
+    Other Parameters
+    ----------------
+    kwargs: dict, optional
         Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
 
     Returns
@@ -116,7 +125,7 @@ def from_file(filename, copy=False):
     ----------
     filename: str
         The file having a Blosc2 frame format with a Caterva metalayer on it.
-    copy: bool
+    copy: bool, optional
         If true, the container is backed by a new, sparse in-memory super-chunk.
         Else, an on-disk, frame-backed one is created (i.e. no copies are made).
 
@@ -147,10 +156,13 @@ def from_sframe(sframe, copy=False, **kwargs):
     ----------
     sframe: bytes
         The Blosc2 serialized frame with a Caterva metalayer on it.
-    copy: bool
+    copy: bool, optional
         If true, the container is backed by a new, sparse in-memory super-chunk.
         Else, an in-memory, frame-backed one is created (i.e. no copies are made).
-    kwargs: dict or None
+
+    Other Parameters
+    ----------------
+    kwargs: dict, optional
         Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
 
     Returns
@@ -179,7 +191,10 @@ def asarray(ndarray, **kwargs):
     ----------
     array: array_like
         An array supporting the python buffer protocol and the numpy array interface.
-    kwargs: dict or None
+        
+    Other Parameters
+    ----------------
+    kwargs: dict, optional
         Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
 
     Returns

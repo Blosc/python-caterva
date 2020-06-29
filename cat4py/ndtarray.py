@@ -4,28 +4,6 @@ import numpy as np
 from .ndarray import NDArray, process_key
 
 
-class ReadIter(ext.ReadIter):
-    def __init__(self, arr, itershape):
-        self.arr = arr
-        super(ReadIter, self).__init__(arr, itershape)
-
-    def __next__(self):
-        buff, info = ext.ReadIter.__next__(self)
-        arr = np.frombuffer(buff, dtype=self.arr.dtype).reshape(info.shape)
-        return arr, info
-
-
-class WriteIter(ext.WriteIter):
-    def __init__(self, arr):
-        self.arr = arr
-        super(WriteIter, self).__init__(arr)
-
-    def __next__(self):
-        buff, info = ext.WriteIter.__next__(self)
-        arr = np.frombuffer(buff, dtype=self.arr.dtype).reshape(info.shape)
-        return arr, info
-
-
 class NDTArray(NDArray):
 
     def __init__(self, dtype, **kwargs):
@@ -37,7 +15,7 @@ class NDTArray(NDArray):
 
         Parameters
         ----------
-        dtype: numpy.dtype
+        dtype: str
             The data type for the container.
         """
         if type(self) == NDTArray:
@@ -45,12 +23,11 @@ class NDTArray(NDArray):
         super(NDTArray, self).__init__(**self.kwargs)
 
     def pre_init(self, dtype, **kwargs):
-        self.dtype = np.dtype(dtype)
-        kwargs["itemsize"] = self.dtype.itemsize
+        self.dtype = dtype
         kwargs["metalayers"] = {"type": {
             # TODO: adding "version" does not deserialize well
             # "version": 0,    # can be any number up to 127
-            "dtype": str(self.dtype),
+            "dtype": self.dtype,
             }
         }
         self.kwargs = kwargs
@@ -61,42 +38,64 @@ class NDTArray(NDArray):
         assert isinstance(cont, NDTArray)
         return cont
 
-    def __getitem__(self, item):
-        return self.slice(item)
+    def __getitem__(self, key):
+        """ Get a (multidimensional) slice as specified in key.
 
-    def slice(self, item, **kwargs):
+        Parameters
+        ----------
+        key: int, slice or sequence of slices
+            The index for the slices to be updated. Note that step parameter is not honored yet in slices.
+
+        Returns
+        -------
+        out: NDTArray
+            An array, stored in a non-compressed buffer, with the requested data.
+        """
+        return self.slice(key)
+
+    def slice(self, key, **kwargs):
+        """ Get a (multidimensional) slice as specified in key. Generalizes :py:meth:`__getitem__`.
+
+       Parameters
+       ----------
+       key: int, slice or sequence of slices
+           The index for the slices to be updated. Note that step parameter is not honored yet in slices.
+
+       Other Parameters
+       ----------------
+       kwargs: dict, optional
+           Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
+
+       Returns
+       -------
+       out: NDTArray
+           An array with the requested data.
+       """
         arr = NDTArray(self.dtype, **kwargs)
-        return ext.get_slice(arr, self, process_key(item, self.ndim), **kwargs)
+        return ext.get_slice(arr, self, process_key(key, self.ndim), **kwargs)
 
     @property
     def __array_interface__(self):
-        print("Array interface")
         interface = {
             "data": self,
             "shape": self.shape,
-            "typestr": str(self.dtype),
+            "typestr": self.dtype,
             "version": 3
         }
         return interface
 
-
     def copy(self, **kwargs):
-        """Copy into a new container whose properties are specified in `kwargs`.
+        """Copy into a new array.
+
+        Other Parameters
+        ----------------
+        kwargs: dict, optional
+            Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
 
         Returns
         -------
         NDTArray
-            A new NPArray container that contains the copy.
+            An array containing the copy.
         """
         arr = NDTArray(self.dtype, **kwargs)
         return ext.copy(arr, self, **kwargs)
-
-    def to_numpy(self):
-        """Returns a NumPy array with the data contents and `dtype`.
-
-        Returns
-        -------
-        numpy.array
-            The NumPy array object containing the data of the whole Container.
-        """
-        return np.fromstring(self.to_buffer(), dtype=self.dtype).reshape(self.shape)

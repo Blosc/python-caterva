@@ -1,10 +1,5 @@
-# This module is only useful to been able to change the Container class to different subclasses.
-# This can't be done on a Cython extension (ext.Container).
-
-
 import msgpack
 from . import container_ext as ext
-import numpy as np
 
 
 def process_key(key, ndim):
@@ -67,13 +62,16 @@ class NDArray(ext.Container):
         return self.slice(key)
 
     def slice(self, key, **kwargs):
-        """ Get a (multidimensional) slice as specified in key.
+        """ Get a (multidimensional) slice as specified in key. Generalizes :py:meth:`__getitem__`.
 
         Parameters
         ----------
         key: int, slice or sequence of slices
             The index for the slices to be updated. Note that step parameter is not honored yet in slices.
-        kwargs: dict or None
+
+        Other Parameters
+        ----------------
+        kwargs: dict, optional
             Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
 
         Returns
@@ -92,7 +90,7 @@ class NDArray(ext.Container):
         ----------
         itershape: tuple, list
             The shape in which the data block will be returned.  If `None`,
-            the `NDArray.pshape` will be used as `itershape`.
+            the `NDArray.chunkshape` will be used as `itershape`.
 
         Yields
         ------
@@ -137,40 +135,45 @@ class NDArray(ext.Container):
         """
         return WriteIter(self)
 
-    def squeeze(self, **kwargs):
-        """Remove the 1's in Container's shape."""
-        super(NDArray, self).squeeze(**kwargs)
+    def squeeze(self):
+        """Remove the 1's in array's shape."""
+        super(NDArray, self).squeeze(**self.kwargs)
 
-    def to_buffer(self, **kwargs):
+    def to_buffer(self):
         """Returns a buffer with the data contents.
 
         Returns
         -------
         bytes
-            The buffer containing the data of the whole Container.
+            The buffer containing the data of the whole array.
         """
-        return super(NDArray, self).to_buffer(**kwargs)
+        return super(NDArray, self).to_buffer(**self.kwargs)
 
-    def to_sframe(self, **kwargs):
+    def to_sframe(self):
         """Return a serialized frame with data and metadata contents.
 
         Returns
         -------
         bytes or MemoryView
-            A buffer containing a serial version of the whole Container.
-            When the Container is backed by an in-memory frame, a MemoryView
+            A buffer containing a serial version of the whole array.
+            When the array is backed by an in-memory frame, a MemoryView
             of it is returned.  If not, a bytes object with the frame is
             returned.
         """
-        return super(NDArray, self).to_sframe(**kwargs)
+        return super(NDArray, self).to_sframe(**self.kwargs)
 
     def copy(self, **kwargs):
-        """Copy into a new container.
+        """Copy into a new array.
+
+        Other Parameters
+        ----------------
+        kwargs: dict, optional
+            Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
 
         Returns
         -------
         NDArray
-            The `arr` object containing the copy.
+            An array containing the copy.
         """
         arr = NDArray(**kwargs)
         return ext.copy(arr, self, **kwargs)
@@ -186,7 +189,7 @@ class NDArray(ext.Container):
         Returns
         -------
         bool
-            True if metalayer exists in `self`; else False.
+            `True` if metalayer exists in `self`; else `False`.
         """
         return super(NDArray, self).has_metalayer(name)
 
@@ -251,13 +254,3 @@ class NDArray(ext.Container):
         """
         content = msgpack.packb(content)
         return super(NDArray, self).update_usermeta(content)
-
-    def to_numpy(self, dtype):
-        """Returns a NumPy array with the data contents and `dtype`.
-
-        Returns
-        -------
-        numpy.array
-            The NumPy array object containing the data of the whole Container.
-        """
-        return np.fromstring(self.to_buffer(), dtype=dtype).reshape(self.shape)

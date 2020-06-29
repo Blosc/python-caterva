@@ -472,8 +472,6 @@ cdef class ReadIter:
 
 
 cdef get_caterva_start_stop(ndim, key, shape):
-
-    print(key)
     start = tuple(s.start if s.start is not None else 0 for s in key)
     stop = tuple(s.stop if s.stop is not None else sh for s, sh in zip(key, shape))
 
@@ -563,7 +561,7 @@ cdef class Container:
         """The compression ratio for this container."""
         if self.array.storage is CATERVA_STORAGE_PLAINBUFFER:
             return 1
-        return self.array.sc.nbytes / self.array.sc.cbytes
+        return self.size / self.array.sc.cbytes
 
     @property
     def clevel(self):
