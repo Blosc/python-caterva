@@ -7,27 +7,16 @@ from .ndarray import NDArray, process_key
 class NDTArray(NDArray):
 
     def __init__(self, dtype, **kwargs):
-        """The multidimensional data container that plays well with NumPy.
-
-        As this inherits from the :py:class:`Container` class, you can pass any
-        keyword argument that is supported by the :py:meth:`Container.__init__`
-        constructor, plus the `dtype`.
-
-        Parameters
-        ----------
-        dtype: str
-            The data type for the container.
-        """
         if type(self) == NDTArray:
             self.pre_init(dtype, **kwargs)
         super(NDTArray, self).__init__(**self.kwargs)
 
     def pre_init(self, dtype, **kwargs):
-        self.dtype = dtype
+        self._dtype = dtype
         kwargs["metalayers"] = {"type": {
             # TODO: adding "version" does not deserialize well
             # "version": 0,    # can be any number up to 127
-            "dtype": self.dtype,
+            "dtype": self._dtype,
             }
         }
         self.kwargs = kwargs
@@ -37,6 +26,21 @@ class NDTArray(NDArray):
         cont.__class__ = cls
         assert isinstance(cont, NDTArray)
         return cont
+
+    @property
+    def dtype(self):
+        """The data type for the container."""
+        return self._dtype
+
+    @property
+    def __array_interface__(self):
+        interface = {
+            "data": self,
+            "shape": self.shape,
+            "typestr": self._dtype,
+            "version": 3
+        }
+        return interface
 
     def __getitem__(self, key):
         """ Get a (multidimensional) slice as specified in key.
@@ -71,18 +75,8 @@ class NDTArray(NDArray):
        out: NDTArray
            An array with the requested data.
        """
-        arr = NDTArray(self.dtype, **kwargs)
+        arr = NDTArray(self._dtype, **kwargs)
         return ext.get_slice(arr, self, process_key(key, self.ndim), **kwargs)
-
-    @property
-    def __array_interface__(self):
-        interface = {
-            "data": self,
-            "shape": self.shape,
-            "typestr": self.dtype,
-            "version": 3
-        }
-        return interface
 
     def copy(self, **kwargs):
         """Copy into a new array.
@@ -97,5 +91,5 @@ class NDTArray(NDArray):
         NDTArray
             An array containing the copy.
         """
-        arr = NDTArray(self.dtype, **kwargs)
+        arr = NDTArray(self._dtype, **kwargs)
         return ext.copy(arr, self, **kwargs)

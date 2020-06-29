@@ -112,7 +112,7 @@ def copy(array, **kwargs):
     out: NDArray or NDTArray
         Depending on the source array class, a `NDArray` or a `NDTArray` is returned with a copy of the data.
     """
-    arr = NDArray(**kwargs) if array.dtype is None else NDTArray(array.dtype, **kwargs)
+    arr = NDArray(**kwargs) if array._dtype is None else NDTArray(array._dtype, **kwargs)
     kwargs = arr.kwargs
 
     ext.copy(arr, array, **kwargs)

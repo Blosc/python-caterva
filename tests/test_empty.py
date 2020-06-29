@@ -58,7 +58,7 @@ def test_empty_numpy(shape, chunkshape, blockshape, dtype, cname, clevel, use_di
         assert a.chunkshape == chunkshape
         assert a.blockshape == blockshape
     assert a.shape == shape
-    assert a.dtype == dtype
+    assert a._dtype == dtype
     assert a.itemsize == dtype.itemsize
     assert a.cname == (cname if chunkshape is not None else None)
     assert a.clevel == (clevel if chunkshape is not None else 1)
