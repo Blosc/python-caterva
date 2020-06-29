@@ -21,13 +21,17 @@ def empty(shape, itemsize, dtype=None, **kwargs):
         Keyword arguments supported:
 
             chunkshape: iterable object or None
-                The chunk shape.  If `None`, the array is stored using a non-compressed buffer.  (Default `None`)
+                The chunk shape.  If `None`, the array is stored using a non-compressed buffer.
+                (Default `None`)
             blockshape: iterable object or None
-                The block shape.  If `None`, the array is stored using a non-compressed buffer.  (Default `None`)
+                The block shape.  If `None`, the array is stored using a non-compressed buffer.
+                (Default `None`)
             filename: str or None
-                The name of the file to store data.  If `None`, data is stored in-memory. (Default `None`)
+                The name of the file to store data.  If `None`, data is stored in-memory.
+                (Default `None`)
             memframe: bool
-                If True, the array is backed by a frame in-memory.  Else, by a super-chunk.  (Default: `False`)
+                If True, the array is backed by a frame in-memory.  Else, by a super-chunk.
+                (Default: `False`)
             metalayers: dict or None
                 A dictionary with different metalayers.  One entry per metalayer:
 
@@ -110,7 +114,8 @@ def copy(array, **kwargs):
     Returns
     -------
     out: NDArray or NDTArray
-        Depending on the source array class, a `NDArray` or a `NDTArray` is returned with a copy of the data.
+        Depending on the source array class, a `NDArray` or a `NDTArray` is returned with a copy
+        of the data.
     """
     arr = NDArray(**kwargs) if array._dtype is None else NDTArray(array._dtype, **kwargs)
     kwargs = arr.kwargs

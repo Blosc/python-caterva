@@ -52,7 +52,8 @@ class NDArray(ext.Container):
         Parameters
         ----------
         key: int, slice or sequence of slices
-            The index for the slices to be updated. Note that step parameter is not honored yet in slices.
+            The index for the slices to be updated. Note that step parameter is not honored yet
+            in slices.
 
         Returns
         -------
@@ -67,7 +68,8 @@ class NDArray(ext.Container):
         Parameters
         ----------
         key: int, slice or sequence of slices
-            The index for the slices to be updated. Note that step parameter is not honored yet in slices.
+            The index for the slices to be updated. Note that step parameter is not honored yet in
+            slices.
 
         Other Parameters
         ----------------

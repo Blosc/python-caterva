@@ -1,5 +1,4 @@
 from cat4py import container_ext as ext
-import numpy as np
 
 from .ndarray import NDArray, process_key
 
@@ -51,7 +50,8 @@ class NDTArray(NDArray):
         Parameters
         ----------
         key: int, slice or sequence of slices
-            The index for the slices to be updated. Note that step parameter is not honored yet in slices.
+            The index for the slices to be updated. Note that step parameter is not honored yet in
+            slices.
 
         Returns
         -------
@@ -66,7 +66,8 @@ class NDTArray(NDArray):
        Parameters
        ----------
        key: int, slice or sequence of slices
-           The index for the slices to be updated. Note that step parameter is not honored yet in slices.
+           The index for the slices to be updated. Note that step parameter is not honored yet in
+           slices.
 
        Other Parameters
        ----------------
