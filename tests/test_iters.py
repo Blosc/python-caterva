@@ -42,7 +42,7 @@ def test_iters(shape, chunkshape1, blockshape1, chunkshape2, blockshape2, dtype)
 def test_iters_numpy(shape, chunkshape1, blockshape1, chunkshape2, blockshape2, dtype):
     size = int(np.prod(shape))
     nparray = np.ones(size, dtype=dtype).reshape(shape)
-    a = cat.from_numpy(nparray, chunkshape=chunkshape1, blockshape=blockshape1)  # creates a NPArray
+    a = cat.asarray(nparray, chunkshape=chunkshape1, blockshape=blockshape1)  # creates a NPArray
 
     b = cat.empty(shape, dtype, chunkshape=chunkshape2, blockshape=blockshape2)
     itershape = chunkshape2 if chunkshape2 is not None else b.shape

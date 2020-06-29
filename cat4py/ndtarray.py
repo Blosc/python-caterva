@@ -47,7 +47,7 @@ class NDTArray(NDArray):
     def pre_init(self, dtype, **kwargs):
         self.dtype = np.dtype(dtype)
         kwargs["itemsize"] = self.dtype.itemsize
-        kwargs["metalayers"] = {"numpy": {
+        kwargs["metalayers"] = {"type": {
             # TODO: adding "version" does not deserialize well
             # "version": 0,    # can be any number up to 127
             "dtype": str(self.dtype),

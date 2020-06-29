@@ -30,7 +30,7 @@ def test_copy(shape, chunkshape1, blockshape1, chunkshape2, blockshape2, itemsiz
 def test_copy_numpy(shape, chunkshape1, blockshape1, chunkshape2, blockshape2, dtype):
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_numpy(nparray, chunkshape1=chunkshape1, blockshape=blockshape1)
+    a = cat.asarray(nparray, chunkshape1=chunkshape1, blockshape=blockshape1)
     b = a.copy(chunkshape=chunkshape2, blockshape=blockshape2, complevel=5, filters=[2])
     if chunkshape2 is not None:
         nparray2 = np.asarray(b.copy())

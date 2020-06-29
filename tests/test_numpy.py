@@ -12,6 +12,6 @@ import numpy as np
 def test_numpy(shape, chunkshape, blockshape, dtype):
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_numpy(nparray, chunkshape=chunkshape, blockshape=blockshape)
+    a = cat.asarray(nparray, chunkshape=chunkshape, blockshape=blockshape)
     nparray2 = a.to_numpy()
     np.testing.assert_almost_equal(nparray, nparray2)

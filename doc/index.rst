@@ -8,6 +8,9 @@ Welcome to cat4py's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Library reference
+   :hidden:
 
-   reference
+   reference/constructors
+   reference/classes
+   reference/first-level

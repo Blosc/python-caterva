@@ -23,46 +23,11 @@ class ReadIter(ext.ReadIter):
 
 class WriteIter(ext.WriteIter):
     def __init__(self, arr):
-        super(WriteIter, self).__init__(arr)
+        super(WriteIter, self).__init__(arr, **arr.kwargs)
 
 
 class NDArray(ext.Container):
     def __init__(self, **kwargs):
-        """The low-level, multidimensional and type-less data container.
-
-        Parameters
-        ----------
-        chunkshape: iterable object or None
-            The chunk shape.  If None, the store is a plain buffer (non-compressed).
-        blockshape: iterable object or None
-            The block shape.  If None, the store is a plain buffer (non-compressed).
-        filename: str or None
-            The name of the file to store data.  If `None`, data is stores in-memory.
-        memframe: bool
-            If True, the Container is backed by a frame in-memory.  Else, by a
-            super-chunk.  Default: False.
-        metalayers: dict or None
-            A dictionary with different metalayers.  One entry per metalayer:
-                key: bytes or str
-                    The name of the metalayer.
-                value: object
-                    The metalayer object that will be (de-)serialized using msgpack.
-        itemsize: int
-            The number of bytes for the itemsize in container.  Default: 4.
-        cname: string
-            The name for the compressor codec.  Default: "lz4".
-        clevel: int (0 to 9)
-            The compression level.  0 means no compression, and 9 maximum compression.
-            Default: 5.
-        filters: list
-            The filter pipeline.  Default: [cat4py.SHUFFLE]
-        filtersmeta: list
-            The meta info for each filter in pipeline.  An uint8 per slot. Default: [0]
-        nthreads: int
-            The number of threads.  Default: 1.
-        usedict: bool
-            If a dictionary should be used during compression.  Default: False.
-        """
         if type(self) == NDArray:
             self.pre_init(**kwargs)
         super(NDArray, self).__init__(**self.kwargs)
@@ -78,7 +43,6 @@ class NDArray(ext.Container):
 
     @property
     def __array_interface__(self):
-        print("Array interface")
         interface = {
             "data": self,
             "shape": self.shape,
@@ -87,59 +51,87 @@ class NDArray(ext.Container):
         }
         return interface
 
-    def __getitem__(self, item):
-        return self.slice(item)
+    def __getitem__(self, key):
+        """ Get a (multidimensional) slice as specified in key.
 
-    def slice(self, item, **kwargs):
+        Parameters
+        ----------
+        key: int, slice or sequence of slices
+            The index for the slices to be updated. Note that step parameter is not honored yet in slices.
+
+        Returns
+        -------
+        out: NDArray
+            An array, stored in a non-compressed buffer, with the requested data.
+        """
+        return self.slice(key)
+
+    def slice(self, key, **kwargs):
+        """ Get a (multidimensional) slice as specified in key.
+
+        Parameters
+        ----------
+        key: int, slice or sequence of slices
+            The index for the slices to be updated. Note that step parameter is not honored yet in slices.
+        kwargs: dict or None
+            Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
+
+        Returns
+        -------
+        out: NDArray
+            An array with the requested data.
+        """
         arr = NDArray(**kwargs)
-        return ext.get_slice(arr, self, process_key(item, self.ndim), **kwargs)
-
+        kwargs = arr.kwargs
+        return ext.get_slice(arr, self, process_key(key, self.ndim), **kwargs)
 
     def iter_read(self, itershape=None):
-        """Iterate over data blocks whose dims are specified in `blockshape`.
+        """Iterate over data blocks whose dims are specified in `itershape`.
 
         Parameters
         ----------
         itershape: tuple, list
             The shape in which the data block will be returned.  If `None`,
-            the `Container.pshape` will be used as `blockshape`.
+            the `NDArray.pshape` will be used as `itershape`.
 
         Yields
         ------
-        tuple of (block, info)
-            block: bytes
-                The buffer with the data block.
+        out: tuple
+            A tuple of (block, info)
+
+            block: NDArray
+                An array, stored in a non-compressed buffer, with the data block.
             info: namedtuple
                 Info about the returned data block.  Its structure is:
-                namedtuple("IterInfo", "slice, shape, size")
-                IterInfo:
+
                     slice: tuple
                         The coordinates where the data block starts.
                     shape: tuple
                         The shape of the actual data block (it can be
-                        smaller than `blockshape` at the edges of the array).
+                        smaller than `itershape` at the edges of the array).
                     size: int
                         The size, in elements, of the block.
         """
         return ReadIter(self, itershape)
 
     def iter_write(self):
-        """Iterate over non initialized data blocks.
+        """Iterate over non initialized data array.
 
         Yields
         ------
-        tuple of (block, info)
+        out: tuple
+            A tuple of (block, info)
+
             block: bytes
                 The buffer with the data block to be filled.
             info: namedtuple
                 Info about the data block to be filled.  Its structure is:
-                namedtuple("IterInfo", "slice, shape, size")
-                IterInfo:
+
                     slice: tuple
                         The coordinates where the data block starts.
                     shape: tuple
                         The shape of the actual data block (it can be
-                        smaller than `blockshape` at the edges of the array).
+                        smaller than `NDArray.blockshape` at the edges of the array).
                     size: int
                         The size, in elements, of the block.
         """

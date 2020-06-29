@@ -17,10 +17,8 @@ from .container_ext import BLOSCLZ, LZ4, LZ4HC, ZLIB, ZSTD, LIZARD
 from .container_ext import NOFILTER, SHUFFLE, BITSHUFFLE, DELTA, TRUNC_PREC
 
 # Public API for container module
-from .constructors import (empty, from_buffer, from_file, from_sframe, from_numpy, asarray, copy)
+from .constructors import (empty, from_buffer, from_file, from_sframe, asarray, copy)
 
-from .ndtarray import NDTArray
-from .ndarray import NDArray
 
 # Available compression library names
 cnames = list(ext.cnames2codecs)

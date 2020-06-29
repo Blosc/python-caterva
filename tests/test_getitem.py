@@ -33,7 +33,7 @@ def test_getitem(shape, chunkshape, blockshape, slices, dtype):
 def test_getitem_numpy(shape, chunkshape, blockshape, slices, dtype):
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_numpy(nparray, chunkshape=chunkshape, blockshape=blockshape)
+    a = cat.asarray(nparray, chunkshape=chunkshape, blockshape=blockshape)
     nparray_slice = nparray[slices]
     a_slice = a[slices]
     np.testing.assert_almost_equal(a_slice, nparray_slice)

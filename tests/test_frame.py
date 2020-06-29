@@ -68,7 +68,7 @@ def test_frame_numpy(shape, chunkshape, blockshape, dtype, enforceframe, filenam
 
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_numpy(nparray, chunkshape=chunkshape, blockshape=blockshape,
+    a = cat.asarray(nparray, chunkshape=chunkshape, blockshape=blockshape,
                        enforceframe=enforceframe, filename=filename)
     sframe1 = a.to_sframe()
     buffer1 = a.to_buffer()
