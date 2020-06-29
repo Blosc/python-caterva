@@ -12,8 +12,8 @@ import numpy as np
 def test_copy(shape, chunkshape1, blockshape1, chunkshape2, blockshape2, itemsize):
     size = int(np.prod(shape))
     buffer = bytes(size * itemsize)
-    a = cat.from_buffer(buffer, shape, chunkshape=chunkshape1, blockshape=blockshape1,
-                        itemsize=itemsize, complevel=2)
+    a = cat.from_buffer(buffer, shape, itemsize, chunkshape=chunkshape1, blockshape=blockshape1,
+                        complevel=2)
     b = a.copy(chunkshape=chunkshape2, blockshape=blockshape2,
                itemsize=itemsize, complevel=5, filters=[2])
     buffer2 = b.to_buffer()

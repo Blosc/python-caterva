@@ -43,9 +43,11 @@ def test_empty(shape, chunkshape, blockshape, itemsize, cname, clevel, use_dict,
                          ])
 def test_empty_numpy(shape, chunkshape, blockshape, dtype, cname, clevel, use_dict, nthreads,
                      filters):
-    a = cat.empty(shape, chunkshape=chunkshape,
+    dtype = np.dtype(dtype)
+    a = cat.empty(shape, dtype.itemsize,
+                  dtype=str(dtype),
+                  chunkshape=chunkshape,
                   blockshape=blockshape,
-                  dtype=dtype,
                   cname=cname,
                   clevel=clevel,
                   use_dict=use_dict,
@@ -57,7 +59,7 @@ def test_empty_numpy(shape, chunkshape, blockshape, dtype, cname, clevel, use_di
         assert a.blockshape == blockshape
     assert a.shape == shape
     assert a.dtype == dtype
-    assert a.itemsize == np.dtype(dtype).itemsize
+    assert a.itemsize == dtype.itemsize
     assert a.cname == (cname if chunkshape is not None else None)
     assert a.clevel == (clevel if chunkshape is not None else 1)
     if chunkshape is not None:

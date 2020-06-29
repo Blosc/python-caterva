@@ -14,7 +14,7 @@ import numpy as np
 def test_getitem(shape, chunkshape, blockshape, slices, dtype):
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_buffer(bytes(nparray), nparray.shape, itemsize=nparray.itemsize,
+    a = cat.from_buffer(bytes(nparray), nparray.shape, nparray.itemsize,
                         chunkshape=chunkshape, blockshape=blockshape)
     nparray_slice = nparray[slices]
     buffer_slice = np.asarray(a[slices])

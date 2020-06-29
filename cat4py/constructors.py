@@ -3,13 +3,15 @@ from .ndarray import NDArray
 from .ndtarray import NDTArray
 
 
-def empty(shape, dtype=None, **kwargs):
+def empty(shape, itemsize, dtype=None, **kwargs):
     """Create an empty array.
 
     Parameters
     ----------
     shape: tuple or list
         The shape for the final array.
+    itemsize: int
+        The size, in bytes, of each element.
     dtype: str, optional
         The dtype of the data. (Default: None)
 
@@ -34,8 +36,6 @@ def empty(shape, dtype=None, **kwargs):
                     value: object
                         The metalayer object that will be (de-)serialized using msgpack.
 
-            itemsize: int
-                The number of bytes for the itemsize in container.  (Default: `4`)
             cname: string
                 The name for the compressor codec.  (Default: `"lz4"`)
             clevel: int (0 to 9)
@@ -59,11 +59,11 @@ def empty(shape, dtype=None, **kwargs):
 
     arr = NDArray(**kwargs) if dtype is None else NDTArray(dtype, **kwargs)
     kwargs = arr.kwargs
-    ext.empty(arr, shape, **kwargs)
+    ext.empty(arr, shape, itemsize, **kwargs)
     return arr
 
 
-def from_buffer(buffer, shape, dtype=None, **kwargs):
+def from_buffer(buffer, shape, itemsize, dtype=None, **kwargs):
     """Create an array out of a buffer.
 
     Parameters
@@ -72,6 +72,8 @@ def from_buffer(buffer, shape, dtype=None, **kwargs):
         The buffer of the data to populate the container.
     shape: tuple or list
         The shape for the final container.
+    itemsize: int
+        The size, in bytes, of each element.
     dtype: str, optional
         The dtype of the data.  Default: None.
 
@@ -88,7 +90,7 @@ def from_buffer(buffer, shape, dtype=None, **kwargs):
     arr = NDArray(**kwargs) if dtype is None else NDTArray(dtype, **kwargs)
     kwargs = arr.kwargs
 
-    ext.from_buffer(arr, buffer, shape, **kwargs)
+    ext.from_buffer(arr, buffer, shape, itemsize, **kwargs)
     return arr
 
 

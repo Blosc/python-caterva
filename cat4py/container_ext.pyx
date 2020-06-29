@@ -822,11 +822,11 @@ def from_sframe(Container arr, sframe, copy, **kwargs):
     arr.array = array_
 
 
-def empty(Container arr, shape, **kwargs):
+def empty(Container arr, shape, itemsize, **kwargs):
     ctx = Context(**kwargs)
 
     cdef caterva_params_t params_
-    create_caterva_params(&params_, shape, kwargs.get("itemsize", 8))
+    create_caterva_params(&params_, shape, itemsize)
 
     cdef caterva_storage_t storage_
     create_caterva_storage(&storage_, kwargs)
@@ -836,11 +836,11 @@ def empty(Container arr, shape, **kwargs):
     arr.array = array_
 
 
-def from_buffer(Container arr, buf, shape, **kwargs):
+def from_buffer(Container arr, buf, shape, itemsize, **kwargs):
     ctx = Context(**kwargs)
 
     cdef caterva_params_t params_
-    create_caterva_params(&params_, shape, kwargs.get("itemsize", 8))
+    create_caterva_params(&params_, shape, itemsize)
 
     cdef caterva_storage_t storage_
     create_caterva_storage(&storage_, kwargs)
