@@ -9,10 +9,9 @@
 # LICENSE file in the root directory of this source tree)
 #######################################################################
 
-import numpy as np
-cimport numpy as np
 import msgpack
 
+from math import prod
 from libc.stdlib cimport malloc, free
 from libcpp cimport bool
 from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer
@@ -367,7 +366,6 @@ cdef class WriteIter:
 
     def __init__(self, Container arr, **kwargs):
         self.arr = arr
-        self.dtype = np.dtype(f"S{arr.itemsize}")
         self.part_len = self.arr.array.chunknitems * self.arr.itemsize
         self.ctx = Context(**kwargs)
         self.IterInfo = namedtuple("IterInfo", "slice, shape, nitems")
@@ -405,11 +403,11 @@ cdef class WriteIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(self.arr.array.ndim)])
         shape = [s.stop - s.start for s in sl]
-        info = self.IterInfo(slice=sl, shape=shape, nitems=np.prod(shape))
+        info = self.IterInfo(slice=sl, shape=shape, nitems=prod(shape))
 
         # Allocate a new buffer if needed
         self.buffer_shape = shape
-        self.buffer_len = np.prod(shape) * self.arr.itemsize
+        self.buffer_len = prod(shape) * self.arr.itemsize
         if self.buffer is None:
             self.buffer = bytearray(self.part_len)
             self.memview = memoryview(self.buffer)
@@ -446,7 +444,7 @@ cdef class ReadIter:
             else:
                 eshape[i] = self.itershape[i] * (shape[i] // self.itershape[i] + 1)
         aux = [eshape[i] // self.itershape[i] for i in range(ndim)]
-        if self.nparts >= np.prod(aux):
+        if self.nparts >= prod(aux):
             raise StopIteration
 
         start_ = [0 for _ in range(ndim)]
@@ -463,7 +461,7 @@ cdef class ReadIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(ndim)])
         sh = [s.stop - s.start for s in sl]
-        info = self.IterInfo(slice=sl, shape=sh, nitems=np.prod(sh))
+        info = self.IterInfo(slice=sl, shape=sh, nitems=prod(sh))
         self.nparts += 1
 
         buf = self.arr.__getitem__(info.slice)
@@ -475,7 +473,7 @@ cdef get_caterva_start_stop(ndim, key, shape):
     start = tuple(s.start if s.start is not None else 0 for s in key)
     stop = tuple(s.stop if s.stop is not None else sh for s, sh in zip(key, shape))
 
-    size = np.prod([stop[i] - start[i] for i in range(ndim)])
+    size = prod([stop[i] - start[i] for i in range(ndim)])
 
     return start, stop, size
 
