@@ -198,7 +198,7 @@ def asarray(ndarray, **kwargs):
     ----------
     array: array_like
         An array supporting the python buffer protocol and the numpy array interface.
-        
+
     Other Parameters
     ----------------
     kwargs: dict, optional
