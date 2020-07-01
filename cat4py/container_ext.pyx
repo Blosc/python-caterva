@@ -542,6 +542,10 @@ cdef class Container:
     cdef int view_count
 
     @property
+    def storage(self):
+        return "Blosc" if self.array.storage is CATERVA_STORAGE_BLOSC else "Plainbuffer"
+
+    @property
     def shape(self):
         """The shape of this container."""
         return tuple([self.array.shape[i] for i in range(self.array.ndim)])

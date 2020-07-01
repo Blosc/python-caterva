@@ -8,6 +8,13 @@ Welcome to cat4py's documentation!
 
 .. toctree::
    :maxdepth: 2
+   :caption: Getting Started
+   :hidden:
+
+   getting-started/tutorial
+
+.. toctree::
+   :maxdepth: 2
    :caption: Library reference
    :hidden:
 

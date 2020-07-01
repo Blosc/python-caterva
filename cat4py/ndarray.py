@@ -37,6 +37,17 @@ class NDArray(ext.Container):
         return cont
 
     @property
+    def info(self):
+        ljust = 20
+        type_s = "Type:".ljust(ljust) + f"{type(self)}\n"
+        dtype_s = "Itemsize:".ljust(ljust) + f"{self.itemsize} bytes\n"
+        storage_s = "Storage:".ljust(ljust) + f"{self.storage}\n"
+        shape_s = "Shape:".ljust(ljust) + f"{self.shape}\n"
+        chunkshape_s = "Chunkshape:".ljust(ljust) + f"{self.chunkshape}\n"
+        blockshape_s = "Blockshape:".ljust(ljust) + f"{self.blockshape}\n"
+
+        return type_s + dtype_s + storage_s + shape_s + chunkshape_s + blockshape_s
+    @property
     def __array_interface__(self):
         interface = {
             "data": self,

@@ -156,7 +156,7 @@ def from_file(filename, copy=False):
     return arr
 
 
-def from_sframe(sframe, copy=False, **kwargs):
+def from_sframe(sframe, copy=False):
     """Open a new container from `sframe`.
 
     Parameters
@@ -167,11 +167,6 @@ def from_sframe(sframe, copy=False, **kwargs):
         If true, the container is backed by a new, sparse in-memory super-chunk.
         Else, an in-memory, frame-backed one is created (i.e. no copies are made).
 
-    Other Parameters
-    ----------------
-    kwargs: dict, optional
-        Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
-
     Returns
     -------
     out: NDArray or NDTArray
@@ -179,7 +174,7 @@ def from_sframe(sframe, copy=False, **kwargs):
         Else, a `NDArray` is returned.
     """
     arr = NDArray()
-    ext.from_sframe(arr, sframe, copy, **kwargs)
+    ext.from_sframe(arr, sframe, copy, **arr.kwargs)
     if arr.has_metalayer("type"):
         arr = NDTArray.cast(arr)
         dtype = arr.get_metalayer("type")[b'dtype']

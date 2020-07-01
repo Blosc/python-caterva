@@ -38,6 +38,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.ifconfig',
+    'nbsphinx',
     'numpydoc',
 ]
 
@@ -50,7 +51,7 @@ master_doc = 'index'
 
 language = None
 
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', '**.ipynb_checkpoints', 'Thumbs.db', '.DS_Store']
 
 pygments_style = None
 
@@ -65,6 +66,7 @@ html_theme_options = {
 }
 
 autodoc_member_order = 'groupwise'
+nbsphinx_exclude_output_prompt = False
 
 
 def setup(app):
