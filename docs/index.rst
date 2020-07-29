@@ -37,9 +37,10 @@ Caterva’s main feature is to be able to extract all kind of slices out of high
    reference/classes
    reference/first-level
 
-..  toctree::
-    :maxdepth: 1
-    :caption: Development
+.. toctree::
+   :maxdepth: 1
+   :caption: Development
+   :hidden:
 
-    development/roadmap
-    development/release-notes
+   development/roadmap
+   development/release-notes

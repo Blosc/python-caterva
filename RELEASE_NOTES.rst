@@ -1,16 +1,14 @@
-# Release notes for cat4py
-| | |
-| - | - |
-| Author | The Blosc Developer Team |
-| Contact | blosc@blosc.org |
-| Date | 2019-09-17 |
+Release notes
+=============
 
-## Changes from 0.3.0 to 0.3.1
+Changes from 0.3.0 to 0.3.1
+---------------------------
 
   XXX version-specific blurb XXX
 
 
-## Changes from 0.2.3 to 0.3.0
+Changes from 0.2.3 to 0.3.0
+---------------------------
 
 * Set the development status to alpha.
 
@@ -31,22 +29,25 @@
 * The `from_numpy()` function always return a `NPArray` now.
 
 
-## Changes from 0.2.2 to 0.2.3
+Changes from 0.2.2 to 0.2.3
+---------------------------
 
 * Rename `MANINFEST.in` for `MANIFEST.in`.
 
 * Fix the list of available cnames.
 
 
-## Changes from 0.2.1 to 0.2.2
+Changes from 0.2.1 to 0.2.2
+---------------------------
 
 * Added a `MANIFEST.in` for including all C-Blosc2 and Caterva sources in package.
 
 
-## Changes from 0.1.1 to 0.2.1
+Changes from 0.1.1 to 0.2.1
+---------------------------
 
 * Docstrings has been added. In addition, the documentation can be found at:
-https://cat4py.readthedocs.io.
+  https://cat4py.readthedocs.io.
 
 * Add a `copy` parameter to `from_file()`.
 

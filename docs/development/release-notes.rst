@@ -1,1 +1,1 @@
-.. include:: ../../../RELEASE_NOTES.rst
+.. include:: ../../RELEASE_NOTES.rst
