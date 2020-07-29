@@ -47,6 +47,7 @@ class NDArray(ext.Container):
         blockshape_s = "Blockshape:".ljust(ljust) + f"{self.blockshape}\n"
 
         return type_s + dtype_s + storage_s + shape_s + chunkshape_s + blockshape_s
+
     @property
     def __array_interface__(self):
         interface = {
