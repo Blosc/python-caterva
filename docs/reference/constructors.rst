@@ -1,6 +1,5 @@
-------------
 Constructors
-------------
+============
 
 .. currentmodule:: cat4py
 
@@ -10,4 +9,3 @@ Constructors
 .. autofunction:: from_buffer
 .. autofunction:: from_file
 .. autofunction:: from_sframe
-
