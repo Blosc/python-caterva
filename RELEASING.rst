@@ -1,17 +1,11 @@
-# Releasing cat4py
-
-| | |
-| - | - |
-| Author | The Blosc Developer Team |
-| Contact | blosc@blosc.org |
-| Date | 2019-09-17 |
-
+cat4py release procedure
+========================
 
 ## Preliminaries
 
 * Make sure that the current master branch is passing the tests on Microsoft Azure.
 
-* Make sure that `RELEASE_NOTES.md` and `ANNOUNCE.md` are up to date with the latest news
+* Make sure that `RELEASE_NOTES.rst` and `ANNOUNCE.rst` are up to date with the latest news
 in the release.
 
 * Check any copyright listings and update them if necessary. You can use ``grep
@@ -19,8 +13,8 @@ in the release.
 
 * Commit the changes:
 ```
-  $ git commit -a -m "Getting ready for release X.Y.Z"
-  $ git push
+  git commit -a -m "Getting ready for release X.Y.Z"
+  git push
 ```
 
 * Check that the documentation is correctly created in https://cat4py.readthedocs.io.
@@ -30,13 +24,13 @@ in the release.
 
 * Create a signed tag ``X.Y.Z`` from ``master``.  Use the next message:
 ```
-    $ git tag -a vX.Y.Z -m "Tagging version X.Y.Z"
+    git tag -a vX.Y.Z -m "Tagging version X.Y.Z"
 ```
 
 * Push the tag to the github repo:
 ```
-    $ git push
-    $ git push --tags
+    git push
+    git push --tags
 ```
 
 After the tag would be up, update the release notes in: https://github.com/Blosc/cat4py/releases
@@ -46,12 +40,9 @@ After the tag would be up, update the release notes in: https://github.com/Blosc
 * Make sure that you are in a clean directory.  The best way is to
   re-clone and re-build:
 ```
-  $ cd /tmp
-  $ git clone git@github.com:Blosc/cat4py.git
-  $ cd cat4py
-  $ git submodule init
-  $ git submodule update
-  $ CFLAGS="" python setup.py build_ext
+  cd /tmp
+  git clone --recursive git@github.com:Blosc/cat4py.git
+  CFLAGS="" python setup.py build_ext
 ```
 
 * Check that all Cython generated ``*.c`` files are present.
@@ -79,7 +70,7 @@ $ CFLAGS="" pip install cat4py
 
 ## Announcing
 
-* Send an announcement to the Blosc list.  Use the ``ANNOUNCE.md`` file as skeleton
+* Send an announcement to the Blosc list.  Use the ``ANNOUNCE.rst`` file as skeleton
 (or possibly as the definitive version).
 
 * Announce in Twitter via @Blosc2 account and rejoice.
@@ -92,7 +83,7 @@ $ CFLAGS="" pip install cat4py
   $ cd $HOME/blosc/cat4py
 ```
 
-* Create new headers for adding new features in ``RELEASE_NOTES.md``
+* Create new headers for adding new features in ``RELEASE_NOTES.rst``
   add this place-holder:
 
   XXX version-specific blurb XXX

@@ -12,8 +12,8 @@ import numpy as np
 def test_copy(shape, chunkshape1, blockshape1, chunkshape2, blockshape2, itemsize):
     size = int(np.prod(shape))
     buffer = bytes(size * itemsize)
-    a = cat.from_buffer(buffer, shape, chunkshape=chunkshape1, blockshape=blockshape1,
-                        itemsize=itemsize, complevel=2)
+    a = cat.from_buffer(buffer, shape, itemsize, chunkshape=chunkshape1, blockshape=blockshape1,
+                        complevel=2)
     b = a.copy(chunkshape=chunkshape2, blockshape=blockshape2,
                itemsize=itemsize, complevel=5, filters=[2])
     buffer2 = b.to_buffer()
@@ -30,10 +30,10 @@ def test_copy(shape, chunkshape1, blockshape1, chunkshape2, blockshape2, itemsiz
 def test_copy_numpy(shape, chunkshape1, blockshape1, chunkshape2, blockshape2, dtype):
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
-    a = cat.from_numpy(nparray, chunkshape1=chunkshape1, blockshape=blockshape1)
+    a = cat.asarray(nparray, chunkshape1=chunkshape1, blockshape=blockshape1)
     b = a.copy(chunkshape=chunkshape2, blockshape=blockshape2, complevel=5, filters=[2])
     if chunkshape2 is not None:
-        nparray2 = b.to_numpy()
+        nparray2 = np.asarray(b.copy())
     else:
         nparray2 = b
     np.testing.assert_almost_equal(nparray, nparray2)

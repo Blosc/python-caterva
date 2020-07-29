@@ -9,8 +9,6 @@
 # LICENSE file in the root directory of this source tree)
 #######################################################################
 
-import numpy as np
-cimport numpy as np
 import msgpack
 
 from libc.stdlib cimport malloc, free
@@ -19,7 +17,11 @@ from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer
 from collections import namedtuple
 from libc.stdint cimport uintptr_t
 from libc.string cimport strdup
-from .container import Container as HLContainer
+from cpython cimport (
+    PyObject_GetBuffer, PyBuffer_Release,
+    PyBUF_SIMPLE, PyBUF_WRITABLE, Py_buffer,
+    PyBytes_FromStringAndSize
+)
 
 import os.path
 
@@ -302,6 +304,13 @@ config_dflts = {
     }
 
 
+def prod(list):
+    prod = 1
+    for l in list:
+        prod *= l
+    return prod
+
+
 cdef class Context:
     cdef caterva_context_t *context_
     cdef uint8_t compcode
@@ -363,7 +372,6 @@ cdef class WriteIter:
 
     def __init__(self, Container arr, **kwargs):
         self.arr = arr
-        self.dtype = np.dtype(f"S{arr.itemsize}")
         self.part_len = self.arr.array.chunknitems * self.arr.itemsize
         self.ctx = Context(**kwargs)
         self.IterInfo = namedtuple("IterInfo", "slice, shape, nitems")
@@ -401,11 +409,11 @@ cdef class WriteIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(self.arr.array.ndim)])
         shape = [s.stop - s.start for s in sl]
-        info = self.IterInfo(slice=sl, shape=shape, nitems=np.prod(shape))
+        info = self.IterInfo(slice=sl, shape=shape, nitems=prod(shape))
 
         # Allocate a new buffer if needed
         self.buffer_shape = shape
-        self.buffer_len = np.prod(shape) * self.arr.itemsize
+        self.buffer_len = prod(shape) * self.arr.itemsize
         if self.buffer is None:
             self.buffer = bytearray(self.part_len)
             self.memview = memoryview(self.buffer)
@@ -442,7 +450,7 @@ cdef class ReadIter:
             else:
                 eshape[i] = self.itershape[i] * (shape[i] // self.itershape[i] + 1)
         aux = [eshape[i] // self.itershape[i] for i in range(ndim)]
-        if self.nparts >= np.prod(aux):
+        if self.nparts >= prod(aux):
             raise StopIteration
 
         start_ = [0 for _ in range(ndim)]
@@ -459,7 +467,7 @@ cdef class ReadIter:
 
         sl = tuple([slice(start_[i], stop_[i]) for i in range(ndim)])
         sh = [s.stop - s.start for s in sl]
-        info = self.IterInfo(slice=sl, shape=sh, nitems=np.prod(sh))
+        info = self.IterInfo(slice=sl, shape=sh, nitems=prod(sh))
         self.nparts += 1
 
         buf = self.arr.__getitem__(info.slice)
@@ -470,11 +478,10 @@ cdef class ReadIter:
 cdef get_caterva_start_stop(ndim, key, shape):
     start = tuple(s.start if s.start is not None else 0 for s in key)
     stop = tuple(s.stop if s.stop is not None else sh for s, sh in zip(key, shape))
-    chunkshape = tuple(sp - st for st, sp in zip(start, stop))
 
-    size = np.prod([stop[i] - start[i] for i in range(ndim)])
+    size = prod([stop[i] - start[i] for i in range(ndim)])
 
-    return start, stop, chunkshape, size
+    return start, stop, size
 
 
 cdef create_caterva_params(caterva_params_t *params, shape, itemsize):
@@ -531,6 +538,12 @@ cdef class Container:
     cdef usermeta_len
     cdef view
     cdef sdata
+    cdef Py_buffer *py_buf
+    cdef int view_count
+
+    @property
+    def storage(self):
+        return "Blosc" if self.array.storage is CATERVA_STORAGE_BLOSC else "Plainbuffer"
 
     @property
     def shape(self):
@@ -556,7 +569,7 @@ cdef class Container:
         """The compression ratio for this container."""
         if self.array.storage is CATERVA_STORAGE_PLAINBUFFER:
             return 1
-        return self.array.sc.nbytes / self.array.sc.cbytes
+        return self.size / self.array.sc.cbytes
 
     @property
     def clevel(self):
@@ -628,41 +641,36 @@ cdef class Container:
         """Whether the container is completely filled or not."""
         return self.array.filled
 
+
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         self.usermeta_len = 0
         self.view = False
         self.sdata = False
         self.array = NULL
+        self.view_count = 0
+        self.py_buf = NULL
 
-    def __getitem__(self, key):
-        ndim = self.ndim
-        start, stop, shape, size = get_caterva_start_stop(ndim, key, self.shape)
-        buffersize = size * self.itemsize
-        buffer = bytes(buffersize)
-        cdef int64_t[CATERVA_MAX_DIM] start_, stop_, shape_
+    def __getbuffer__(self, Py_buffer *buffer, int flags):
+        if flags != PyBUF_WRITABLE or PyBUF_SIMPLE:
+            raise BufferError
+        if self.array.storage is CATERVA_STORAGE_BLOSC:
+            raise AttributeError("Invalid storage")
 
-        for i in range(self.ndim):
-            start_[i] = start[i]
-            stop_[i] = stop[i]
-            shape_[i] = shape[i]
-        ctx = Context(**self.kwargs)
-        caterva_array_get_slice_buffer(ctx.context_, self.array, start_, stop_, shape_, <void *> <char *> buffer, buffersize)
-        return buffer
+        buffer.buf = <char *> &(self.array.buf[0])
+        buffer.obj = self
+        buffer.itemsize = self.itemsize
+        buffer.len = self.size
+        buffer.ndim = 1
+
+        self.view_count += 1
+
+    def __releasebuffer__(self, Py_buffer *buffer):
+        self.view_count -= 1
 
     def squeeze(self, **kwargs):
         ctx = Context(**kwargs)
         caterva_array_squeeze(ctx.context_, self.array)
-
-    def copy(self, Container arr, **kwargs):
-        ctx = Context(**kwargs)
-        cdef caterva_storage_t storage_
-        create_caterva_storage(&storage_, kwargs)
-
-        cdef caterva_array_t *array_
-        caterva_array_copy(ctx.context_, self.array, &storage_, &array_)
-        arr.array = array_
-        return arr
 
     def to_buffer(self, **kwargs):
         ctx = Context(**kwargs)
@@ -747,6 +755,10 @@ cdef class Container:
         return content
 
     def __dealloc__(self):
+        if self.py_buf != NULL:
+            PyBuffer_Release(self.py_buf)
+            free(self.py_buf)
+
         if self.array != NULL:
             ctx = Context(**self.kwargs)
             if self.view:
@@ -754,6 +766,38 @@ cdef class Container:
             if self.sdata:
                 self.array.sc.frame.sdata = NULL
             caterva_array_free(ctx.context_, &self.array)
+
+
+def get_slice(Container arr, Container src, key, **kwargs):
+    ctx = Context(**kwargs)
+    ndim = src.ndim
+    start, stop, size = get_caterva_start_stop(ndim, key, src.shape)
+
+    cdef int64_t[CATERVA_MAX_DIM] start_, stop_
+
+    for i in range(src.ndim):
+        start_[i] = start[i]
+        stop_[i] = stop[i]
+
+    cdef caterva_storage_t storage_
+    create_caterva_storage(&storage_, kwargs)
+
+    cdef caterva_array_t *array_
+    caterva_array_get_slice(ctx.context_, src.array, start_, stop_, &storage_, &array_)
+    arr.array = array_
+    return arr
+
+
+
+def copy(Container arr, Container src, **kwargs):
+    ctx = Context(**kwargs)
+    cdef caterva_storage_t storage_
+    create_caterva_storage(&storage_, kwargs)
+
+    cdef caterva_array_t *array_
+    caterva_array_copy(ctx.context_, src.array, &storage_, &array_)
+    arr.array = array_
+    return arr
 
 
 def from_file(Container arr, filename, copy, **kwargs):
@@ -786,11 +830,11 @@ def from_sframe(Container arr, sframe, copy, **kwargs):
     arr.array = array_
 
 
-def empty(Container arr, shape, **kwargs):
+def empty(Container arr, shape, itemsize, **kwargs):
     ctx = Context(**kwargs)
 
     cdef caterva_params_t params_
-    create_caterva_params(&params_, shape, kwargs.get("itemsize", 8))
+    create_caterva_params(&params_, shape, itemsize)
 
     cdef caterva_storage_t storage_
     create_caterva_storage(&storage_, kwargs)
@@ -800,11 +844,11 @@ def empty(Container arr, shape, **kwargs):
     arr.array = array_
 
 
-def from_buffer(Container arr, buf, shape, **kwargs):
+def from_buffer(Container arr, buf, shape, itemsize, **kwargs):
     ctx = Context(**kwargs)
 
     cdef caterva_params_t params_
-    create_caterva_params(&params_, shape, kwargs.get("itemsize", 8))
+    create_caterva_params(&params_, shape, itemsize)
 
     cdef caterva_storage_t storage_
     create_caterva_storage(&storage_, kwargs)
@@ -812,6 +856,28 @@ def from_buffer(Container arr, buf, shape, **kwargs):
     cdef caterva_array_t *array_
     caterva_array_from_buffer(ctx.context_, <void*> <char *> buf, len(buf), &params_, &storage_, &array_)
     arr.array = array_
+
+
+def asarray(Container arr, ndarray, **kwargs):
+    ctx = Context(**kwargs)
+
+    interface = ndarray.__array_interface__
+    cdef Py_buffer *buf = <Py_buffer *> malloc(sizeof(Py_buffer))
+    PyObject_GetBuffer(ndarray, buf, PyBUF_SIMPLE)
+
+    shape = interface["shape"]
+    itemsize = buf.itemsize
+
+    cdef caterva_params_t params_
+    create_caterva_params(&params_, shape, itemsize)
+
+    cdef caterva_storage_t storage_
+    create_caterva_storage(&storage_, kwargs)
+
+    cdef caterva_array_t *array_
+    caterva_array_from_buffer(ctx.context_, <void*> <char *> buf.buf, buf.len, &params_, &storage_, &array_)
+    arr.array = array_
+    arr.py_buf = buf
 
 
 def get_pointer(Container arr, **kwargs):

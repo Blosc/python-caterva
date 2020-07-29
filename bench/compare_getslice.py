@@ -36,7 +36,7 @@ dtype = np.float64
 cname = "zstd"
 clevel = 6
 filter = cat.SHUFFLE
-nthreads = 2
+nthreads = 1
 blocksize = int(np.prod(blockshape))
 
 fname_cat = None
@@ -71,11 +71,11 @@ content = np.random.normal(0, 1, int(np.prod(shape))).reshape(shape)
 
 # Create and fill a caterva array using a block iterator
 t0 = time()
-a = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape,
-              dtype=content.dtype, filename=fname_cat,
+a = cat.empty(shape, content.itemsize, chunkshape=chunkshape, blockshape=blockshape,
+              dtype=str(content.dtype), filename=fname_cat,
               cname=cname, clevel=clevel, filters=[filter], nthreads=nthreads)
 for block, info in a.iter_write():
-    block[:] = content[info.slice]
+    block[:] = bytes(content[info.slice])
 acratio = a.cratio
 if persistent:
     del a

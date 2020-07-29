@@ -12,23 +12,22 @@ if os.path.exists(filename):
     # Remove file on disk
     os.remove(filename)
 
-dtype = np.int32
+dtype = np.dtype(np.int32)
 itemsize = np.dtype(dtype).itemsize
 
 # Create a numpy array
 nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create a caterva array from a numpy array
-a = cat.from_numpy(nparray, chunkshape=chunkshape, blockshape=blockshape,
+a = cat.asarray(nparray, chunkshape=chunkshape, blockshape=blockshape,
                    enforceframe=True)
 
 # Create an empty caterva array (on disk)
 metalayers = {"numpy": {b"dtype": str(np.dtype(dtype))},
               "test": {b"lorem": 1234}
               }
-b = cat.empty(shape, chunkshape=chunkshape, blockshape=blockshape,
-                  filename=filename, itemsize=itemsize,
-                  metalayers=metalayers)
+b = cat.empty(shape, itemsize, str(dtype), chunkshape=chunkshape, blockshape=blockshape,
+                  filename=filename, metalayers=metalayers)
 
 assert(b.has_metalayer("numpy") is True)
 assert(b.get_metalayer("numpy") == {b"dtype": bytes(str(np.dtype(dtype)), "utf-8")})
@@ -44,7 +43,7 @@ for block, info in b.iter_write():
 # Assert that both caterva arrays are equal
 itershape = (5, 5)
 for (block1, info1), (block2, info2) in lzip(a.iter_read(blockshape), b.iter_read(blockshape)):
-    assert bytes(block1) == block2
+    np.testing.assert_equal(np.asarray(block1), np.asarray(block2))
 
 assert(b.update_usermeta({b"author": b"cat4py example", b"description": b"lorem ipsum"}) >= 0)
 assert(b.get_usermeta() == {b"author": b"cat4py example", b"description": b"lorem ipsum"})

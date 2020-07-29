@@ -12,6 +12,6 @@ import numpy as np
 def test_buffer(shape, chunkshape, blockshape, itemsize):
     size = int(np.prod(shape))
     buffer = bytes(size * itemsize)
-    a = cat.from_buffer(buffer, shape, chunkshape=chunkshape, blockshape=blockshape, itemsize=itemsize)
+    a = cat.from_buffer(buffer, shape, itemsize, chunkshape=chunkshape, blockshape=blockshape)
     buffer2 = a.to_buffer()
     assert buffer == buffer2

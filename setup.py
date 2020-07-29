@@ -92,10 +92,9 @@ if __name__ == '__main__':
             '-DDEACTIVATE_ZLIB:BOOL=%s' % cmake_bool(not int(os.environ.get('INCLUDE_ZLIB', '1'))),
             '-DDEACTIVATE_ZSTD:BOOL=%s' % cmake_bool(not int(os.environ.get('INCLUDE_ZSTD', '1'))),
         ],
-        install_requires=['numpy>=1.16'],
+        install_requires=[],
         setup_requires=[
             'cython>=0.29',
-            'numpy>=1.16',
             'scikit-build',
             'pytest>=3.4.2',
             'msgpack>=0.6.1'

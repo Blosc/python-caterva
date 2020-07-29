@@ -2,23 +2,41 @@ import cat4py as cat
 import numpy as np
 
 
-shape = (50, 123)
-chunkshape = (13, 44)
-blockshape = (5, 15)
+shape = (10, 10)
+chunkshape = (10, 10)
+blockshape = (10, 10)
 
-itemsize = 8
+dtype = np.dtype(np.float64)
 
 # Create a buffer
-buffer = bytes(np.prod(shape) * itemsize)
+buffer = bytes(np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape))
 
 # Create a caterva array from a buffer
-a = cat.from_buffer(buffer, shape, chunkshape=chunkshape, blockshape=blockshape, itemsize=itemsize)
+a = cat.from_buffer(buffer, shape, dtype.itemsize, dtype=str(dtype),
+                    chunkshape=chunkshape, blockshape=blockshape)
 
 # Get a copy of a caterva array (plainbuffer)
-b = a.copy()
+b = cat.copy(a)
+d = b.copy()
+
+aux = np.asarray(b)
+aux[1, 2] = 0
+aux2 = cat.asarray(aux)
+
+print(np.asarray(aux2))
+
+c = np.asarray(b)
+
+c[3:5, 2:7] = 0
+print(c)
+
+del b
+
+print(c)
 
 # Convert the copy to a buffer
 buffer1 = a.to_buffer()
-buffer2 = b.to_buffer()
+buffer2 = d.to_buffer()
 
 assert buffer1 == buffer2
+

@@ -12,8 +12,8 @@ if os.path.exists(filename):
     # Remove file on disk
     os.remove(filename)
 
-dtype = np.complex128
-itemsize = np.dtype(dtype).itemsize
+dtype = np.dtype(np.complex128)
+itemsize = dtype.itemsize
 
 # Create a numpy array
 nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
@@ -26,7 +26,7 @@ a = cat.from_buffer(bytes(nparray), nparray.shape, chunkshape=chunkshape, blocks
 b = cat.from_file(filename)
 
 # Convert a caterva array to a numpy array
-nparray2 = b.to_numpy(dtype=dtype)
+nparray2 = np.asarray(cat.from_buffer(b.to_buffer(), b.shape, b.itemsize, str(dtype)))
 
 np.testing.assert_almost_equal(nparray, nparray2)
 
