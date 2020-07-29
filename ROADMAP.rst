@@ -28,6 +28,7 @@ Interoperability
 ----------------
 
 * *Third-party integration*. Caterva need better integration with libraries like:
+
     * xarray (labeled arrays)
     * dask (computation)
     * napari (visualization)
