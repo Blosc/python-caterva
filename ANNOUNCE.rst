@@ -14,7 +14,7 @@ to/from frames (bytes).
 
 For more info, you can have a look at the release notes in:
 
-https://github.com/Blosc/cat4py/blob/master/RELEASE_NOTES.md
+https://github.com/Blosc/cat4py/releases
 
 More docs and examples are available in the documentation site:
 
