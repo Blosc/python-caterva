@@ -1,10 +1,20 @@
 Release notes
 =============
 
-Changes from 0.3.0 to 0.3.1
+Changes from 0.3.0 to 0.4.0
 ---------------------------
 
-  XXX version-specific blurb XXX
+* Compile the package using skbuild.
+
+* Introduce a second level of multidimensional blocking.
+
+* Complete API renaming.
+
+* Support the buffer protocol and the numpy array protocol.
+
+* Generalize the slicing.
+
+* Make cat4py independent of numpy.
 
 
 Changes from 0.2.3 to 0.3.0

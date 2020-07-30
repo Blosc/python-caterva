@@ -1,16 +1,15 @@
-# Announcing cat4py 0.3.0
+# Announcing cat4py 0.4.0
 
 
 ## What is new?
 
-In this realease the development status has changed to alpha and the instructions about
-installing cat4py from pip has been added.
+In this release the package is compiled using the scikit-build tool for a better integration
+with the C dependencies.
 
-A new class, named `NPArray`, has been created for better integration with numpy arrays.
+A complete API renaming has been introduced to facilitate the use of cat4py by the community.
 
-Another functionality to consider is that now the containers can be serialized/deserialized
-to/from frames (bytes).
-
+Finally, the buffer protocol/numpy array protocol have been implemented and the slicing
+has been generalized.
 
 For more info, you can have a look at the release notes in:
 
