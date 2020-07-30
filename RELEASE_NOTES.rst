@@ -1,7 +1,7 @@
 Release notes
 =============
 
-Changes from 0.3.0 to 0.4.1
+Changes from 0.4.0 to 0.4.1
 ---------------------------
 
 * Fix invalid values for classifiers defined in `setup.py`.
