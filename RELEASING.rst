@@ -9,6 +9,8 @@ Preliminaries
 * Make sure that `RELEASE_NOTES.rst` and `ANNOUNCE.rst` are up to date with the latest news
   in the release.
 
+* Check that `VERSION` file contains the correct number.
+
 * Check any copyright listings and update them if necessary. You can use ``grep
   -i copyright`` to figure out where they might be.
 
@@ -42,6 +44,7 @@ Packaging
 
     cd /tmp
     git clone --recursive git@github.com:Blosc/cat4py.git
+    cd cat4py
     CFLAGS="" python setup.py build_ext
 
 * Check that all Cython generated ``*.c`` files are present.
@@ -88,6 +91,9 @@ Post-release actions
   add this place-holder:
 
   XXX version-specific blurb XXX
+
+* Edit ``VERSION`` in master to increment the version to the next
+  minor one (i.e. X.Y.Z --> X.Y.(Z+1).dev0).
 
 * Commit your changes with::
 

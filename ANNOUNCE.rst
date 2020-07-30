@@ -1,4 +1,4 @@
-# Announcing cat4py 0.4.0
+# Announcing cat4py 0.4.1
 
 
 ## What is new?
