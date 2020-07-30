@@ -4,9 +4,9 @@ Release notes
 Changes from 0.3.0 to 0.4.0
 ---------------------------
 
-* Compile the package using skbuild.
+* Compile the package using scikit-build.
 
-* Introduce a second level of multidimensional blocking.
+* Introduce a second level of multidimensional chunking.
 
 * Complete API renaming.
 

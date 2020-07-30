@@ -8,8 +8,7 @@ with the C dependencies.
 
 A complete API renaming has been introduced to facilitate the use of cat4py by the community.
 
-Finally, the buffer protocol/numpy array protocol have been implemented and the slicing
-has been generalized.
+Finally, the buffer protocol/numpy array protocol have been implemented.
 
 For more info, you can have a look at the release notes in:
 
