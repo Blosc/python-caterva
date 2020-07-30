@@ -55,19 +55,19 @@ if __name__ == '__main__':
         return 'ON' if cond else 'OFF'
 
     classifiers = dedent("""\
-    Development Status :: 3 - Alpha,
-    Intended Audience :: Developers,
-    Intended Audience :: Information Technology,
-    Intended Audience :: Science/Research,
-    License :: OSI Approved :: BSD License,
-    Programming Language :: Python,
-    Topic :: Software Development :: Libraries :: Python Modules,
-    Operating System :: Microsoft :: Windows,
-    Operating System :: Unix,
-    Programming Language :: Python :: 3,
-    Programming Language :: Python :: 3.6,
-    Programming Language :: Python :: 3.7,
-    Programming Language :: Python :: 3.8,
+    Development Status :: 3 - Alpha
+    Intended Audience :: Developers
+    Intended Audience :: Information Technology
+    Intended Audience :: Science/Research
+    License :: OSI Approved :: BSD License
+    Programming Language :: Python
+    Topic :: Software Development :: Libraries :: Python Modules
+    Operating System :: Microsoft :: Windows
+    Operating System :: Unix
+    Programming Language :: Python :: 3
+    Programming Language :: Python :: 3.6
+    Programming Language :: Python :: 3.7
+    Programming Language :: Python :: 3.8
     """)
 
     setup(name = "cat4py",
