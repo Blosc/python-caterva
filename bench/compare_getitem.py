@@ -24,7 +24,7 @@ else:
 itemsize = np.dtype(dtype).itemsize
 
 # Create an empty caterva array
-a = cat.empty(shape, dtype=dtype, chunkshape=chunkshape, blockshape=blockshape,
+a = cat.empty(shape, itemsize, dtype=str(np.dtype(dtype)), chunkshape=chunkshape, blockshape=blockshape,
               filename=filename, compcode=0)
 
 # Fill an empty caterva array using a block iterator
@@ -32,7 +32,7 @@ t0 = time()
 count = 0
 for block, info in a.iter_write():
     nparray = np.arange(count, count + info.nitems, dtype=dtype).reshape(info.shape)
-    block[:] = nparray
+    block[:] = bytes(nparray)
     count += info.nitems
 t1 = time()
 print("Time for filling: %.3fs" % (t1 - t0))

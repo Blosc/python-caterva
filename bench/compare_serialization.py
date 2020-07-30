@@ -12,7 +12,6 @@ from time import time
 import pyarrow as pa
 
 import pickle
-assert(pickle.HIGHEST_PROTOCOL <= 4)
 
 check_roundtrip = False  # set this to True to check for roundtrip validity
 
@@ -20,7 +19,7 @@ check_roundtrip = False  # set this to True to check for roundtrip validity
 shape = (100, 5000, 250)
 chunkshape = (20, 500, 100)
 blockshape = (10, 50, 50)
-dtype = "float64"
+dtype = "f8"
 
 # Compression properties
 cname = "lz4"
@@ -44,13 +43,13 @@ print("Time for copying array in-memory (numpy): %.3fs" % (t1 - t0))
 
 # Create and fill a caterva array using a block iterator and an in-memory frame
 t0 = time()
-carr = cat.empty(shape, dtype=dtype, chunkshape=chunkshape, blockshape=blockshape,
+carr = cat.empty(shape, np.dtype(dtype).itemsize, dtype=dtype, chunkshape=chunkshape, blockshape=blockshape,
                  enforceframe=True,
                  cname=cname, clevel=clevel, filters=[filter],
                  cnthreads=nthreads, dnthreads=nthreads)
 for block, info in carr.iter_write():
     nparray = arr[info.slice]
-    block[:] = nparray
+    block[:] = bytes(nparray)
 acratio = carr.cratio
 t1 = time()
 print("Time for creating an array in-memory (numpy -> caterva, copy): %.3fs ; CRatio: %.1fx" % ((t1 - t0), acratio))
@@ -93,17 +92,6 @@ if check_roundtrip:
     np.testing.assert_allclose(carr2, arr)
     print("ok!")
 
-# The next does not bring additional info for the comparison
-# t0 = time()
-# carr2 = cat.from_sframe(sframe_copy, copy=False)
-# t1 = time()
-# print("Time for de-serializing array in-memory (caterva, copy): %.3fs" % (t1 - t0))
-#
-# if check_roundtrip:
-#     print("The roundtrip is... ", end="", flush=True)
-#     np.testing.assert_allclose(carr2, arr)
-#     print("ok!")
-
 t0 = time()
 arr2 = pa.deserialize_components(pyarrow_nocopy)
 t1 = time()
@@ -138,7 +126,7 @@ print()
 t0 = time()
 for i in range(1):
     carr3 = cat.from_sframe(sframe_copy)
-    arr2 = carr3.to_numpy()
+    arr2 = np.asarray(carr3.copy())
 t1 = time()
 print("Time for re-creating array in-memory (caterva -> numpy, copy): %.3fs" % (t1 - t0))
 
@@ -148,7 +136,7 @@ if check_roundtrip:
     print("ok!")
 
 print()
-arrsize = arr.nitems * arr.itemsize
+arrsize = arr.size * arr.itemsize
 time_100Mbps = arrsize / (10 * 2 ** 20)
 print("Time to transmit array at 100 Mbps (no compression):\t%6.3fs" % time_100Mbps)
 ctime_100Mbps = (arrsize / acratio) / (10 * 2**20)
