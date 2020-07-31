@@ -45,7 +45,7 @@ Packaging
     cd /tmp
     git clone --recursive git@github.com:Blosc/cat4py.git
     cd cat4py
-    CFLAGS="" python setup.py build_ext
+    python setup.py build_ext
 
 * Check that all Cython generated ``*.c`` files are present.
 
@@ -67,7 +67,7 @@ Uploading
 
 It takes about 15 minutes for it to be installed using::
 
-    CFLAGS="" pip install cat4py
+    pip install cat4py
 
 
 
