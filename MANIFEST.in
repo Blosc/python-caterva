@@ -7,8 +7,7 @@ include setup.py
 
 recursive-include cat4py *.py *.pyx *.pxd *.c *.h *.txt
 recursive-include tests *.py
-recursive-include c-blosc2 *.c *.h *.txt
-recursive-include c-blosc2/blosc *.in
+recursive-include c-blosc2 *.c *.h *.txt *.in
 recursive-include Caterva *.c *.h *.txt
 recursive-include bench *.py *.txt
 recursive-include doc *.rst *.txt *.py *.pdf *.html *.css *.png
