@@ -59,6 +59,12 @@ Do a quick check that the tarball is sane.
 Uploading
 ---------
 
+* Register and upload the distribution to TestPyPI and install it using pip::
+
+    twine upload --repository testpypi dist/*
+
+
+
 * Register and upload it also in the PyPi repository::
 
     twine upload dist/*
