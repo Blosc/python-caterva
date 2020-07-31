@@ -1,6 +1,11 @@
 Release notes
 =============
 
+Changes from 0.4.1 to 0.4.2
+---------------------------
+
+* Add files in `MANIFEST.in`.
+
 Changes from 0.4.0 to 0.4.1
 ---------------------------
 
