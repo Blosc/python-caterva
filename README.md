@@ -2,6 +2,7 @@
 ![Coverage](https://img.shields.io/azure-devops/coverage/blosc/caterva/1)
 [![Documentation Status](https://readthedocs.org/projects/cat4py/badge/?version=latest)](https://cat4py.readthedocs.io/en/latest/?badge=latest)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Blosc/cat4py/master?filepath=notebooks%2Fslicing-performance.ipynb)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 # cat4py
 
 Python wrapper for Caterva.  Still on development.
