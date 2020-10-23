@@ -30,8 +30,7 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
-      git submodule init
-      git submodule update
+      git submodule update --init --recursive
       python setup.py build_ext --build-type RelWithDebInfo
     displayName: 'Compile package'
 
@@ -84,8 +83,7 @@ jobs:
     displayName: 'Install dependencies'
 
   - bash: |
-      git submodule init
-      git submodule update
+      git submodule update --init --recursive
       python setup.py build_ext --build-type RelWithDebInfo --generator "NMake Makefiles" -- -DWINGEN="NMake Makefiles"
     displayName: 'Compile package'
 
@@ -128,8 +126,7 @@ jobs:
     displayName: 'Install dependencies'
 
   - script: |
-      git submodule init
-      git submodule update
+      git submodule update --init --recursive
       python setup.py build_ext --build-type RelWithDebInfo
     displayName: 'Compile package'
 

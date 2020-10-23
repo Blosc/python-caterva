@@ -1,16 +1,5 @@
 include_directories(${NumPy_INCLUDE_DIRS})
 
-set(BUILD_STATIC ON CACHE BOOL "Build a static version of the blosc library.")
-set(BUILD_SHARED OFF CACHE BOOL "Build a shared library version of the blosc library.")
-set(BUILD_TESTS OFF CACHE BOOL "Build test programs form the blosc compression library")
-set(BUILD_BENCHMARKS OFF CACHE BOOL "Build benchmark programs form the blosc compression library")
-set(BUILD_EXAMPLES OFF CACHE BOOL "Build benchmark programs form the blosc compression library")
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-add_subdirectory(c-blosc2)
-include_directories("${CMAKE_SOURCE_DIR}/c-blosc2/blosc")
-
-set(BLOSC_LIB blosc2_static)
-
 set(STATIC_LIB ON CACHE BOOL "Build a static version of the blosc library.")
 set(SHARED_LIB OFF CACHE BOOL "Build a shared library version of the blosc library.")
 set(CATERVA_BUILD_TESTS OFF CACHE BOOL "Build Caterva tests")
