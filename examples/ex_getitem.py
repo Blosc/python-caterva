@@ -6,7 +6,7 @@ shape = (200, 132)
 chunkshape = (55, 23)
 blockshape = (5, 11)
 
-slices = (5, ..., slice(2, 13))
+slices = (5, ..., 25)
 
 dtype = np.float64
 itemsize = np.dtype(dtype).itemsize

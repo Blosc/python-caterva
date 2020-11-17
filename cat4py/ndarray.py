@@ -94,7 +94,7 @@ class NDArray(ext.Container):
         arr = NDArray(**kwargs)
         kwargs = arr.kwargs
         key, mask = process_key(key, self.shape)
-        return ext.get_slice(arr, self, key, **kwargs)
+        return ext.get_slice(arr, self, key, mask, **kwargs)
 
     def iter_read(self, itershape=None):
         """Iterate over data blocks whose dims are specified in `itershape`.

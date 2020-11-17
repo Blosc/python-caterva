@@ -246,6 +246,10 @@ cdef extern from "caterva.h":
     int caterva_array_get_slice(caterva_context_t *ctx, caterva_array_t *src, int64_t *start, int64_t *stop,
         caterva_storage_t *storage, caterva_array_t **array)
 
+    int caterva_array_squeeze_index(caterva_context_t *ctx,
+                                    caterva_array_t *array,
+                                    bool *index)
+
     int caterva_array_squeeze(caterva_context_t *ctx, caterva_array_t *array)
 
     int caterva_array_get_slice_buffer(caterva_context_t *ctx, caterva_array_t *src, int64_t *start, int64_t *stop,
@@ -768,7 +772,7 @@ cdef class Container:
             caterva_array_free(ctx.context_, &self.array)
 
 
-def get_slice(Container arr, Container src, key, **kwargs):
+def get_slice(Container arr, Container src, key, mask, **kwargs):
     ctx = Context(**kwargs)
     ndim = src.ndim
     start, stop, size = get_caterva_start_stop(ndim, key, src.shape)
@@ -784,6 +788,12 @@ def get_slice(Container arr, Container src, key, **kwargs):
 
     cdef caterva_array_t *array_
     caterva_array_get_slice(ctx.context_, src.array, start_, stop_, &storage_, &array_)
+
+    cdef bool mask_[CATERVA_MAX_DIM]
+    for i in range(src.ndim):
+        mask_[i] = mask[i]
+
+    caterva_array_squeeze_index(ctx.context_, array_, mask_)
     arr.array = array_
     return arr
 

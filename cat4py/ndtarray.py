@@ -81,8 +81,7 @@ class NDTArray(NDArray):
        """
         arr = NDTArray(self._dtype, **kwargs)
         key, mask = process_key(key, self.shape)
-        print(mask)
-        return ext.get_slice(arr, self, key, **kwargs)
+        return ext.get_slice(arr, self, key, mask, **kwargs)
 
     def copy(self, **kwargs):
         """Copy into a new array.
