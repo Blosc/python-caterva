@@ -80,7 +80,9 @@ class NDTArray(NDArray):
            An array with the requested data.
        """
         arr = NDTArray(self._dtype, **kwargs)
-        return ext.get_slice(arr, self, process_key(key, self.ndim), **kwargs)
+        key, mask = process_key(key, self.shape)
+        print(mask)
+        return ext.get_slice(arr, self, key, **kwargs)
 
     def copy(self, **kwargs):
         """Copy into a new array.
