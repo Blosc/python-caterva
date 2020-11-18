@@ -45,4 +45,4 @@ $ PYTHONPATH=. python bench/compare_getslice.py
 $ CFLAGS='' pip install cat4py
 ```
 
-We don't produce wheels yet, so you will currently need a C compiler in order to install cat4py.  The reason why you need the `CFLAGS=''` above is to prevent Anaconda Python injecting their own paths for dependencies (LZ4, Zstd...). 
+We don't produce wheels yet, so you will currently need a C compiler in order to install cat4py.  The reason why you need the `CFLAGS=''` above is to prevent Anaconda Python injecting their own paths for dependencies (LZ4, Zstd...).
