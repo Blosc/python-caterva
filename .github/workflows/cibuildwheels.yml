@@ -28,19 +28,17 @@ jobs:
         with:
           python-version: '3.7'
 
-      - name: Install Visual Studio 2017
-        if: runner.os == 'Windows'
-        run: |
-          choco install visualstudio2017buildtools -f -y
       - name: Install cibuildwheel
         run: |
-          python -m pip install -r requirements.txt
+          python -m pip install cibuildwheel==1.6.3
+
       - name: Build wheels
         run: |
-          python -m cibuildwheel --output-dir wheelhouse
+          python -m cibuildwheel --output-dir wheelhouse --global-option -G Ninja
         env:
           CIBW_BUILD: "cp37-*"
           CIBW_BEFORE_BUILD: pip install -r requirements.txt
+
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
