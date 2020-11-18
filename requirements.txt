@@ -6,3 +6,4 @@ msgpack>=0.6.1
 cmake>=3.14.0
 matplotlib>=3.2.1
 ndindex>=1.4
+cibuildwheel==1.6.3
