@@ -31,6 +31,9 @@ jobs:
       - uses: seanmiddleditch/gha-setup-ninja@master
         name: Install Ninja
 
+      - uses: ilammy/msvc-dev-cmd@v1
+        name: Install MSVC
+
       - name: Install cibuildwheel
         run: |
           python -m pip install cibuildwheel
@@ -58,6 +61,12 @@ jobs:
         name: Install Python
         with:
           python-version: '3.7'
+
+      - uses: seanmiddleditch/gha-setup-ninja@master
+        name: Install Ninja
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        name: Install MSVC
 
       - name: Install requirements
         run: |
