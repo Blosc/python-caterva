@@ -38,7 +38,7 @@ jobs:
       - name: Build wheels
         run: |
           python setup.py clean
-          python setup.py build --build-type RelWithDebInfo -G Ninja
+          python setup.py build --build-type RelWithDebInfo -G Ninja - DMS_WIN64
         env:
           CIBW_BUILD: "cp37-*"
           CIBW_BEFORE_BUILD:
