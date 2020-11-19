@@ -28,6 +28,9 @@ jobs:
         with:
           python-version: '3.7'
 
+      - uses: seanmiddleditch/gha-setup-ninja@master
+        name: Install Ninja
+
       - name: Install requirements
         run: |
           pip install -r requirements.txt
