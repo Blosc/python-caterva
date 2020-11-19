@@ -31,6 +31,9 @@ jobs:
       - uses: seanmiddleditch/gha-setup-ninja@master
         name: Install Ninja
 
+      - uses: ilammy/msvc-dev-cmd@v1
+        name: Install MSVC
+
       - name: Install requirements
         run: |
           pip install -r requirements.txt
