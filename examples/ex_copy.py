@@ -39,4 +39,3 @@ buffer1 = a.to_buffer()
 buffer2 = d.to_buffer()
 
 assert buffer1 == buffer2
-

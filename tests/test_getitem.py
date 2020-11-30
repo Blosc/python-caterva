@@ -3,14 +3,17 @@ import pytest
 import numpy as np
 
 
-@pytest.mark.parametrize("shape, chunkshape, blockshape, slices, dtype",
-                         [
-                             ([456], [258], [73], slice(0, 1), np.int32),
-                             ([77, 134, 13], [31, 13, 5], [7, 8, 3],
-                              (slice(3, 7), slice(50, 100),slice(2, 7)), np.float64),
-                             ([12, 13, 14, 15, 16], None, None,
-                              (slice(1, 3), slice(2, 5), slice(0, 12), slice(3, 6)), np.float32)
-                         ])
+argnames = "shape, chunkshape, blockshape, slices, dtype"
+argvalues = [
+    ([456], [258], [73], slice(0, 1), np.int32),
+    ([77, 134, 13], [31, 13, 5], [7, 8, 3], (slice(3, 7), slice(50, 100), 7),
+     np.float64),
+    ([12, 13, 14, 15, 16], None, None, (slice(1, 3), ..., slice(3, 6)),
+     np.float32)
+]
+
+
+@pytest.mark.parametrize(argnames, argvalues)
 def test_getitem(shape, chunkshape, blockshape, slices, dtype):
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)
@@ -22,14 +25,7 @@ def test_getitem(shape, chunkshape, blockshape, slices, dtype):
     np.testing.assert_almost_equal(a_slice, nparray_slice)
 
 
-@pytest.mark.parametrize("shape, chunkshape, blockshape, slices, dtype",
-                         [
-                             ([456], [258], [73], slice(0, 1), np.int32),
-                             ([77, 134, 13], [31, 13, 5], [7, 8, 3],
-                              (slice(3, 7), slice(50, 100), slice(2, 7)), np.float64),
-                             ([12, 13, 14, 15, 16], None, None,
-                              (slice(1, 3), slice(2, 5), slice(0, 12), slice(3, 6)), np.float32)
-                         ])
+@pytest.mark.parametrize(argnames, argvalues)
 def test_getitem_numpy(shape, chunkshape, blockshape, slices, dtype):
     size = int(np.prod(shape))
     nparray = np.arange(size, dtype=dtype).reshape(shape)

@@ -79,4 +79,3 @@ Changes from 0.1.1 to 0.2.1
 * `complib` has been renamed to `cname` for compatibility with blosc-powered packages.
 
 * The use of an itemsize different than a 2 power is allowed now.
-

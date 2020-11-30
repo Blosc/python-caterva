@@ -1,14 +1,13 @@
 import msgpack
 from . import container_ext as ext
+import ndindex
 
 
-def process_key(key, ndim):
-    if not isinstance(key, (tuple, list)):
-        key = (key,)
-    key = tuple(k if isinstance(k, slice) else slice(k, k + 1) for k in key)
-    if len(key) < ndim:
-        key += tuple(slice(None) for _ in range(ndim - len(key)))
-    return key
+def process_key(key, shape):
+    key = ndindex.ndindex(key).expand(shape).raw
+    mask = tuple(True if isinstance(k, int) else False for k in key)
+    key = tuple(k if isinstance(k, slice) else slice(k, k+1, None) for k in key)
+    return key, mask
 
 
 class ReadIter(ext.ReadIter):
@@ -95,7 +94,8 @@ class NDArray(ext.Container):
         """
         arr = NDArray(**kwargs)
         kwargs = arr.kwargs
-        return ext.get_slice(arr, self, process_key(key, self.ndim), **kwargs)
+        key, mask = process_key(key, self.shape)
+        return ext.get_slice(arr, self, key, mask, **kwargs)
 
     def iter_read(self, itershape=None):
         """Iterate over data blocks whose dims are specified in `itershape`.
