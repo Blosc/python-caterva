@@ -92,13 +92,13 @@ if __name__ == '__main__':
             '-DDEACTIVATE_ZSTD:BOOL=%s' % cmake_bool(not int(os.environ.get('INCLUDE_ZSTD', '1'))),
         ],
         install_requires=[
-            'ndindex>=1.4'
+            'ndindex>=1.4',
+            'msgpack >= 0.6.1'
         ],
         setup_requires=[
             'cython>=0.29',
             'scikit-build',
-            'pytest>=3.4.2',
-            'msgpack>=0.6.1'
+            'pytest>=3.4.2'
         ],
         tests_require=['numpy', 'psutil'],
         packages=['cat4py'],
