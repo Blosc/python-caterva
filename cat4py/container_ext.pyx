@@ -62,7 +62,7 @@ cdef extern from "blosc2.h":
       int64_t maxlen
       uint32_t trailer_len
 
-    blosc2_frame *blosc2_new_frame(char *fname)
+    blosc2_frame *blosc2_frame_new(char *fname)
 
     ctypedef struct blosc2_context
     ctypedef int* blosc2_prefilter_fn
@@ -119,7 +119,7 @@ cdef extern from "blosc2.h":
     blosc2_cparams BLOSC2_CPARAMS_DEFAULTS
     blosc2_dparams BLOSC2_DPARAMS_DEFAULTS
 
-    int64_t blosc2_schunk_to_frame(blosc2_schunk* schunk, blosc2_frame* frame)
+    int64_t blosc2_frame_from_schunk(blosc2_schunk* schunk, blosc2_frame* frame)
     int blosc2_has_metalayer(blosc2_schunk *schunk, char *name)
     int blosc2_add_metalayer(blosc2_schunk *schunk, char *name, uint8_t *content, uint32_t content_len)
     int blosc2_update_metalayer(blosc2_schunk *schunk, char *name, uint8_t *content, uint32_t content_len)
@@ -130,7 +130,7 @@ cdef extern from "blosc2.h":
 
     char* blosc_list_compressors()
 
-    int blosc2_free_frame(blosc2_frame *frame)
+    int blosc2_frame_free(blosc2_frame *frame)
 
 
 cdef extern from "caterva.h":
@@ -703,11 +703,11 @@ cdef class Container:
         else:
             # Container is not backed by a frame, so create a new one and fill it
             # Here there is a double copy; how to avoid it?
-            frame = blosc2_new_frame(NULL)
-            blosc2_schunk_to_frame(self.array.sc, frame)
+            frame = blosc2_frame_new(NULL)
+            blosc2_frame_from_schunk(self.array.sc, frame)
             data = <char*> frame.sdata
             sdata = data[:frame.len]
-            blosc2_free_frame(frame)
+            blosc2_frame_free(frame)
         return sdata
 
     def has_metalayer(self, name):
