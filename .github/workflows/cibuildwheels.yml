@@ -69,7 +69,7 @@ jobs:
           CIBW_BUILD: 'cp37-* cp38-* cp39-*'
           CIBW_BEFORE_BUILD: pip install -r requirements.txt
           CIBW_BEFORE_TEST: pip install numpy
-          CIBW_TEST_COMMAND: PYTHOPATH=. pytest {project}/tests
+          CIBW_TEST_COMMAND: pytest {project}/tests
 
       - uses: actions/upload-artifact@v2
         with:
