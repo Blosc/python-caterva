@@ -3,8 +3,8 @@ import numpy as np
 
 
 shape = (10, 10)
-chunkshape = (10, 10)
-blockshape = (10, 10)
+chunks = (10, 10)
+blocks = (10, 10)
 
 dtype = np.dtype(np.float64)
 
@@ -13,7 +13,7 @@ buffer = bytes(np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape))
 
 # Create a caterva array from a buffer
 a = cat.from_buffer(buffer, shape, dtype.itemsize, dtype=str(dtype),
-                    chunkshape=chunkshape, blockshape=blockshape)
+                    chunks=chunks, blocks=blocks)
 
 # Get a copy of a caterva array (plainbuffer)
 b = cat.copy(a)

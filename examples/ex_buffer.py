@@ -4,8 +4,8 @@ import numpy as np
 np.random.seed(123)
 
 shape = (50, 50)
-chunkshape = (49, 49)
-blockshape = (48, 48)
+chunks = (49, 49)
+blocks = (48, 48)
 
 itemsize = 8
 
@@ -14,8 +14,9 @@ buffer = bytes(np.random.normal(0, 1, np.prod(shape)) * itemsize)
 
 # Create a caterva array from a buffer
 
-a = cat.from_buffer(buffer, shape, chunkshape=chunkshape, blockshape=blockshape, itemsize=itemsize)
-
+a = cat.from_buffer(buffer, shape, chunks=chunks, blocks=blocks, itemsize=itemsize)
+print(a.filters)
+print(a.codec)
 print(a.cratio)
 # Convert a caterva array to a buffer
 buffer2 = a.to_buffer()

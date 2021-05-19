@@ -116,7 +116,7 @@ print("Time for filling array (hdf5): %.3fs ; CRatio: %.1fx" % ((t1 - t0), h5rat
 # Check that the contents are the same
 t0 = time()
 if persistent:
-    a = cat.from_file(fname_cat, copy=False)  # reopen
+    a = cat.open(fname_cat, copy=False)  # reopen
     z = zarr.open(fname_zarr, mode='r')
     h5f = tables.open_file(fname_h5, 'r', filters=filters)
     h5ca = h5f.root.carray
@@ -139,7 +139,7 @@ planes_idx = np.random.randint(0, shape[1], 100)
 # Time getitem with caterva
 t0 = time()
 if persistent:
-    a = cat.from_file(fname_cat, copy=False)  # reopen
+    a = cat.open(fname_cat, copy=False)  # reopen
 for i in planes_idx:
     rbytes = a[:, i, :]
 del a
