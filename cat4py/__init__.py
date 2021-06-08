@@ -9,6 +9,8 @@
 
 from .version import __version__
 
+from . import caterva_ext as ext
+
 # Public API for container module
 from .constructors import (empty, zeros, full, from_buffer, open, asarray, copy)
 
