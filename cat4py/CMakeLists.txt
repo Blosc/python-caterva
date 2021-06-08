@@ -10,16 +10,16 @@ add_subdirectory(Caterva)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Caterva/caterva")
 
 
-add_cython_target(container_ext container_ext.pyx)
-add_library(container_ext MODULE ${container_ext})
+add_cython_target(caterva_ext caterva_ext.pyx)
+add_library(caterva_ext MODULE ${caterva_ext})
 
-target_link_libraries(container_ext caterva_static)
+target_link_libraries(caterva_ext caterva_static)
 
-python_extension_module(container_ext)
+python_extension_module(caterva_ext)
 
 add_custom_command(
-    TARGET container_ext POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:container_ext> ${CMAKE_SOURCE_DIR}/cat4py
+    TARGET caterva_ext POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:caterva_ext> ${CMAKE_SOURCE_DIR}/cat4py
 )
 
-install(TARGETS container_ext LIBRARY DESTINATION cat4py)
+install(TARGETS caterva_ext LIBRARY DESTINATION cat4py)

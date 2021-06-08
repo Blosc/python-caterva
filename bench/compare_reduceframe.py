@@ -80,7 +80,7 @@ def bench_read_numpy(fname, copy):
 def bench_read_caterva(fname, copy):
     if macosx: os.system("/usr/sbin/purge")
     t0 = time()
-    a = cat.from_file(fname, copy=copy)
+    a = cat.open(fname, copy=copy)
     t1 = time()
     print("Time for opening the on-disk frame (caterva, copy=%s): %.3fs" % (copy, (t1 - t0)))
 

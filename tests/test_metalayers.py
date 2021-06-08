@@ -2,42 +2,38 @@ import cat4py as cat
 import pytest
 import numpy as np
 import os
+from msgpack import packb
 
 
-@pytest.mark.parametrize("shape, chunkshape, blockshape, filename, dtype",
+@pytest.mark.parametrize("shape, chunks, blocks, urlpath, dtype",
                          [
                              ([556], [221], [33], "testmeta00.cat", np.float64),
                              ([20, 134, 13], [12, 66, 8], [3, 13, 5], "testmeta01.cat", np.int32),
                              ([12, 13, 14, 15, 16], [8, 9, 4, 12, 9], [2, 6, 4, 5, 4], "testmeta02.cat", np.float32)
                          ])
-def test_metalayers(shape, chunkshape, blockshape, filename, dtype):
-    if os.path.exists(filename):
-        os.remove(filename)
+def test_metalayers(shape, chunks, blocks, urlpath, dtype):
+    if os.path.exists(urlpath):
+        os.remove(urlpath)
+
+    numpy_meta = packb({b"dtype": str(np.dtype(dtype))})
+    test_meta = packb({b"lorem": 1234})
 
     # Create an empty caterva array (on disk)
     itemsize = np.dtype(dtype).itemsize
-    a = cat.empty(shape, itemsize, chunkshape=chunkshape, blockshape=blockshape,
-                  filename=filename,
-                  metalayers={"numpy": {b"dtype": str(np.dtype(dtype))},
-                              "test": {b"lorem": 1234}})
+    a = cat.empty(shape, itemsize, chunks=chunks, blocks=blocks,
+                  urlpath=urlpath,
+                  meta={"numpy": numpy_meta,
+                        "test": test_meta})
 
-    assert (a.has_metalayer("numpy") is True)
-    assert (a.get_metalayer("error") is None)
-    assert (a.get_metalayer("numpy") == {b"dtype": bytes(str(np.dtype(dtype)), "utf-8")})
-    assert (a.has_metalayer("test") is True)
-    assert (a.get_metalayer("test") == {b"lorem": 1234})
-    assert (a.update_metalayer("test", {b"lorem": 4321}) >= 0)
-    assert (a.get_metalayer("test") == {b"lorem": 4321})
+    assert ("numpy" in a.meta)
+    assert ("error" not in a.meta)
+    assert (a.meta["numpy"] == numpy_meta)
+    assert ("test" in a.meta)
+    assert (a.meta["test"] == test_meta)
 
-    # Fill an empty caterva array using a block iterator
-    nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
-    for block, info in a.iter_write():
-        block[:] = bytes(nparray[info.slice])
-
-    assert (a.update_usermeta({b"author": b"cat4py example", b"description": b"lorem ipsum"}) >= 0)
-    assert (a.get_usermeta() == {b"author": b"cat4py example", b"description": b"lorem ipsum"})
-    assert (a.update_usermeta({b"author": b"cat4py example"}) >= 0)
-    assert (a.get_usermeta() == {b"author": b"cat4py example"})
+    test_meta = packb({b"lorem": 4231})
+    a.meta["test"] = test_meta
+    assert (a.meta["test"] == test_meta)
 
     # Remove file on disk
-    os.remove(filename)
+    os.remove(urlpath)

@@ -79,7 +79,7 @@ def bench_read_numpy(fname, planes_idx, copy):
 
 def bench_read_caterva(fname, planes_idx, copy):
     t0 = time()
-    a = cat.from_file(fname, copy=copy)
+    a = cat.open(fname, copy=copy)
     t1 = time()
     print("Time for opening the on-disk frame (caterva, copy=%s): %.3fs" % (copy, (t1 - t0)))
 

@@ -1,0 +1,12 @@
+numpydoc
+sphinx
+cython
+numpy
+scikit-build
+pytest
+msgpack
+cmake
+pydata-sphinx-theme
+sphinx-inline-tabs
+sphinx-panels
+myst-nb

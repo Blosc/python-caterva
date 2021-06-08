@@ -1,6 +1,8 @@
-import msgpack
-from . import container_ext as ext
+from . import caterva_ext as ext
 import ndindex
+from .info import InfoReporter
+import os
+from .meta import Meta
 
 
 def process_key(key, shape):
@@ -10,18 +12,32 @@ def process_key(key, shape):
     return key, mask
 
 
-class ReadIter(ext.ReadIter):
-    def __init__(self, arr, itershape=None):
-        super(ReadIter, self).__init__(arr, itershape)
+def prod(list):
+    prod = 1
+    for li in list:
+        prod *= li
+    return prod
 
 
-class WriteIter(ext.WriteIter):
-    def __init__(self, arr):
-        super(WriteIter, self).__init__(arr, **arr.kwargs)
+def get_caterva_start_stop(ndim, key, shape):
+    start = tuple(s.start if s.start is not None else 0 for s in key)
+    stop = tuple(s.stop if s.stop is not None else sh for s, sh in zip(key, shape))
+
+    size = prod([stop[i] - start[i] for i in range(ndim)])
+
+    return start, stop, size
 
 
-class NDArray(ext.Container):
+def parse_kwargs(**kwargs):
+    if "urlpath" in kwargs:
+        if os.path.exists(kwargs["urlpath"]):
+            raise FileExistsError(f"Can not create the file {kwargs['urlpath']}."
+                                  f"It already exists!")
+
+
+class NDArray(ext.NDArray):
     def __init__(self, **kwargs):
+        parse_kwargs(**kwargs)
         if type(self) == NDArray:
             self.pre_init(**kwargs)
         super(NDArray, self).__init__(**self.kwargs)
@@ -36,26 +52,50 @@ class NDArray(ext.Container):
         return cont
 
     @property
-    def info(self):
-        ljust = 20
-        type_s = "Type:".ljust(ljust) + f"{type(self)}\n"
-        dtype_s = "Itemsize:".ljust(ljust) + f"{self.itemsize} bytes\n"
-        storage_s = "Storage:".ljust(ljust) + f"{self.storage}\n"
-        shape_s = "Shape:".ljust(ljust) + f"{self.shape}\n"
-        chunkshape_s = "Chunkshape:".ljust(ljust) + f"{self.chunkshape}\n"
-        blockshape_s = "Blockshape:".ljust(ljust) + f"{self.blockshape}\n"
+    def meta(self):
+        if self.storage == "Blosc":
+            return Meta(self)
+        return None
 
-        return type_s + dtype_s + storage_s + shape_s + chunkshape_s + blockshape_s
+    @property
+    def info(self):
+        """
+        Print information about this array.
+        """
+        return InfoReporter(self)
+
+    @property
+    def info_items(self):
+        items = []
+        items += [("Type", f"{self.__class__.__name__} ({self.storage})")]
+        items += [("Itemsize", self.itemsize)]
+        items += [("Shape", self.shape)]
+
+        if self.storage == "Blosc":
+            items += [("Chunks", self.chunks)]
+            items += [("Blocks", self.blocks)]
+            items += [("Comp. codec", self.codec.name)]
+            items += [("Comp. level", self.clevel)]
+            filters = [f.name for f in self.filters if f.name != "NOFILTER"]
+            items += [("Comp. filters", f"[{', '.join(map(str, filters))}]")]
+            items += [("Comp. ratio", f"{self.cratio:.2f}")]
+        return items
 
     @property
     def __array_interface__(self):
         interface = {
             "data": self,
             "shape": self.shape,
-            "typestr": f'S{self.itemsize}',
+            "typestr": f"|S{self.itemsize}",
             "version": 3
         }
         return interface
+
+    def __setitem__(self, key, value):
+        key, mask = process_key(key, self.shape)
+        start, stop, _ = get_caterva_start_stop(self.ndim, key, self.shape)
+        key = (start, stop)
+        return ext.set_slice(self, key, value)
 
     def __getitem__(self, key):
         """ Get a (multidimensional) slice as specified in key.
@@ -95,59 +135,9 @@ class NDArray(ext.Container):
         arr = NDArray(**kwargs)
         kwargs = arr.kwargs
         key, mask = process_key(key, self.shape)
+        start, stop, _ = get_caterva_start_stop(self.ndim, key, self.shape)
+        key = (start, stop)
         return ext.get_slice(arr, self, key, mask, **kwargs)
-
-    def iter_read(self, itershape=None):
-        """Iterate over data blocks whose dims are specified in `itershape`.
-
-        Parameters
-        ----------
-        itershape: tuple, list
-            The shape in which the data block will be returned.  If `None`,
-            the `NDArray.chunkshape` will be used as `itershape`.
-
-        Yields
-        ------
-        out: tuple
-            A tuple of (block, info)
-
-            block: NDArray
-                An array, stored in a non-compressed buffer, with the data block.
-            info: namedtuple
-                Info about the returned data block.  Its structure is:
-
-                    slice: tuple
-                        The coordinates where the data block starts.
-                    shape: tuple
-                        The shape of the actual data block (it can be
-                        smaller than `itershape` at the edges of the array).
-                    size: int
-                        The size, in elements, of the block.
-        """
-        return ReadIter(self, itershape)
-
-    def iter_write(self):
-        """Iterate over non initialized data array.
-
-        Yields
-        ------
-        out: tuple
-            A tuple of (block, info)
-
-            block: bytes
-                The buffer with the data block to be filled.
-            info: namedtuple
-                Info about the data block to be filled.  Its structure is:
-
-                    slice: tuple
-                        The coordinates where the data block starts.
-                    shape: tuple
-                        The shape of the actual data block (it can be
-                        smaller than `NDArray.blockshape` at the edges of the array).
-                    size: int
-                        The size, in elements, of the block.
-        """
-        return WriteIter(self)
 
     def squeeze(self):
         """Remove the 1's in array's shape."""
@@ -162,19 +152,6 @@ class NDArray(ext.Container):
             The buffer containing the data of the whole array.
         """
         return super(NDArray, self).to_buffer(**self.kwargs)
-
-    def to_sframe(self):
-        """Return a serialized frame with data and metadata contents.
-
-        Returns
-        -------
-        bytes or MemoryView
-            A buffer containing a serial version of the whole array.
-            When the array is backed by an in-memory frame, a MemoryView
-            of it is returned.  If not, a bytes object with the frame is
-            returned.
-        """
-        return super(NDArray, self).to_sframe(**self.kwargs)
 
     def copy(self, **kwargs):
         """Copy into a new array.
@@ -191,80 +168,3 @@ class NDArray(ext.Container):
         """
         arr = NDArray(**kwargs)
         return ext.copy(arr, self, **kwargs)
-
-    def has_metalayer(self, name):
-        """Whether `name` is an existing metalayer or not.
-
-        Parameters
-        ----------
-        name: str
-            The name of the metalayer to check.
-
-        Returns
-        -------
-        bool
-            `True` if metalayer exists in `self`; else `False`.
-        """
-        return super(NDArray, self).has_metalayer(name)
-
-    def get_metalayer(self, name):
-        """Return the `name` metalayer.
-
-        Parameters
-        ----------
-        name: str
-            The name of the metalayer to return.
-
-        Returns
-        -------
-        bytes
-            The buffer containing the metalayer info (typically in msgpack
-            format).
-        """
-        if self.has_metalayer(name) is False:
-            return None
-        content = super(NDArray, self).get_metalayer(name)
-
-        return msgpack.unpackb(content, raw=True)
-
-    def update_metalayer(self, name, content):
-        """Update the `name` metalayer with `content`.
-
-        Parameters
-        ----------
-        name: str
-            The name of the metalayer to update.
-        content: bytes
-            The buffer containing the new content for the metalayer.
-            Note that the *length* of the metalayer cannot not change,
-            else an exception will be raised.
-
-        """
-        content = msgpack.packb(content)
-        return super(NDArray, self).update_metalayer(name, content)
-
-    def get_usermeta(self):
-        """Return the `usermeta` section.
-
-        Returns
-        -------
-        bytes
-            The buffer for the usermeta section (typically in msgpack format,
-            but not necessarily).
-        """
-        content = super(NDArray, self).get_usermeta()
-        return msgpack.unpackb(content, raw=True)
-
-    def update_usermeta(self, content):
-        """Update the `usermeta` section.
-
-        Parameters
-        ----------
-        content: bytes
-            The buffer containing the new `usermeta` data that replaces the
-            previous one.  Note that the length of the new content can be
-            different from the existing one.
-
-        """
-        content = msgpack.packb(content)
-        return super(NDArray, self).update_usermeta(content)
