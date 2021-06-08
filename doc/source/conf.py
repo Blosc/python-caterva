@@ -84,7 +84,6 @@ myst_url_schemes = ("http", "https", "mailto")
 myst_update_mathjax = False
 
 jupyter_execute_notebooks = "cache"
-jupyter_cache = "source/getting_started/.jupyter_cache"
 
 panels_add_bootstrap_css = False
 
