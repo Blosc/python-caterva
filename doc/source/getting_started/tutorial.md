@@ -117,7 +117,7 @@ meta = {
 ```
 
 ```{code-cell} ipython3
-c = cat.zeros((1000, 1000), 5, chunks=(100, 100), blocks=(50, 50), metalayers=meta)
+c = cat.zeros((1000, 1000), 5, chunks=(100, 100), blocks=(50, 50), meta=meta)
 ```
 
 ```{code-cell} ipython3
@@ -142,7 +142,7 @@ for key in c.meta:
     print(f"{key} -> {unpackb(c.meta[key])}")
 ```
 
-# Example of use
+## Example of use
 
 ```{code-cell} ipython3
 from PIL import Image
@@ -157,7 +157,7 @@ im
 ```{code-cell} ipython3
 meta = {"dtype": b"|u1"}
 
-c = cat.asarray(np.array(im), chunks=(50, 50, 4), blocks=(10, 10, 4), metalayers=meta)
+c = cat.asarray(np.array(im), chunks=(50, 50, 4), blocks=(10, 10, 4), meta=meta)
 
 c.info
 ```
