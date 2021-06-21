@@ -1,7 +1,8 @@
-Cat4py Documentation
-=====================
+python-caterva Documentation
+============================
 
-Cat4py is a Python wrapper of `Caterva <https://www.caterva.rtfd.io>`_, an open source C library specially designed
+python-caterva is a Python wrapper of `Caterva <https://www.caterva.rtfd.io>`_, an open source C library specially
+designed
 to deal with large multidimensional, chunked, compressed datasets.
 
 .. panels::
@@ -13,8 +14,8 @@ to deal with large multidimensional, chunked, compressed datasets.
     Getting Started
     ^^^^^^^^^^^^^^^
 
-    New to *cat4py*? Check out the getting started guides. They contain an
-    introduction to *cat4py'* main concepts and an installation tutorial.
+    New to *caterva*? Check out the getting started guides. They contain an
+    introduction to *caterva'* main concepts and an installation tutorial.
 
     +++
 
@@ -28,7 +29,7 @@ to deal with large multidimensional, chunked, compressed datasets.
     API Reference
     ^^^^^^^^^^^^^
 
-    The reference guide contains a detailed description of the cat4py API.
+    The reference guide contains a detailed description of the caterva API.
     The reference describes how the functions work and which parameters can
     be used.
 
@@ -47,7 +48,7 @@ to deal with large multidimensional, chunked, compressed datasets.
 
     Saw a typo in the documentation? Want to improve
     existing functionalities? The contributing guidelines will guide
-    you through the process of improving cat4py.
+    you through the process of improving caterva.
 
     +++
 

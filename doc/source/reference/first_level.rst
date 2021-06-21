@@ -1,14 +1,14 @@
 Global variables
 ================
 
-.. py:attribute:: cat4py.__version__
+.. py:attribute:: caterva.__version__
 
-    The version of the cat4py package.
+    The version of the caterva package.
 
-.. autoclass:: cat4py.Codec
+.. autoclass:: caterva.Codec
    :members:
    :undoc-members:
 
-.. autoclass:: cat4py.Filter
+.. autoclass:: caterva.Filter
    :members:
    :undoc-members:

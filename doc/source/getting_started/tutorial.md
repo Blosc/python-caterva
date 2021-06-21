@@ -15,7 +15,7 @@ kernelspec:
 # Tutorial
 
 ```{code-cell} ipython3
-import cat4py as cat
+import caterva as cat
 
 cat.__version__
 ```
