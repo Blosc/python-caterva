@@ -1,7 +1,7 @@
 Constructors
 ============
 
-.. currentmodule:: cat4py
+.. currentmodule:: caterva
 
 Basics
 ------

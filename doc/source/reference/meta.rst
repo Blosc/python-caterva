@@ -1,12 +1,12 @@
 Metalayers
 ==========
 
-.. currentmodule:: cat4py.meta
+.. currentmodule:: caterva.meta
 
 .. autoclass:: Meta
    :exclude-members: get, keys, items, values
 
-.. currentmodule:: cat4py.meta.Meta
+.. currentmodule:: caterva.meta.Meta
 
 Methods
 -------

@@ -3,7 +3,7 @@ NDArray
 
 The multidimensional data array class.
 
-.. currentmodule:: cat4py.NDArray
+.. currentmodule:: caterva.NDArray
 
 Attributes
 ----------
