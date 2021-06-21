@@ -8,6 +8,7 @@ set(CATERVA_BUILD_EXAMPLES OFF CACHE BOOL "Build Caterva examples")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_subdirectory(caterva)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/caterva/caterva")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/caterva/contribs/c-blosc2/include")
 
 
 add_cython_target(caterva_ext caterva_ext.pyx)
