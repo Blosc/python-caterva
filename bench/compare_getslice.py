@@ -6,7 +6,7 @@
 # Usage: pass any argument for testing the persistent backends.
 # Else, only in-memory containers will be tested.
 
-import cat4py as cat
+import caterva as cat
 import zarr
 import numcodecs
 import tables

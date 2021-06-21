@@ -17,12 +17,12 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information -----------------------------------------------------
 
-project = 'cat4py'
+project = 'caterva'
 copyright = '2021, The Blosc Developers'
 author = 'The Blosc Developers'
 
-import cat4py
-release = cat4py.__version__
+import caterva
+release = caterva.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -54,7 +54,7 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = 'pydata_sphinx_theme'
-html_logo = "_static/cat4py.svg"
+html_logo = "_static/caterva.svg"
 
 pygments_style = 'sphinx'
 

@@ -1,5 +1,5 @@
 import numpy as np
-import cat4py as cat
+import caterva as cat
 from time import time
 import os
 

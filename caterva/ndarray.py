@@ -121,7 +121,7 @@ class NDArray(ext.NDArray):
         Other Parameters
         ----------------
         kwargs: dict, optional
-            Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
+            Keyword arguments that are supported by the :py:meth:`caterva.empty` constructor.
 
         Returns
         -------
@@ -155,7 +155,7 @@ class NDArray(ext.NDArray):
         Other Parameters
         ----------------
         kwargs: dict, optional
-            Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
+            Keyword arguments that are supported by the :py:meth:`caterva.empty` constructor.
 
         Returns
         -------

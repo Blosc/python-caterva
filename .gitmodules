@@ -1,6 +1,3 @@
-[submodule "c-blosc2"]
-	path = cat4py/c-blosc2
-	url = https://github.com/Blosc/c-blosc2
-[submodule "Caterva"]
-	path = cat4py/Caterva
-	url = https://github.com/Blosc/Caterva
+[submodule "caterva/caterva"]
+	path = caterva/caterva
+	url = https://github.com/Blosc/caterva.git
