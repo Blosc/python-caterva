@@ -1,5 +1,5 @@
 from . import caterva_ext as ext
-from collections import Mapping
+from collections.abc import Mapping
 
 
 class Meta(Mapping):

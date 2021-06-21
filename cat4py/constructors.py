@@ -29,7 +29,7 @@ def empty(shape, itemsize, **kwargs):
             memframe: bool
                 If True, the array is backed by a frame in-memory.  Else, by a super-chunk.
                 (Default: `False`)
-            metalayers: dict or None
+            meta: dict or None
                 A dictionary with different metalayers.  One entry per metalayer:
 
                     key: bytes or str

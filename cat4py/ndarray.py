@@ -29,7 +29,7 @@ def get_caterva_start_stop(ndim, key, shape):
 
 
 def parse_kwargs(**kwargs):
-    if "urlpath" in kwargs:
+    if "urlpath" in kwargs and kwargs["urlpath"]:
         if os.path.exists(kwargs["urlpath"]):
             raise FileExistsError(f"Can not create the file {kwargs['urlpath']}."
                                   f"It already exists!")
@@ -38,12 +38,8 @@ def parse_kwargs(**kwargs):
 class NDArray(ext.NDArray):
     def __init__(self, **kwargs):
         parse_kwargs(**kwargs)
-        if type(self) == NDArray:
-            self.pre_init(**kwargs)
-        super(NDArray, self).__init__(**self.kwargs)
-
-    def pre_init(self, **kwargs):
         self.kwargs = kwargs
+        super(NDArray, self).__init__(**self.kwargs)
 
     @classmethod
     def cast(cls, cont):
