@@ -3,6 +3,9 @@ Constructors
 
 .. currentmodule:: cat4py
 
+Basics
+------
+
 .. autosummary::
    :toctree: api/
 
@@ -11,3 +14,12 @@ Constructors
     from_buffer
     open
     asarray
+
+
+Utils
+-----
+
+.. autosummary::
+   :toctree: api/utils
+
+    remove

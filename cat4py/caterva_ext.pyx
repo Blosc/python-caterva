@@ -51,6 +51,10 @@ cdef extern from "blosc2.h":
         BLOSC2_MAX_METALAYERS
         BLOSC2_MAX_VLMETALAYERS
         BLOSC_MAX_OVERHEAD
+        BLOSC_ALWAYS_SPLIT = 1,
+        BLOSC_NEVER_SPLIT = 2,
+        BLOSC_AUTO_SPLIT = 3,
+        BLOSC_FORWARD_COMPAT_SPLIT = 4,
 
     ctypedef int *blosc2_prefilter_fn
     ctypedef struct blosc2_prefilter_params
@@ -105,10 +109,12 @@ cdef extern from "caterva.h":
     ctypedef struct caterva_config_t:
         void *(*alloc)(size_t)
         void (*free)(void *)
-        int compcodec
-        int complevel
+        uint8_t compcodec
+        uint8_t compmeta
+        uint8_t complevel
+        int32_t splitmode
         int usedict
-        int nthreads
+        int16_t nthreads
         uint8_t filters[BLOSC2_MAX_FILTERS]
         uint8_t filtersmeta[BLOSC2_MAX_FILTERS]
         blosc2_prefilter_fn prefilter
@@ -226,7 +232,9 @@ config_dflts = {
 cdef class Context:
     cdef caterva_ctx_t *context_
     cdef uint8_t compcode
+    cdef uint8_t compmeta
     cdef uint8_t complevel
+    cdef int32_t splitmode
     cdef int usedict
     cdef int16_t nthreads
     cdef int32_t blocksize
@@ -240,7 +248,9 @@ cdef class Context:
         config.free = free
         config.alloc = malloc
         config.compcodec = kwargs.get('codec', config_dflts['codec']).value
+        config.compmeta = 0
         config.complevel = kwargs.get('clevel', config_dflts['clevel'])
+        config.splitmode = BLOSC_AUTO_SPLIT
         config.usedict =  kwargs.get('usedict', config_dflts['usedict'])
         config.nthreads = kwargs.get('nthreads', config_dflts['nthreads'])
         config.prefilter = NULL
@@ -279,10 +289,7 @@ cdef create_caterva_storage(caterva_storage_t *storage, kwargs):
     chunks = kwargs.get('chunks', None)
     blocks = kwargs.get('blocks', None)
     urlpath = kwargs.get('urlpath', None)
-    if (urlpath is not None):
-        sequencial = True
-    else:
-        sequencial = kwargs.get('sequencial', False)
+    sequential = kwargs.get('sequential', False)
     meta = kwargs.get('meta', None)
 
     if chunks is not None and blocks is not None:
@@ -296,7 +303,7 @@ cdef create_caterva_storage(caterva_storage_t *storage, kwargs):
             storage.properties.blosc.urlpath = urlpath
         else:
             storage.properties.blosc.urlpath = NULL
-        storage.properties.blosc.sequencial = sequencial
+        storage.properties.blosc.sequencial = sequential
         for i in range(len(chunks)):
             storage.properties.blosc.chunkshape[i] = chunks[i]
             storage.properties.blosc.blockshape[i] = blocks[i]
@@ -575,7 +582,7 @@ def from_file(NDArray arr, urlpath, **kwargs):
     ctx = Context(**kwargs)
 
     urlpath = urlpath.encode("utf-8") if isinstance(urlpath, str) else urlpath
-    if not os.path.isfile(urlpath):
+    if not os.path.exists(urlpath):
         raise FileNotFoundError
 
     cdef caterva_array_t *array_

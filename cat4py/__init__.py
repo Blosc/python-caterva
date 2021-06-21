@@ -16,4 +16,4 @@ from .constructors import (empty, zeros, full, from_buffer, open, asarray, copy)
 
 from .ndarray import NDArray
 
-from .utils import Codec, Filter
+from .utils import Codec, Filter, remove
