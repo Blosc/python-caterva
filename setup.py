@@ -49,7 +49,7 @@ if __name__ == '__main__':
     # Blosc version
     VERSION = open('VERSION').read().strip()
     # Create the version.py file
-    open('cat4py/version.py', 'w').write('__version__ = "%s"\n' % VERSION)
+    open('caterva/version.py', 'w').write('__version__ = "%s"\n' % VERSION)
 
     def cmake_bool(cond):
         return 'ON' if cond else 'OFF'
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     Programming Language :: Python :: 3.8
     """)
 
-    setup(name = "cat4py",
+    setup(name = "caterva",
         version = VERSION,
         description='Caterva for Python (multidimensional compressed data containers).',
         long_description = long_description,
@@ -101,8 +101,8 @@ if __name__ == '__main__':
             'pytest>=3.4.2'
         ],
         tests_require=['numpy', 'psutil'],
-        packages=['cat4py'],
-        package_dir={'cat4py': 'cat4py'},
+        packages=['caterva'],
+        package_dir={'caterva': 'caterva'},
         )
 elif __name__ == '__mp_main__':
     # This occurs from `cpuinfo 4.0.0` using multiprocessing to interrogate the

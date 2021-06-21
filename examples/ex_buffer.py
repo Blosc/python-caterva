@@ -1,4 +1,4 @@
-import cat4py as cat
+import caterva as cat
 import numpy as np
 
 np.random.seed(123)

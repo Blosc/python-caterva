@@ -11,4 +11,4 @@ repos:
     rev: ''  # pick a git hash / tag to point to
     hooks:
     -   id: flake8
-        files: cat4py/*
+        files: caterva/*

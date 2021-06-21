@@ -76,7 +76,7 @@ def zeros(shape, itemsize, **kwargs):
     Other Parameters
     ----------------
     kwargs: dict, optional
-        Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
+        Keyword arguments that are supported by the :py:meth:`caterva.empty` constructor.
 
     Returns
     -------
@@ -102,7 +102,7 @@ def full(shape, fill_value, **kwargs):
     Other Parameters
     ----------------
     kwargs: dict, optional
-        Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
+        Keyword arguments that are supported by the :py:meth:`caterva.empty` constructor.
 
     Returns
     -------
@@ -130,7 +130,7 @@ def from_buffer(buffer, shape, itemsize, **kwargs):
     Other Parameters
     ----------------
     kwargs: dict, optional
-        Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
+        Keyword arguments that are supported by the :py:meth:`caterva.empty` constructor.
 
     Returns
     -------
@@ -155,7 +155,7 @@ def copy(array, **kwargs):
     Other Parameters
     ----------------
     kwargs: dict, optional
-        Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
+        Keyword arguments that are supported by the :py:meth:`caterva.empty` constructor.
 
     Returns
     -------
@@ -203,7 +203,7 @@ def asarray(ndarray, **kwargs):
     Other Parameters
     ----------------
     kwargs: dict, optional
-        Keyword arguments that are supported by the :py:meth:`cat4py.empty` constructor.
+        Keyword arguments that are supported by the :py:meth:`caterva.empty` constructor.
 
     Returns
     -------

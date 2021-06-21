@@ -3,7 +3,7 @@
 # * Opening an on-disk frame without copying
 # * Loading the frame in-memory
 
-import cat4py as cat
+import caterva as cat
 import numpy as np
 import os
 from time import time

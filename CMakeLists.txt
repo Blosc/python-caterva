@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.11.0)
-project(cat4py)
+project(caterva)
 find_package(PythonExtensions REQUIRED)
 find_package(Cython REQUIRED)
 find_package(NumPy REQUIRED)
 
-add_subdirectory(cat4py)
+add_subdirectory(caterva)

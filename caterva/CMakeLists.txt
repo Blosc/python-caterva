@@ -6,8 +6,8 @@ set(SHARED_LIB ON CACHE BOOL "Build a shared library version of the blosc
 set(CATERVA_BUILD_TESTS OFF CACHE BOOL "Build Caterva tests")
 set(CATERVA_BUILD_EXAMPLES OFF CACHE BOOL "Build Caterva examples")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-add_subdirectory(Caterva)
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/Caterva/caterva")
+add_subdirectory(caterva)
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/caterva/caterva")
 
 
 add_cython_target(caterva_ext caterva_ext.pyx)
@@ -19,7 +19,7 @@ python_extension_module(caterva_ext)
 
 add_custom_command(
     TARGET caterva_ext POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:caterva_ext> ${CMAKE_SOURCE_DIR}/cat4py
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:caterva_ext> ${CMAKE_SOURCE_DIR}/caterva
 )
 
-install(TARGETS caterva_ext LIBRARY DESTINATION cat4py)
+install(TARGETS caterva_ext LIBRARY DESTINATION caterva)

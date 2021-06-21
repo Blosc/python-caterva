@@ -6,7 +6,7 @@
 # * Pickle v4
 # * Pickle v5 (in the future)
 
-import cat4py as cat
+import caterva as cat
 import numpy as np
 from time import time
 import pyarrow as pa
