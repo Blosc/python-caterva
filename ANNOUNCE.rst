@@ -1,22 +1,21 @@
-# Announcing cat4py 0.4.2
+# Announcing python-caterva 0.5.0
 
 
 ## What is new?
 
-In this release the package is compiled using the scikit-build tool for a better integration
-with the C dependencies.
+In this release the package has been completely rebuilt in order to improve the slicing capabilities.
+Now, users can update the values of the arrays as many times as they want.
 
-A complete API renaming has been introduced to facilitate the use of cat4py by the community.
-
-Finally, the buffer protocol and the array interface have been implemented.
+In addition, the buffer and array protocols has been improved and the data type support has been removed
+to simplify the library.
 
 For more info, you can have a look at the release notes in:
 
-https://github.com/Blosc/cat4py/releases
+https://github.com/Blosc/python-caterva/releases
 
 More docs and examples are available in the documentation site:
 
-https://cat4py.readthedocs.io
+https://python-caterva.readthedocs.io
 
 
 ## What is it?
@@ -26,17 +25,17 @@ multidimensional, chunked, compressed datasets. Data can be stored either
 in-memory or on-disk, but the API to handle both versions is the same.
 Compression is handled transparently for the user by adopting the Blosc2 library.
 
-cat4py is a pythonic wrapper for the Caterva library.
+python-caterva is a pythonic wrapper for the Caterva library.
 
 
 ## Sources repository
 
 The sources and documentation are managed through github services at:
 
-http://github.com/Blosc/cat4py
+http://github.com/Blosc/python-caterva
 
 Caterva is distributed using the BSD license, see
-[LICENSE](https://github.com/Blosc/cat4py/blob/master/LICENSE) for details.
+[LICENSE](https://github.com/Blosc/python-caterva/blob/master/LICENSE) for details.
 
 
 ## Mailing list

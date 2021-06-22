@@ -1,10 +1,14 @@
 Release notes
 =============
 
-Changes from 0.4.2 to 0.4.3
+Changes from 0.4.2 to 0.5.0
 ---------------------------
 
-XXX version-specific blurb XXX
+* Big c-core refactoring improving the slicing performance.
+* Implement `__setitem__` method for arrays to allow to update the values of the arrays.
+* Use Blosc special-constructors to initialize the arrays.
+* Improve the buffer and array protocols.
+* Remove the data type support in order to simplify the library.
 
 Changes from 0.4.1 to 0.4.2
 ---------------------------

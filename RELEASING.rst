@@ -1,4 +1,4 @@
-cat4py release procedure
+python-caterva release procedure
 ========================
 
 Preliminaries
@@ -19,7 +19,7 @@ Preliminaries
     git commit -a -m "Getting ready for release X.Y.Z"
     git push
 
-* Check that the documentation is correctly created in https://cat4py.readthedocs.io.
+* Check that the documentation is correctly created in https://python-caterva.readthedocs.io.
 
 
 Tagging
@@ -34,7 +34,7 @@ Tagging
     git push
     git push --tags
 
-After the tag would be up, update the release notes in: https://github.com/Blosc/cat4py/releases
+After the tag would be up, update the release notes in: https://github.com/Blosc/python-caterva/releases
 
 Packaging
 ---------
@@ -43,8 +43,8 @@ Packaging
   re-clone and re-build::
 
     cd /tmp
-    git clone --recursive git@github.com:Blosc/cat4py.git
-    cd cat4py
+    git clone --recursive git@github.com:Blosc/python-caterva.git
+    cd python-caterva
     python setup.py build_ext
 
 * Check that all Cython generated ``*.c`` files are present.
@@ -67,7 +67,7 @@ Uploading
 
 It takes about 15 minutes for it to be installed using::
 
-    pip install cat4py
+    pip install python-caterva
 
 
 
@@ -83,9 +83,9 @@ Announcing
 Post-release actions
 --------------------
 
-* Change back to the actual cat4py repo::
+* Change back to the actual python-caterva repo::
 
-    cd $HOME/blosc/cat4py
+    cd $HOME/blosc/python-caterva
 
 
 * Create new headers for adding new features in ``RELEASE_NOTES.rst``
