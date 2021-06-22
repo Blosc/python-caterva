@@ -1,6 +1,11 @@
 Release notes
 =============
 
+Changes from 0.5.0 to 0.5.1
+---------------------------
+
+* Update `setup.py` and add `pyproject.toml`.
+
 Changes from 0.4.2 to 0.5.0
 ---------------------------
 

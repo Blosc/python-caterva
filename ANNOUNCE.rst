@@ -1,13 +1,9 @@
-# Announcing python-caterva 0.5.0
+# Announcing python-caterva 0.5.1
 
 
 ## What is new?
 
-In this release the package has been completely rebuilt in order to improve the slicing capabilities.
-Now, users can update the values of the arrays as many times as they want.
-
-In addition, the buffer and array protocols has been improved and the data type support has been removed
-to simplify the library.
+In this release the `setup.py` has been updated and a `pyproject.toml` has been added.
 
 For more info, you can have a look at the release notes in:
 
