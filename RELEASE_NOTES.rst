@@ -1,6 +1,8 @@
 Release notes
 =============
 
+XXX version-specific blurb XXX
+
 Changes from 0.5.0 to 0.5.1
 ---------------------------
 

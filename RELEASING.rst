@@ -67,7 +67,7 @@ Uploading
 
 It takes about 15 minutes for it to be installed using::
 
-    pip install python-caterva
+    pip install caterva
 
 
 
