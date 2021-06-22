@@ -4,6 +4,7 @@ include VERSION
 include *.txt *.rst *.md
 exclude RELEASING.rst
 include setup.py
+include *.toml
 
 recursive-include caterva *.py *.pyx *.pxd *.c *.h *.txt *in *.cmake *.rc
 recursive-include tests *.py
