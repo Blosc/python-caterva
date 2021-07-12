@@ -9,11 +9,9 @@
 # LICENSE file in the root directory of this source tree)
 #######################################################################
 
-import msgpack
 from libc.stdlib cimport malloc, free
 from libcpp cimport bool
 from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer
-from collections import namedtuple
 from libc.stdint cimport uintptr_t
 from libc.string cimport strdup
 from cpython cimport (
