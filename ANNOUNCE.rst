@@ -1,9 +1,9 @@
-# Announcing python-caterva 0.5.1
+# Announcing python-caterva 0.5.2
 
 
 ## What is new?
 
-In this release the `setup.py` has been updated and a `pyproject.toml` has been added.
+In this release a dependencies installation issue has been fixed.
 
 For more info, you can have a look at the release notes in:
 
