@@ -1,7 +1,7 @@
 Release notes
 =============
 
-Changes from 0.5.1 to 0.5.2
+Changes from 0.5.1 to 0.5.3
 ---------------------------
 
 * Fix dependencies installation issue.

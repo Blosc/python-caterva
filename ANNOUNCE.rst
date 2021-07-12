@@ -1,4 +1,4 @@
-# Announcing python-caterva 0.5.2
+# Announcing python-caterva 0.5.3
 
 
 ## What is new?
