@@ -76,4 +76,5 @@ setup(
     platforms=['any'],
     packages=['caterva'],
     package_dir={'caterva': 'caterva'},
+    install_requires=['ndindex'],
 )
