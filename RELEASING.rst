@@ -36,40 +36,7 @@ Tagging
 
 After the tag would be up, update the release notes in: https://github.com/Blosc/python-caterva/releases
 
-Packaging
----------
-
-* Make sure that you are in a clean directory.  The best way is to
-  re-clone and re-build::
-
-    cd /tmp
-    git clone --recursive git@github.com:Blosc/python-caterva.git
-    cd python-caterva
-    python setup.py build_ext
-
-* Check that all Cython generated ``*.c`` files are present.
-
-* Make the tarball with the command::
-
-    python setup.py sdist
-    pip install dist/*
-
-Do a quick check that the tarball is sane.
-
-
-Uploading
----------
-
-* Register and upload it also in the PyPi repository::
-
-    twine upload dist/*
-
-
-It takes about 15 minutes for it to be installed using::
-
-    pip install caterva
-
-
+* Check that the wheels are upload correctly to Pypi.
 
 Announcing
 ----------
@@ -82,11 +49,6 @@ Announcing
 
 Post-release actions
 --------------------
-
-* Change back to the actual python-caterva repo::
-
-    cd $HOME/blosc/python-caterva
-
 
 * Create new headers for adding new features in ``RELEASE_NOTES.rst``
   add this place-holder:
