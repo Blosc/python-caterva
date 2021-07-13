@@ -1,6 +1,5 @@
 [![Python package](https://github.com/Blosc/python-caterva/actions/workflows/python-package.yml/badge.svg?branch=master)](https://github.com/Blosc/python-caterva/actions/workflows/python-package.yml)
 [![Documentation Status](https://readthedocs.org/projects/python-caterva/badge/?version=latest)](https://python-caterva.readthedocs.io/en/latest/?badge=latest)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Blosc/python-caterva/master?filepath=notebooks%2Fslicing-performance.ipynb)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
 
 # python-caterva
@@ -18,7 +17,9 @@ git clone --recurse-submodules https://github.com/Blosc/python-caterva
 ### Install requirements
 
 ```sh
-pip install -r requirements.txt
+python -m pip install -r requirements-build.txt
+python -m pip install -r requirements.txt
+python -m pip install -r requirements-tests.txt
 ```
 
 ### Compile
@@ -33,16 +34,8 @@ python setup.py build_ext --build-type=RelWithDebInfo
 PYTHONPATH=. pytest
 ```
 
-### Run bench
-
-```sh
-PYTHONPATH=. python bench/compare_getslice.py
-```
-
 ### Installing
 
 ```sh
-CFLAGS='' pip install caterva
+python -m pip install .
 ```
-
-We don't produce wheels yet, so you will currently need a C compiler in order to install cat4py.  The reason why you need the `CFLAGS=''` above is to prevent Anaconda Python injecting their own paths for dependencies (LZ4, Zstd...).

@@ -1,0 +1,6 @@
+setuptools
+wheel
+scikit-build
+cmake
+ninja
+cython
