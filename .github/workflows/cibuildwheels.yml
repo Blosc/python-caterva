@@ -111,4 +111,4 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@master
         with:
           user: __token__
-          password: ${{ secrets.blosc_pypi_secret }}
+          password: ${{ secrets.caterva_pypi_secret }}
