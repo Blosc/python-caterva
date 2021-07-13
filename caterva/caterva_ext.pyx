@@ -438,7 +438,7 @@ cdef class NDArray:
             for i in range(self.ndim - 2, -1, -1):
                 self.bp_strides[i] = self.bp_strides[i + 1] * self.shape[i + 1]
 
-        format = f"{self.itemsize}s".encode("utf-8")
+        format = f"{self.itemsize}s".encode()
         buffer.buf = <char *> &(self.array.buf[0])
         buffer.format = format
         buffer.internal = NULL  # see References

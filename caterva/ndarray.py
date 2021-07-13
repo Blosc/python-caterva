@@ -82,7 +82,7 @@ class NDArray(ext.NDArray):
         interface = {
             "data": self,
             "shape": self.shape,
-            "typestr": f"|S{self.itemsize}",
+            "typestr": f"|S{self.itemsize}".encode(),
             "version": 3
         }
         return interface
