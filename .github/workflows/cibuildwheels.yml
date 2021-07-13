@@ -1,22 +1,29 @@
-name: Build and upload to PyPI
-
-# Build on every branch push, tag push, and pull request change:
-on: [pull_request]
-# Alternatively, to publish when a (published) GitHub Release is created, use the following:
-# on:
-#   push:
-#   pull_request:
-#   release:
-#     types:
-#       - published
+name: Python wheels
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - master
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.os }} (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
+    # Only build wheels when tagging (typically a release)
+    if: startsWith(github.event.ref, 'refs/tags')
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
+        arch: [x86, amd64]
+        exclude:
+          - os: ubuntu-latest
+            arch: x86
+          - os: macos-latest
+            arch: x86
 
     steps:
       - name: Checkout repo
@@ -24,78 +31,113 @@ jobs:
         with:
           submodules: 'recursive'
 
-      - name: Install Python
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.7'
+          python-version: '3.8'
 
       - name: Install Ninja
         uses: seanmiddleditch/gha-setup-ninja@master
 
       - name: Install MSVC x86
+        if: ${{ runner.os == 'Windows' && matrix.arch == 'x86'}}
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: x86
 
       - name: Build wheels (Windows x86)
-        if: runner.os == 'Windows'
+        if: ${{ runner.os == 'Windows' && matrix.arch == 'x86'}}
         run: |
+          python -m pip install --upgrade pip
           python -m pip install cibuildwheel
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD: 'cp37-win32 cp38-win32 cp39-win32'
-          CIBW_BEFORE_BUILD: pip install -r requirements.txt
+          CIBW_BEFORE_BUILD: python -m pip install -r requirements.txt
+          CIBW_BEFORE_TEST: python -m pip install -r requirements-tests.txt
+          CIBW_TEST_COMMAND: python -m pytest {project}/tests
+          CIBW_BUILD_VERBOSITY: 1
 
       - name: Install MSVC amd64
+        if: ${{ runner.os == 'Windows' && matrix.arch == 'amd64'}}
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
 
       - name: Build wheels (Windows / amd64)
-        if: runner.os == 'Windows'
+        if: ${{ runner.os == 'Windows' && matrix.arch == 'amd64'}}
         run: |
+          python -m pip install --upgrade pip
           python -m pip install cibuildwheel
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD: 'cp37-win_amd64 cp38-win_amd64 cp39-win_amd64'
-          CIBW_BEFORE_BUILD: pip install -r requirements.txt
+          CIBW_BEFORE_BUILD: python -m pip install -r requirements.txt
+          CIBW_BEFORE_TEST: python -m pip install -r requirements-tests.txt
+          CIBW_TEST_COMMAND: python -m pytest {project}/tests
+          CIBW_BUILD_VERBOSITY: 1
 
       - name: Build wheels (Linux / macOS)
         if: runner.os != 'Windows'
         run: |
+          python -m pip install --upgrade pip
           python -m pip install cibuildwheel
           python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD: 'cp37-* cp38-* cp39-*'
-          CIBW_SKIP: '*-manylinux_i686'
+          CIBW_SKIP: '*-manylinux*_i686'
           CIBW_BEFORE_BUILD: python -m pip install -r requirements.txt
-          CIBW_BEFORE_TEST: python -m pip install numpy pytest
+          CIBW_BEFORE_TEST: python -m pip install -r requirements-tests.txt
           CIBW_TEST_COMMAND: python -m pytest {project}/tests
+          CIBW_BUILD_VERBOSITY: 1
 
-      - uses: actions/upload-artifact@v2
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
 
+
   build_sdist:
-    name: Build source distribution
+    name: Build sdist
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.7', '3.8', '3.9' ]
+
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: 'recursive'
 
       - uses: actions/setup-python@v2
-        name: Install Python
+        name: Setup Python ${{ matrix.python-version }}
         with:
-          python-version: '3.7'
+          python-version: ${{ matrix.python-version }}
 
-      - name: Install requirements
+      - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-
+          python -m pip install -r requirements-tests.txt
       - name: Build sdist
-        run: python setup.py sdist
-
-      - uses: actions/upload-artifact@v2
+        run: |
+          python setup.py sdist
+      - name: Upload sdist package
+        uses: actions/upload-artifact@v2
         with:
           path: dist/*.tar.gz
+
+  upload_pypi:
+    needs: [ build_wheels, build_sdist ]  # last but not least
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.ref, 'refs/tags')
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.blosc_pypi_secret }}

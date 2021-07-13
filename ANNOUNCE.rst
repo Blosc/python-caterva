@@ -1,9 +1,9 @@
-# Announcing python-caterva 0.5.3
+# Announcing python-caterva 0.5.4
 
 
 ## What is new?
 
-In this release a dependencies installation issue has been fixed.
+In this release Caterva submodule has been updated to 0.5.0 version.
 
 For more info, you can have a look at the release notes in:
 

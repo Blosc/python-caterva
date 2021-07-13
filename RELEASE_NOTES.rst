@@ -4,7 +4,7 @@ Release notes
 Changes from 0.5.3 to 0.5.4
 ---------------------------
 
-XXX version-specific blurb XXX
+* Update caterva submodule to 0.5.0
 
 Changes from 0.5.1 to 0.5.3
 ---------------------------
