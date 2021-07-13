@@ -1,5 +1,4 @@
-[![Build Status](https://dev.azure.com/blosc/caterva/_apis/build/status/Blosc.cat4py?branchName=master)](https://dev.azure.com/blosc/caterva/_build/latest?definitionId=1&branchName=master)
-![Coverage](https://img.shields.io/azure-devops/coverage/blosc/caterva/1)
+[![Python package](https://github.com/Blosc/python-caterva/actions/workflows/python-package.yml/badge.svg?branch=master)](https://github.com/Blosc/python-caterva/actions/workflows/python-package.yml)
 [![Documentation Status](https://readthedocs.org/projects/python-caterva/badge/?version=latest)](https://python-caterva.readthedocs.io/en/latest/?badge=latest)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Blosc/python-caterva/master?filepath=notebooks%2Fslicing-performance.ipynb)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
