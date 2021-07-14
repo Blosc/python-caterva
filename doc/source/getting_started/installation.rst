@@ -14,6 +14,6 @@ Source code
 
 .. code-block::
 
-    git clone --recurse-submodules https://github.com/Blosc/caterva
-    cd caterva
+    git clone --recurse-submodules https://github.com/Blosc/python-caterva
+    cd python-caterva
     python -m pip install .
