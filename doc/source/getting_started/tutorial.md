@@ -83,7 +83,8 @@ np.array(c2[0, 20:30]).view("S4")
 
 ```{code-cell} ipython3
 import os
-os.remove("cat_tutorial.caterva")
+if os.path.exists("cat_tutorial.caterva"):
+  cat.remove("cat_tutorial.caterva")
 ```
 
 ## Compression params
