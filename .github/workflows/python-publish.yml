@@ -1,4 +1,4 @@
-name: Python wheels
+name: Python publish
 on:
   push:
     branches:
@@ -111,4 +111,4 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@master
         with:
           user: __token__
-          password: ${{ secrets.caterva_pypi_secret }}
+          password: ${{ secrets.blosc_pypi_secret }}
