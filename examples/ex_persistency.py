@@ -9,6 +9,7 @@ chunks = (32, 32)
 blocks = (8, 8)
 
 urlpath = "ex_persistency.cat"
+
 if os.path.exists(urlpath):
     cat.remove(urlpath)
 
@@ -31,4 +32,5 @@ nparray2 = np.asarray(cat.from_buffer(b.to_buffer(), b.shape, b.itemsize)).view(
 np.testing.assert_almost_equal(nparray, nparray2)
 
 # Remove file on disk
-cat.remove(urlpath)
+if os.path.exists(urlpath):
+    cat.remove(urlpath)
