@@ -1,10 +1,11 @@
 Release notes
 =============
 
-Changes from 0.5.3 to 0.5.4
+Changes from 0.5.3 to 0.6.0
 ---------------------------
 
-* Update caterva submodule to 0.5.0
+* Provide wheels in PyPi.
+* Update caterva submodule to 0.5.0.
 
 Changes from 0.5.1 to 0.5.3
 ---------------------------

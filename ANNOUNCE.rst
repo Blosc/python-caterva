@@ -1,9 +1,10 @@
-# Announcing python-caterva 0.5.4
+# Announcing python-caterva 0.6.0
 
 
 ## What is new?
 
-In this release Caterva submodule has been updated to 0.5.0 version.
+In this release Caterva submodule has been updated to 0.5.0 version. Also, wheels are already being generated
+and can be found in PyPi.
 
 For more info, you can have a look at the release notes in:
 
