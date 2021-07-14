@@ -4,15 +4,21 @@
 
 # python-caterva
 
-Python wrapper for Caterva.  Still on development.
+Python wrapper for [Caterva](https://caterva.readthedocs.io).
 
-## Clone repo and submodules
+## Install
+
+```sh
+pip install caterva
+```
+
+## Development Workflow
+
+### Clone repo and submodules
 
 ```sh
 git clone --recurse-submodules https://github.com/Blosc/python-caterva
 ```
-
-## Development workflow
 
 ### Install requirements
 

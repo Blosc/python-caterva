@@ -1,22 +1,22 @@
-Contributing to cat4py
-======================
+Contributing to python-caterva
+==============================
 
-cat4py is a community maintained project. We want to make contributing to
+python-caterva is a community maintained project. We want to make contributing to
 this project as easy and transparent as possible.
 
 
 Asking for help
 ---------------
 
-If you have a question about how to use cat4py, please post your question on
-StackOverflow using the `“cat4py” tag <https://stackoverflow.com/questions/tagged/cat4py>`_.
+If you have a question about how to use python-caterva, please post your question on
+StackOverflow using the `“caterva” tag <https://stackoverflow.com/questions/tagged/caterva>`_.
 
 
 
 Bug reports
 -----------
 
-We use `GitHub issues <https://github.com/Blosc/cat4py/issues>`_ to track
+We use `GitHub issues <https://github.com/Blosc/python-caterva/issues>`_ to track
 public bugs. Please ensure your description is clear and has sufficient
 instructions to be able to reproduce the issue. The ideal report should
 contain the following:
@@ -31,35 +31,35 @@ found and why it didn’t meet your needs.
 reproduce your issue. You can format the code nicely using markdown::
 
     ```python
-    import cat4py as cat
+    import caterva as cat
 
     ...
     ```
 
 
-4. Determine the environment: Indicates the cat4py version and the operating
+4. Determine the environment: Indicates the python-caterva version and the operating
 system the code is running on.
 
 Contributing to code
 --------------------
 
-We actively welcome your code contributions. By contributing to cat4py, you
+We actively welcome your code contributions. By contributing to python-caterva, you
 agree that your contributions will be licensed under the `<LICENSE>`_ file of
 the project.
 
 Fork the repo
 +++++++++++++
 
-Make a fork of the cat4py repository and clone it::
+Make a fork of the python-caterva repository and clone it::
 
-    git clone https://github.com/<your-github-username>/cat4py
+    git clone https://github.com/<your-github-username>/python-caterva
 
 
 Create your branch
 ++++++++++++++++++++
 
 Before you do any new work or submit a pull request, please open an `issue on
-GitHub <https://github.com/Blosc/cat4py/issues>`_ to report the bug or
+GitHub <https://github.com/Blosc/python-caterva/issues>`_ to report the bug or
 propose the feature you’d like to add.
 
 Then create a new, separate branch for each piece of work you want to do.

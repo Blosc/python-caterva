@@ -71,7 +71,7 @@ setup(
     author_email='blosc@blosc.org',
     maintainer='Blosc Development Team',
     maintainer_email='blosc@blosc.org',
-    url='https://github.com/Blosc/cat4py',
+    url='https://github.com/Blosc/python-caterva',
     license='https://opensource.org/licenses/BSD-3-Clause',
     platforms=['any'],
     packages=['caterva'],
