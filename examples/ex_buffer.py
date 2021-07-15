@@ -1,3 +1,11 @@
+#######################################################################
+# Copyright (C) 2019-present, Blosc Development team <blosc@blosc.org>
+# All rights reserved.
+#
+# This source code is licensed under a BSD-style license (found in the
+# LICENSE file in the root directory of this source tree)
+#######################################################################
+
 import caterva as cat
 import numpy as np
 
@@ -18,6 +26,7 @@ a = cat.from_buffer(buffer, shape, chunks=chunks, blocks=blocks, itemsize=itemsi
 print(a.filters)
 print(a.codec)
 print(a.cratio)
+
 # Convert a caterva array to a buffer
 buffer2 = a.to_buffer()
 assert buffer == buffer2

@@ -1,5 +1,5 @@
 python-caterva release procedure
-========================
+================================
 
 Preliminaries
 -------------

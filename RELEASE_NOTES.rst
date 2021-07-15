@@ -48,7 +48,7 @@ Changes from 0.3.0 to 0.4.0
 
 * Generalize the slicing.
 
-* Make cat4py independent of numpy.
+* Make python-caterva independent of numpy.
 
 
 Changes from 0.2.3 to 0.3.0
@@ -56,7 +56,7 @@ Changes from 0.2.3 to 0.3.0
 
 * Set the development status to alpha.
 
-* Add instructions about installing cat4py from pip.
+* Add instructions about installing python-caterva from pip.
 
 * `getitem` and `setitem` are now special methods in `ext.Container`.
 
@@ -91,7 +91,7 @@ Changes from 0.1.1 to 0.2.1
 ---------------------------
 
 * Docstrings has been added. In addition, the documentation can be found at:
-  https://cat4py.readthedocs.io.
+  https://python-caterva.readthedocs.io/
 
 * Add a `copy` parameter to `from_file()`.
 

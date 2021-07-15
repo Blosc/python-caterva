@@ -1,3 +1,11 @@
+#######################################################################
+# Copyright (C) 2019-present, Blosc Development team <blosc@blosc.org>
+# All rights reserved.
+#
+# This source code is licensed under a BSD-style license (found in the
+# LICENSE file in the root directory of this source tree)
+#######################################################################
+
 from . import caterva_ext as ext
 from collections.abc import Mapping
 
@@ -9,7 +17,7 @@ class Meta(Mapping):
     """
     def get(self, key, default=None):
         """Return the value for `key` if `key` is in the dictionary, else `default`.
-        If `default` is not given, it defaults to ``None``"""
+        If `default` is not given, it defaults to ``None``."""
         return self[key] if key in self else default
 
     def __del__(self):
@@ -19,7 +27,7 @@ class Meta(Mapping):
         self.arr = ndarray
 
     def __contains__(self, key):
-        """Check if the `key` metalayer exists or not"""
+        """Check if the `key` metalayer exists or not."""
         return ext.meta__contains__(self.arr, key)
 
     def __delitem__(self, key):
@@ -57,7 +65,7 @@ class Meta(Mapping):
         return ext.meta__getitem__(self.arr, item)
 
     def keys(self):
-        """Return the metalayers keys"""
+        """Return the metalayers keys."""
         return ext.meta_keys(self.arr)
 
     def values(self):
@@ -67,9 +75,9 @@ class Meta(Mapping):
         raise NotImplementedError("Items can not be accessed")
 
     def __iter__(self):
-        """Iter over the keys of the metalayers"""
+        """Iter over the keys of the metalayers."""
         return iter(self.keys())
 
     def __len__(self):
-        """Return the nnumber of metalayers"""
+        """Return the number of metalayers."""
         return ext.meta__len__(self.arr)

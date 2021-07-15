@@ -1,7 +1,7 @@
 Roadmap
 =======
 
-This document lists the main goals for the upcoming cat4py releases.
+This document lists the main goals for the upcoming python-caterva releases.
 
 
 Features
