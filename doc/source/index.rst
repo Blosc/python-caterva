@@ -1,7 +1,7 @@
 Python-caterva documentation
 ============================
 
-Python-caterva is a Python wrapper of `Caterva <https://www.caterva.rtfd.io>`_, an open source C library specially
+Python-caterva is a Python wrapper of `Caterva <https://caterva.readthedocs.io/en/latest/>`_, an open source C library specially
 designed
 to deal with large multidimensional, chunked, compressed datasets.
 
@@ -15,7 +15,7 @@ to deal with large multidimensional, chunked, compressed datasets.
     ^^^^^^^^^^^^^^^
 
     New to *python-caterva*? Check out the getting started guides. They contain an
-    introduction to *python-caterva'* main concepts and an installation tutorial.
+    introduction to *python-caterva* main concepts and an installation tutorial.
 
     +++
 
