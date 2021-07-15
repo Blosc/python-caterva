@@ -1,15 +1,15 @@
 Contributing to python-caterva
 ==============================
 
-python-caterva is a community maintained project. We want to make
-contributing to this project as easy and transparent as possible.
+python-caterva is a community maintained project. We want to make contributing to
+this project as easy and transparent as possible.
 
 
 Asking for help
 ---------------
 
 If you have a question about how to use python-caterva, please post your question on
-StackOverflow using the `“cat4py” tag <https://stackoverflow.com/questions/tagged/cat4py>`_.
+StackOverflow using the `“caterva” tag <https://stackoverflow.com/questions/tagged/caterva>`_.
 
 
 
@@ -37,15 +37,15 @@ reproduce your issue. You can format the code nicely using markdown::
     ```
 
 
-4. Determine the environment: Indicates the python-caterva version and the
-operating system the code is running on.
+4. Determine the environment: Indicates the python-caterva version and the operating
+system the code is running on.
 
 Contributing to code
 --------------------
 
-We actively welcome your code contributions. By contributing to python-caterva,
-you agree that your contributions will be licensed under the `<LICENSE>`_
-file of the project.
+We actively welcome your code contributions. By contributing to python-caterva, you
+agree that your contributions will be licensed under the `<LICENSE>`_ file of
+the project.
 
 Fork the repo
 +++++++++++++

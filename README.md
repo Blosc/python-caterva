@@ -45,5 +45,3 @@ PYTHONPATH=. python bench/compare_getslice.py
 ```sh
 CFLAGS='' pip install caterva
 ```
-
-We don't produce wheels yet, so you will currently need a C compiler in order to install python-caterva.  The reason why you need the `CFLAGS=''` above is to prevent Anaconda Python injecting their own paths for dependencies (LZ4, Zstd...).
