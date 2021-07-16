@@ -1,5 +1,6 @@
 Global variables
 ================
+There are some fundamental variables that every Caterva array has and it is important to know about.
 
 .. py:attribute:: caterva.__version__
 

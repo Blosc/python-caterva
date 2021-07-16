@@ -13,6 +13,8 @@ kernelspec:
 ---
 
 # Tutorial
+Caterva functions let users to perform different operations with Caterva arrays like setting, copying or slicing them.
+In this section, we are going to see how to create and manipulate a Caterva array in a simple way.
 
 ```{code-cell} ipython3
 import caterva as cat
@@ -21,6 +23,7 @@ cat.__version__
 ```
 
 ## Creating an array
+First, we create an array, with zero being used as the default value for uninitialized portions of the array.
 
 ```{code-cell} ipython3
 c = cat.zeros((10000, 10000), itemsize=4, chunks=(1000, 1000), blocks=(100, 100))
@@ -29,6 +32,7 @@ c
 ```
 
 ## Reading and writing data
+We can access and edit Caterva arrays using NumPy.
 
 ```{code-cell} ipython3
 import struct
@@ -65,6 +69,8 @@ np.array(c[:]).view(dtype)
 ```
 
 ## Persistent data
+When we create a Caterva array, we can save it on a frame file.
+Then, we can access to this array whenever we want and it will still contain all the data as it is stored persistently.
 
 ```{code-cell} ipython3
 c1 = cat.full((1000, 1000), fill_value=b"pepe", chunks=(100, 100), blocks=(50, 50),
@@ -88,6 +94,7 @@ if os.path.exists("cat_tutorial.caterva"):
 ```
 
 ## Compression params
+Here we can see how when we make a copy of a Caterva array we can change its compression parameters in an easy way. 
 
 ```{code-cell} ipython3
 b = np.arange(1000000).tobytes()
@@ -105,6 +112,7 @@ c2.info
 ```
 
 ## Metalayers
+The metalayers of a Caterva array are also really easy to access and edit by users.
 
 ```{code-cell} ipython3
 from msgpack import packb, unpackb
@@ -144,6 +152,7 @@ for key in c.meta:
 ```
 
 ## Example of use
+In this example it is shown how easy is to create a Caterva array from an image and how users can manipulate it using Caterva and Image functions.  
 
 ```{code-cell} ipython3
 from PIL import Image

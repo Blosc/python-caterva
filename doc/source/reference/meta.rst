@@ -1,5 +1,6 @@
 Metalayers
 ==========
+Metalayers are small metadata for informing about the kind of data that is stored on a container. Caterva implements its own metalayer on top of C-Blosc2 for storing multidimensional information.
 
 .. currentmodule:: caterva.meta
 
