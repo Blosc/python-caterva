@@ -69,7 +69,7 @@ np.array(c[:]).view(dtype)
 ```
 
 ## Persistent data
-When we create a Caterva array, we can save it on a frame file.
+When we create a Caterva array, we can we can specify where it will be stored.
 Then, we can access to this array whenever we want and it will still contain all the data as it is stored persistently.
 
 ```{code-cell} ipython3
@@ -112,7 +112,8 @@ c2.info
 ```
 
 ## Metalayers
-The metalayers of a Caterva array are also really easy to access and edit by users.
+Metalayers are small metadata for informing about the properties of data that is stored on a container. 
+The metalayers of a Caterva array are also easy to access and edit by users.
 
 ```{code-cell} ipython3
 from msgpack import packb, unpackb
@@ -151,7 +152,7 @@ for key in c.meta:
     print(f"{key} -> {unpackb(c.meta[key])}")
 ```
 
-## Example of use
+## Small tutorial
 In this example it is shown how easy is to create a Caterva array from an image and how users can manipulate it using Caterva and Image functions.  
 
 ```{code-cell} ipython3
