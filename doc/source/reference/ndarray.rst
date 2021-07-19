@@ -1,7 +1,7 @@
 NDArray
 =======
 
-The multidimensional data array class.
+The multidimensional data array class. This class consists of a set of useful parameters and functions that allow not only to define an array correctly, but also to handle it in a simple way, being able to extract multidimensional slices from it.
 
 .. currentmodule:: caterva.NDArray
 
