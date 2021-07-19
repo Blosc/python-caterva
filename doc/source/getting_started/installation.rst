@@ -1,6 +1,6 @@
 Installation
 ============
-You can install Caterva wheels via PyPI using Pip or clone the GitHub repository to access the source code.
+You can install Caterva wheels via PyPI using Pip or clone the GitHub repository.
 
 Pip
 +++
