@@ -1,6 +1,6 @@
 Global variables
 ================
-There are some fundamental variables that every Caterva array has and it is important to know about.
+There are some global variables in Caterva that can be used anytime and make code more clear during compression and decompression processes.
 
 .. py:attribute:: caterva.__version__
 
