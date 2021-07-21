@@ -62,7 +62,7 @@ exclude_patterns = []
 # a list of builtin themes.
 #
 html_theme = 'pydata_sphinx_theme'
-html_logo = "_static/caterva.svg"
+html_logo = "caterva-logo.png"
 
 pygments_style = 'sphinx'
 
