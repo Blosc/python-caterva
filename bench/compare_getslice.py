@@ -31,7 +31,6 @@ else:
     print("Testing the in-memory backends...")
 
 # Dimensions and type properties for the arrays
-# 'Small' arrays config follows...
 shape = (100, 5000, 250)
 chunkshape = (20, 500, 50)
 blockshape = (10, 100, 25)
@@ -43,7 +42,8 @@ dtype = np.float64
 # Compression properties
 cname = "zstd"
 clevel = 6
-filter = cat.SHUFFLE
+filter = cat.Filter.SHUFFLE
+zfilter = numcodecs.Blosc.SHUFFLE
 nthreads = 1
 blocksize = int(np.prod(blockshape))
 
@@ -64,26 +64,12 @@ if persistent:
 # Create content for populating arrays
 content = np.random.normal(0, 1, int(np.prod(shape))).reshape(shape)
 
-# Create and fill a caterva array using a buffer
-# t0 = time()
-# a = cat.from_buffer(bytes(content), shape, pshape=pshape, itemsize=content.itemsize, filename=fname_cat,
-#                     cname=cname, clevel=clevel, filters=[filter],
-#                     cnthreads=nthreads, dnthreads=nthreads)
-# if persistent:
-#     del a
-# t1 = time()
-# print("Time for filling array (caterva, from_buffer): %.3fs" % (t1 - t0))
-
-# if fname_cat is not None and os.path.exists(fname_cat):
-#     os.remove(fname_cat)
-
 # Create and fill a caterva array using a block iterator
 t0 = time()
 a = cat.empty(shape, content.itemsize, chunkshape=chunkshape, blockshape=blockshape,
-              dtype=str(content.dtype), filename=fname_cat,
+              dtype=str(content.dtype), urlpath=fname_cat,
               cname=cname, clevel=clevel, filters=[filter], nthreads=nthreads)
-for block, info in a.iter_write():
-    block[:] = bytes(content[info.slice])
+a[:] = content
 acratio = a.cratio
 if persistent:
     del a
@@ -92,7 +78,7 @@ print("Time for filling array (caterva, iter): %.3fs ; CRatio: %.1fx" % ((t1 - t
 
 # Create and fill a zarr array
 t0 = time()
-compressor = numcodecs.Blosc(cname=cname, clevel=clevel, shuffle=filter, blocksize=blocksize)
+compressor = numcodecs.Blosc(cname=cname, clevel=clevel, shuffle=zfilter, blocksize=blocksize)
 numcodecs.blosc.set_nthreads(nthreads)
 if persistent:
     z = zarr.open(fname_zarr, mode='w', shape=shape, chunks=chunkshape, dtype=dtype, compressor=compressor)
@@ -121,33 +107,13 @@ if persistent:
 t1 = time()
 print("Time for filling array (hdf5): %.3fs ; CRatio: %.1fx" % ((t1 - t0), h5ratio))
 
-# Check that the contents are the same
-t0 = time()
-if persistent:
-    a = cat.open(fname_cat, copy=False)  # reopen
-    z = zarr.open(fname_zarr, mode='r')
-    h5f = tables.open_file(fname_h5, 'r', filters=filters)
-    h5ca = h5f.root.carray
-for block, info in a.iter_read(chunkshape):
-    block_cat = block
-    block_zarr = z[info.slice]
-    np.testing.assert_array_almost_equal(block_cat, block_zarr)
-    block_h5 = h5ca[info.slice]
-    np.testing.assert_array_almost_equal(block_cat, block_h5)
-if persistent:
-    del a
-    del z
-    h5f.close()
-t1 = time()
-print("Time for checking contents: %.3fs" % (t1 - t0))
-
 # Setup the coordinates for random planes
 planes_idx = np.random.randint(0, shape[1], 100)
 
 # Time getitem with caterva
 t0 = time()
 if persistent:
-    a = cat.open(fname_cat, copy=False)  # reopen
+    a = cat.open(fname_cat)  # reopen
 for i in planes_idx:
     rbytes = a[:, i, :]
 del a
