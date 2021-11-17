@@ -33,7 +33,7 @@ def test_persistency(shape, chunks, blocks, urlpath, sequencial, dtype):
                     urlpath=urlpath, sequencial=sequencial)
     b = cat.open(urlpath)
 
-    bc = b.copy()
+    bc = b[:]
 
     nparray2 = np.asarray(bc).view(dtype)
     np.testing.assert_almost_equal(nparray, nparray2)

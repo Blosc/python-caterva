@@ -37,7 +37,6 @@ clevel = 3
 filter = cat.SHUFFLE
 nthreads = 4
 
-# Create a plain numpy array
 t0 = time()
 arr = np.linspace(0, 10, int(np.prod(shape)), dtype=dtype).reshape(shape)
 # arr = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)

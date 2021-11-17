@@ -8,6 +8,7 @@
 
 from . import caterva_ext as ext
 import ndindex
+import numpy as np
 from .info import InfoReporter
 import os
 from .meta import Meta
@@ -37,7 +38,7 @@ def get_caterva_start_stop(ndim, key, shape):
 
 
 def parse_kwargs(**kwargs):
-    if "urlpath" in kwargs and kwargs["urlpath"]:
+    if kwargs.get("urlpath"):
         if os.path.exists(kwargs["urlpath"]):
             raise FileExistsError(f"Can not create the file {kwargs['urlpath']}."
                                   f"It already exists!")
@@ -57,9 +58,7 @@ class NDArray(ext.NDArray):
 
     @property
     def meta(self):
-        if self.storage == "Blosc":
-            return Meta(self)
-        return None
+        return Meta(self)
 
     @property
     def info(self):
@@ -71,29 +70,17 @@ class NDArray(ext.NDArray):
     @property
     def info_items(self):
         items = []
-        items += [("Type", f"{self.__class__.__name__} ({self.storage})")]
+        items += [("Type", f"{self.__class__.__name__}")]
         items += [("Itemsize", self.itemsize)]
         items += [("Shape", self.shape)]
-
-        if self.storage == "Blosc":
-            items += [("Chunks", self.chunks)]
-            items += [("Blocks", self.blocks)]
-            items += [("Comp. codec", self.codec.name)]
-            items += [("Comp. level", self.clevel)]
-            filters = [f.name for f in self.filters if f.name != "NOFILTER"]
-            items += [("Comp. filters", f"[{', '.join(map(str, filters))}]")]
-            items += [("Comp. ratio", f"{self.cratio:.2f}")]
+        items += [("Chunks", self.chunks)]
+        items += [("Blocks", self.blocks)]
+        items += [("Comp. codec", self.codec.name)]
+        items += [("Comp. level", self.clevel)]
+        filters = [f.name for f in self.filters if f.name != "NOFILTER"]
+        items += [("Comp. filters", f"[{', '.join(map(str, filters))}]")]
+        items += [("Comp. ratio", f"{self.cratio:.2f}")]
         return items
-
-    @property
-    def __array_interface__(self):
-        interface = {
-            "data": self,
-            "shape": self.shape,
-            "typestr": str(f"|S{self.itemsize}").encode("utf-8"),
-            "version": 3
-        }
-        return interface
 
     def __setitem__(self, key, value):
         key, mask = process_key(key, self.shape)
@@ -115,7 +102,12 @@ class NDArray(ext.NDArray):
         out: NDArray
             An array, stored in a non-compressed buffer, with the requested data.
         """
-        return self.slice(key)
+        key, mask = process_key(key, self.shape)
+        start, stop, _ = get_caterva_start_stop(self.ndim, key, self.shape)
+        key = (start, stop)
+        shape = [sp - st for st, sp in zip(start, stop)]
+        arr = np.zeros(shape, dtype=f"S{self.itemsize}")
+        return ext.get_slice_numpy(arr, self, key, mask)
 
     def slice(self, key, **kwargs):
         """ Get a (multidimensional) slice as specified in key. Generalizes :py:meth:`__getitem__`.

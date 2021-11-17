@@ -15,7 +15,6 @@ import numpy as np
                          [
                              ([450], [128], [25], 8),
                              ([20, 134, 13], [3, 13, 5], [3, 10, 5], 4),
-                             ([12, 13, 14, 15, 16], None, None, 8)
                          ])
 def test_buffer(shape, chunks, blocks, itemsize):
     size = int(np.prod(shape))
