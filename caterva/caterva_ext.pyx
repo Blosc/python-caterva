@@ -8,7 +8,7 @@
 # This source code is licensed under a BSD-style license (found in the
 # LICENSE file in the root directory of this source tree)
 #######################################################################
-
+import numpy as np
 from libc.stdlib cimport malloc, free
 from libcpp cimport bool
 from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer
@@ -122,36 +122,18 @@ cdef extern from "caterva.h":
     ctypedef struct caterva_ctx_t:
         caterva_config_t *cfg
 
-    ctypedef enum caterva_storage_backend_t:
-        CATERVA_STORAGE_BLOSC
-        CATERVA_STORAGE_PLAINBUFFER
-
     ctypedef struct caterva_metalayer_t:
         char *name
         uint8_t *sdata
         int32_t size
 
-    ctypedef struct caterva_storage_properties_blosc_t:
+    ctypedef struct caterva_storage_t:
         int32_t chunkshape[CATERVA_MAX_DIM]
         int32_t blockshape[CATERVA_MAX_DIM]
         bool sequencial
         char* urlpath
         caterva_metalayer_t metalayers[CATERVA_MAX_METALAYERS]
         int32_t nmetalayers
-
-    ctypedef struct caterva_storage_properties_plainbuffer_t:
-        char* urlpath
-
-
-    ctypedef union caterva_storage_properties_t:
-        caterva_storage_properties_blosc_t blosc
-        caterva_storage_properties_plainbuffer_t plainbuffer
-
-
-    ctypedef struct caterva_storage_t:
-        caterva_storage_backend_t backend
-        caterva_storage_properties_t properties
-
 
     ctypedef struct caterva_params_t:
         int64_t shape[CATERVA_MAX_DIM]
@@ -164,7 +146,6 @@ cdef extern from "caterva.h":
         int32_t nchunk
 
     ctypedef struct caterva_array_t:
-        caterva_storage_backend_t storage;
         blosc2_schunk *sc;
         uint8_t *buf;
         int64_t shape[CATERVA_MAX_DIM];
@@ -290,51 +271,40 @@ cdef create_caterva_storage(caterva_storage_t *storage, kwargs):
     sequential = kwargs.get('sequential', False)
     meta = kwargs.get('meta', None)
 
-    if chunks is not None and blocks is not None:
-        storage.backend = CATERVA_STORAGE_BLOSC
+    if not chunks:
+        raise AttributeError("chunks must be specified")
+    if not blocks:
+        raise AttributeError("blocks must be specified")
+
+    if urlpath is not None:
+        urlpath = urlpath.encode("utf-8") if isinstance(urlpath, str) else urlpath
+        storage.urlpath = urlpath
     else:
-        storage.backend = CATERVA_STORAGE_PLAINBUFFER
+        storage.urlpath = NULL
+    storage.sequencial = sequential
+    for i in range(len(chunks)):
+        storage.chunkshape[i] = chunks[i]
+        storage.blockshape[i] = blocks[i]
 
-    if storage.backend is CATERVA_STORAGE_BLOSC:
-        if urlpath is not None:
-            urlpath = urlpath.encode("utf-8") if isinstance(urlpath, str) else urlpath
-            storage.properties.blosc.urlpath = urlpath
-        else:
-            storage.properties.blosc.urlpath = NULL
-        storage.properties.blosc.sequencial = sequential
-        for i in range(len(chunks)):
-            storage.properties.blosc.chunkshape[i] = chunks[i]
-            storage.properties.blosc.blockshape[i] = blocks[i]
-
-        if meta is None:
-            storage.properties.blosc.nmetalayers = 0
-        else:
-            storage.properties.blosc.nmetalayers = len(meta)
-            for i, (name, content) in enumerate(meta.items()):
-                name2 = name.encode("utf-8") if isinstance(name, str) else name # do a copy
-                storage.properties.blosc.metalayers[i].name = strdup(name2)
-                storage.properties.blosc.metalayers[i].sdata = <uint8_t *> strdup(content)
-                storage.properties.blosc.metalayers[i].size = len(content)
-
+    if meta is None:
+        storage.nmetalayers = 0
     else:
-        storage.properties.plainbuffer.urlpath = NULL  # Not implemented yet
+        storage.nmetalayers = len(meta)
+        for i, (name, content) in enumerate(meta.items()):
+            name2 = name.encode("utf-8") if isinstance(name, str) else name # do a copy
+            storage.metalayers[i].name = strdup(name2)
+            storage.metalayers[i].sdata = <uint8_t *> strdup(content)
+            storage.metalayers[i].size = len(content)
 
 
 cdef class NDArray:
     cdef caterva_array_t *array
     cdef kwargs
     cdef usermeta_len
-    cdef view
     cdef cframe
     cdef Py_buffer *py_buf
     cdef Py_ssize_t bp_shape[CATERVA_MAX_DIM]
     cdef Py_ssize_t bp_strides[CATERVA_MAX_DIM]
-    cdef int view_count
-
-    @property
-    def storage(self):
-        """The backend used to store the array."""
-        return "Blosc" if self.array.storage is CATERVA_STORAGE_BLOSC else "Plainbuffer"
 
     @property
     def shape(self):
@@ -344,43 +314,31 @@ cdef class NDArray:
     @property
     def chunks(self):
         """The chunk shape of this container."""
-        if self.array.storage is CATERVA_STORAGE_PLAINBUFFER:
-            return None
         return tuple([self.array.chunkshape[i] for i in range(self.array.ndim)])
 
     @property
     def blocks(self):
         """The block shape of this container."""
-        if self.array.storage is CATERVA_STORAGE_PLAINBUFFER:
-            return None
         return tuple([self.array.blockshape[i] for i in range(self.array.ndim)])
 
     @property
     def cratio(self):
         """The compression ratio for this container."""
-        if self.array.storage is CATERVA_STORAGE_PLAINBUFFER:
-            return 1
         return self.size / (self.array.sc.cbytes + BLOSC_MAX_OVERHEAD * self.nchunks)
 
     @property
     def clevel(self):
         """The compression level for this container."""
-        if self.chunks is None:
-            return 1
         return self.array.sc.clevel
 
     @property
     def codec(self):
         """The compression codec name for this container."""
-        if self.chunks is None:
-            return None
         return Codec(self.array.sc.compcode)
 
     @property
     def filters(self):
         """The filters list for this container."""
-        if self.chunks is None:
-            return None
         return [Filter(self.array.sc.filters[i]) for i in range(BLOSC2_MAX_FILTERS)]
 
     @property
@@ -420,41 +378,9 @@ cdef class NDArray:
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         self.usermeta_len = 0
-        self.view = False
         self.cframe = False
         self.array = NULL
-        self.view_count = 0
         self.py_buf = NULL
-
-    def __getbuffer__(self, Py_buffer *buffer, int flags):
-        if self.array.storage is CATERVA_STORAGE_BLOSC:
-            raise AttributeError("Invalid storage")
-
-        for i in range(self.ndim):
-            self.bp_shape[i] = self.shape[i]
-
-        if self.ndim > 0:
-            self.bp_strides[self.ndim - 1] = self.itemsize
-            for i in range(self.ndim - 2, -1, -1):
-                self.bp_strides[i] = self.bp_strides[i + 1] * self.shape[i + 1]
-
-        format = str(f"{self.itemsize}s").encode("utf-8")
-        buffer.buf = <char *> &(self.array.buf[0])
-        buffer.format = format
-        buffer.internal = NULL  # see References
-        buffer.readonly = 0
-        buffer.obj = self
-        buffer.itemsize = self.itemsize
-        buffer.len = self.size
-        buffer.ndim = self.array.ndim
-        buffer.shape = self.bp_shape
-        buffer.strides = self.bp_strides
-        buffer.suboffsets = NULL
-
-        self.view_count += 1
-
-    def __releasebuffer__(self, Py_buffer *buffer):
-        self.view_count -= 1
 
     def squeeze(self, **kwargs):
         ctx = Context(**kwargs)
@@ -474,9 +400,34 @@ cdef class NDArray:
 
         if self.array != NULL:
             ctx = Context(**self.kwargs)
-            if self.view:
-                self.array.buf = NULL
             caterva_free(ctx.context_, &self.array)
+
+
+def get_slice_numpy(arr, NDArray src, key, mask, **kwargs):
+    ctx = Context(**kwargs)
+    ndim = src.ndim
+    start, stop = key
+
+    cdef int64_t[CATERVA_MAX_DIM] start_, stop_
+    cdef int64_t buffersize_ = src.itemsize
+    cdef int64_t[CATERVA_MAX_DIM] buffershape_
+    for i in range(src.ndim):
+        start_[i] = start[i]
+        stop_[i] = stop[i]
+        buffershape_[i] = stop_[i] - start_[i]
+        buffersize_ *= buffershape_[i]
+
+    buffershape = [sp - st for st, sp in zip(start, stop)]
+    cdef int64_t buffersize = src.itemsize
+
+    cdef Py_buffer view
+    PyObject_GetBuffer(arr, &view, PyBUF_SIMPLE)
+
+    cdef caterva_array_t *array_
+    caterva_get_slice_buffer(ctx.context_, src.array, start_, stop_, <void *> view.buf, buffershape_, buffersize_)
+    PyBuffer_Release(&view)
+
+    return arr.squeeze()
 
 
 def get_slice(NDArray arr, NDArray src, key, mask, **kwargs):
@@ -626,16 +577,12 @@ def asarray(NDArray arr, ndarray, **kwargs):
 
 def meta__contains__(self, name):
     cdef caterva_array_t *array = <caterva_array_t *><uintptr_t> self.c_array
-    if array.storage != CATERVA_STORAGE_BLOSC:
-        raise NotImplementedError("Invalid backend")
     name = name.encode("utf-8") if isinstance(name, str) else name
     n = blosc2_meta_exists(array.sc, name)
     return False if n < 0 else True
 
 def meta__getitem__(self, name):
     cdef caterva_array_t *array = <caterva_array_t *><uintptr_t> self.c_array
-    if  array.storage != CATERVA_STORAGE_BLOSC:
-        raise NotImplementedError("Invalid backend")
     name = name.encode("utf-8") if isinstance(name, str) else name
     cdef uint8_t *content
     cdef uint32_t content_len
@@ -644,8 +591,6 @@ def meta__getitem__(self, name):
 
 def meta__setitem__(self, name, content):
     cdef caterva_array_t *array = <caterva_array_t *><uintptr_t> self.c_array
-    if  array.storage != CATERVA_STORAGE_BLOSC:
-        raise NotImplementedError("Invalid backend")
     name = name.encode("utf-8") if isinstance(name, str) else name
     old_content = meta__getitem__(self, name)
     if len(old_content) != len(content):
