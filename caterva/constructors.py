@@ -216,7 +216,7 @@ def asarray(ndarray, **kwargs):
     Returns
     -------
     out: NDArray
-        A Caterva array interpretation of `ndarray`. No copy is performed.
+        A Caterva array interpretation of `ndarray`.
     """
     arr = NDArray(**kwargs)
     kwargs = arr.kwargs
