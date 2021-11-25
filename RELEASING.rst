@@ -4,7 +4,7 @@ Python-caterva release procedure
 Preliminaries
 -------------
 
-* Make sure that the current master branch is passing the tests on Microsoft Azure.
+* Make sure that the current master branch is passing the tests on Github Actions.
 
 * Make sure that `RELEASE_NOTES.rst` and `ANNOUNCE.rst` are up to date with the latest news
   in the release.

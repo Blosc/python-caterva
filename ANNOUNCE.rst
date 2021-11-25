@@ -1,10 +1,9 @@
-# Announcing python-caterva 0.6.0
+# Announcing python-caterva 0.7.0
 
 
 ## What is new?
 
-In this release Caterva submodule has been updated to 0.5.0 version. Also, wheels are already being generated
-and can be found in PyPi.
+In this release, the plainbuffer support has been removed.
 
 For more info, you can have a look at the release notes in:
 

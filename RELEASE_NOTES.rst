@@ -1,10 +1,11 @@
 Release notes
 =============
 
-Changes from 0.6.0 to 0.6.1
+Changes from 0.6.0 to 0.7.0
 ---------------------------
 
-XXX version-specific blurb XXX
+* Remove plainbuffer support.
+* Improve documentation.
 
 Changes from 0.5.3 to 0.6.0
 ---------------------------
