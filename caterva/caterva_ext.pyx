@@ -130,7 +130,7 @@ cdef extern from "caterva.h":
     ctypedef struct caterva_storage_t:
         int32_t chunkshape[CATERVA_MAX_DIM]
         int32_t blockshape[CATERVA_MAX_DIM]
-        bool sequencial
+        bool sequential
         char* urlpath
         caterva_metalayer_t metalayers[CATERVA_MAX_METALAYERS]
         int32_t nmetalayers
@@ -281,7 +281,7 @@ cdef create_caterva_storage(caterva_storage_t *storage, kwargs):
         storage.urlpath = urlpath
     else:
         storage.urlpath = NULL
-    storage.sequencial = sequential
+    storage.sequential = sequential
     for i in range(len(chunks)):
         storage.chunkshape[i] = chunks[i]
         storage.blockshape[i] = blocks[i]
