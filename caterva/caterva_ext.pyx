@@ -246,7 +246,7 @@ cdef class Context:
 
         filtersmeta = kwargs.get('filtersmeta', config_dflts['filtersmeta'])
         for i in range(BLOSC2_MAX_FILTERS - len(filtersmeta), BLOSC2_MAX_FILTERS):
-            self.filtersmeta[i] = filtersmeta[i - BLOSC2_MAX_FILTERS + len(filtersmeta)]
+            config.filtersmeta[i] = filtersmeta[i - BLOSC2_MAX_FILTERS + len(filtersmeta)]
 
         caterva_ctx_new(&config, &self.context_)
 
