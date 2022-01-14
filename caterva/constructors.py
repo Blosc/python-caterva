@@ -31,9 +31,12 @@ def empty(shape, itemsize, **kwargs):
             blocks: iterable object or None
                 The block shape.  If `None`, the array is stored using a non-compressed buffer.
                 (Default `None`)
-            filename: str or None
+            urlpath: str or None
                 The name of the file to store data.  If `None`, data is stored in-memory.
                 (Default `None`)
+            sequential: bool or None
+                Whether the data is stored sequentially or sparsely (one chunk per file).
+                If `None`, data is stored sparsely.
             memframe: bool
                 If True, the array is backed by a frame in-memory.  Else, by a super-chunk.
                 (Default: `False`)
