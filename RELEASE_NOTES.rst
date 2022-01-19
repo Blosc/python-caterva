@@ -1,5 +1,11 @@
 Release notes
 =============
+
+Changes from 0.7.1 to 0.7.2
+---------------------------
+
+  XXX version-specific blurb XXX
+
 Changes from 0.7.0 to 0.7.1
 ---------------------------
 
