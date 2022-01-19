@@ -13,7 +13,7 @@ from libc.stdlib cimport malloc, free
 from libcpp cimport bool
 from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer
 from libc.stdint cimport uintptr_t
-from libc.string cimport strdup
+from libc.string cimport strdup, memcpy
 from cpython cimport (
     PyObject_GetBuffer, PyBuffer_Release,
     PyBUF_SIMPLE, PyBUF_WRITABLE, Py_buffer,
@@ -293,7 +293,8 @@ cdef create_caterva_storage(caterva_storage_t *storage, kwargs):
         for i, (name, content) in enumerate(meta.items()):
             name2 = name.encode("utf-8") if isinstance(name, str) else name # do a copy
             storage.metalayers[i].name = strdup(name2)
-            storage.metalayers[i].sdata = <uint8_t *> strdup(content)
+            storage.metalayers[i].sdata = <uint8_t *> malloc(len(content))
+            memcpy(storage.metalayers[i].sdata, <uint8_t *> content, len(content))
             storage.metalayers[i].size = len(content)
 
 
