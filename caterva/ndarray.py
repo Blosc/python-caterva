@@ -109,6 +109,22 @@ class NDArray(ext.NDArray):
         arr = np.zeros(shape, dtype=f"S{self.itemsize}")
         return ext.get_slice_numpy(arr, self, key, mask)
 
+    def resize(self, newshape):
+        """Change the shape of the array by growing one or more dimensions.
+
+        Parameters
+        ----------
+        newshape : tuple or list
+            The new shape of the array. It should have the same dimensions
+            as `self`.
+
+        Notes
+        -----
+        The array values corresponding to the added positions are not initialized.
+        Thus, the user is in charge of initializing them.
+        """
+        return ext.resize(self, newshape)
+
     def slice(self, key, **kwargs):
         """ Get a (multidimensional) slice as specified in key. Generalizes :py:meth:`__getitem__`.
 
