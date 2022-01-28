@@ -21,9 +21,6 @@ Attributes
 Methods
 -------
 
-Slicing
-+++++++
-
 .. autosummary::
     :toctree: api/ndarray
     :nosignatures:
@@ -31,3 +28,4 @@ Slicing
     __getitem__
     __setitem__
     slice
+    resize

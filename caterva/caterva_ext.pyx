@@ -195,7 +195,8 @@ cdef extern from "caterva.h":
                                  int64_t *start, int64_t *stop, caterva_array_t *array);
     int caterva_copy(caterva_ctx_t *ctx, caterva_array_t *src, caterva_storage_t *storage,
                      caterva_array_t ** array);
-
+    int caterva_resize(caterva_array_t *array,
+                             int64_t *new_shape);
 
 # Defaults for compression params
 config_dflts = {
@@ -301,11 +302,6 @@ cdef create_caterva_storage(caterva_storage_t *storage, kwargs):
 cdef class NDArray:
     cdef caterva_array_t *array
     cdef kwargs
-    cdef usermeta_len
-    cdef cframe
-    cdef Py_buffer *py_buf
-    cdef Py_ssize_t bp_shape[CATERVA_MAX_DIM]
-    cdef Py_ssize_t bp_strides[CATERVA_MAX_DIM]
 
     @property
     def shape(self):
@@ -378,10 +374,7 @@ cdef class NDArray:
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
-        self.usermeta_len = 0
-        self.cframe = False
         self.array = NULL
-        self.py_buf = NULL
 
     def squeeze(self, **kwargs):
         ctx = Context(**kwargs)
@@ -395,10 +388,6 @@ cdef class NDArray:
         return buffer
 
     def __dealloc__(self):
-        if self.py_buf != NULL:
-            PyBuffer_Release(self.py_buf)
-            free(self.py_buf)
-
         if self.array != NULL:
             ctx = Context(**self.kwargs)
             caterva_free(ctx.context_, &self.array)
@@ -527,6 +516,12 @@ def copy(NDArray arr, NDArray src, **kwargs):
     arr.array = array_
     return arr
 
+def resize(NDArray arr, new_shape):
+    cdef int64_t new_shape_[CATERVA_MAX_DIM]
+    for i, s in enumerate(new_shape):
+        new_shape_[i] = s
+    caterva_resize(arr.array, new_shape_)
+    return arr
 
 def from_file(NDArray arr, urlpath, **kwargs):
     ctx = Context(**kwargs)
@@ -573,7 +568,7 @@ def asarray(NDArray arr, ndarray, **kwargs):
     cdef caterva_array_t *array_
     caterva_from_buffer(ctx.context_, <void*> <char *> buf.buf, buf.len, &params_, &storage_, &array_)
     arr.array = array_
-    arr.py_buf = buf
+    PyBuffer_Release(buf)
 
 
 def meta__contains__(self, name):
