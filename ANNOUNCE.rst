@@ -1,9 +1,9 @@
-# Announcing python-caterva 0.7.0
+# Announcing python-caterva 0.7.2
 
 
 ## What is new?
 
-In this release, the plainbuffer support has been removed.
+In this release, the `resize` method has been implemented.
 
 For more info, you can have a look at the release notes in:
 

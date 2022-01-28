@@ -1,9 +1,16 @@
 Release notes
 =============
+Changes from 0.7.1 to 0.7.2
+---------------------------
+
+* Implement a resize method
+
 Changes from 0.7.0 to 0.7.1
 ---------------------------
 
-XXX version-specific blurb XXX
+* Fix to apply filtersmeta from kwargs.
+* Fix metalayer creation in the ext file.
+* Update the docstrings.
 
 Changes from 0.6.0 to 0.7.0
 ---------------------------
