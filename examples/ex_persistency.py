@@ -29,7 +29,7 @@ nparray = np.arange(int(np.prod(shape)), dtype=dtype).reshape(shape)
 
 # Create a caterva array from a numpy array (on disk)
 a = cat.from_buffer(bytes(nparray), nparray.shape, itemsize, chunks=chunks, blocks=blocks,
-                    urlpath=urlpath, sequencial=False)
+                    urlpath=urlpath, contiguous=False)
 
 # Read a caterva array from disk
 b = cat.open(urlpath)
