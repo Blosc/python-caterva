@@ -8,15 +8,14 @@
 # This source code is licensed under a BSD-style license (found in the
 # LICENSE file in the root directory of this source tree)
 #######################################################################
-import numpy as np
 from libc.stdlib cimport malloc, free
 from libcpp cimport bool
-from cpython.pycapsule cimport PyCapsule_New, PyCapsule_GetPointer
+from cpython.pycapsule cimport PyCapsule_New
 from libc.stdint cimport uintptr_t
 from libc.string cimport strdup, memcpy
 from cpython cimport (
     PyObject_GetBuffer, PyBuffer_Release,
-    PyBUF_SIMPLE, PyBUF_WRITABLE, Py_buffer,
+    PyBUF_SIMPLE, Py_buffer,
     PyBytes_FromStringAndSize
 )
 from .utils import Codec, Filter
@@ -75,7 +74,7 @@ cdef extern from "blosc2.h":
         int32_t chunksize;
         uint8_t filters[BLOSC2_MAX_FILTERS];
         uint8_t filters_meta[BLOSC2_MAX_FILTERS];
-        int32_t nchunks;
+        int64_t nchunks;
         int64_t nbytes;
         int64_t cbytes;
         uint8_t** data;
@@ -130,7 +129,7 @@ cdef extern from "caterva.h":
     ctypedef struct caterva_storage_t:
         int32_t chunkshape[CATERVA_MAX_DIM]
         int32_t blockshape[CATERVA_MAX_DIM]
-        bool sequencial
+        bool contiguous
         char* urlpath
         caterva_metalayer_t metalayers[CATERVA_MAX_METALAYERS]
         int32_t nmetalayers
@@ -158,7 +157,7 @@ cdef extern from "caterva.h":
         int64_t extnitems;
         int32_t blocknitems;
         int64_t extchunknitems;
-        uint8_t ndim;
+        int8_t ndim;
         uint8_t itemsize;
         int64_t nchunks;
         chunk_cache_s chunk_cache;
@@ -195,8 +194,7 @@ cdef extern from "caterva.h":
                                  int64_t *start, int64_t *stop, caterva_array_t *array);
     int caterva_copy(caterva_ctx_t *ctx, caterva_array_t *src, caterva_storage_t *storage,
                      caterva_array_t ** array);
-    int caterva_resize(caterva_array_t *array,
-                             int64_t *new_shape);
+    int caterva_resize(caterva_ctx_t *ctx, caterva_array_t *array, int64_t *new_shape);
 
 # Defaults for compression params
 config_dflts = {
@@ -255,7 +253,7 @@ cdef class Context:
         caterva_ctx_free(&self.context_)
 
     def tocapsule(self):
-        return PyCapsule_New(self.context_, "caterva_ctx_t*", NULL)
+        return PyCapsule_New(self.context_, <char *>"caterva_ctx_t*", NULL)
 
 
 cdef create_caterva_params(caterva_params_t *params, shape, itemsize):
@@ -269,7 +267,7 @@ cdef create_caterva_storage(caterva_storage_t *storage, kwargs):
     chunks = kwargs.get('chunks', None)
     blocks = kwargs.get('blocks', None)
     urlpath = kwargs.get('urlpath', None)
-    sequential = kwargs.get('sequential', False)
+    contiguous = kwargs.get('contiguous', False)
     meta = kwargs.get('meta', None)
 
     if not chunks:
@@ -282,7 +280,7 @@ cdef create_caterva_storage(caterva_storage_t *storage, kwargs):
         storage.urlpath = urlpath
     else:
         storage.urlpath = NULL
-    storage.sequencial = sequential
+    storage.contiguous = contiguous
     for i in range(len(chunks)):
         storage.chunkshape[i] = chunks[i]
         storage.blockshape[i] = blocks[i]
@@ -517,10 +515,11 @@ def copy(NDArray arr, NDArray src, **kwargs):
     return arr
 
 def resize(NDArray arr, new_shape):
+    ctx = Context(**arr.kwargs)
     cdef int64_t new_shape_[CATERVA_MAX_DIM]
     for i, s in enumerate(new_shape):
         new_shape_[i] = s
-    caterva_resize(arr.array, new_shape_)
+    caterva_resize(ctx.context_, arr.array, new_shape_)
     return arr
 
 def from_file(NDArray arr, urlpath, **kwargs):

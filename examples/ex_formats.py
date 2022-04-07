@@ -13,14 +13,14 @@ import os
 
 urlpath_sparse = "ex_formats_sparse.caterva"
 # urlpath_sparse = None
-urlpath_sequential = "ex_formats_sequential.caterva"
-# urlpath_sequential = None
+urlpath_contiguous = "ex_formats_contiguous.caterva"
+# urlpath_contiguous = None
 
 if urlpath_sparse and os.path.exists(urlpath_sparse):
     cat.remove(urlpath_sparse)
 
-if urlpath_sequential and os.path.exists(urlpath_sequential):
-    cat.remove(urlpath_sequential)
+if urlpath_contiguous and os.path.exists(urlpath_contiguous):
+    cat.remove(urlpath_contiguous)
 
 shape = (1000 * 1000,)
 chunks = (100,)
@@ -30,7 +30,7 @@ itemsize = dtype.itemsize
 
 t0 = time()
 a = cat.empty(shape, 8, chunks=chunks, blocks=blocks, urlpath=urlpath_sparse,
-             sequential=False)
+             contiguous=False)
 for nchunk in range(a.nchunks):
     a[nchunk * chunks[0]: (nchunk + 1) * chunks[0]] = np.arange(chunks[0], dtype=dtype)
 t1 = time()
@@ -41,7 +41,7 @@ an = np.array(a[:]).view(dtype)
 
 
 t0 = time()
-b = cat.empty(shape, itemsize=itemsize, chunks=chunks, blocks=blocks, urlpath=urlpath_sequential, sequential=True)
+b = cat.empty(shape, itemsize=itemsize, chunks=chunks, blocks=blocks, urlpath=urlpath_contiguous, contiguous=True)
 
 print(b.nchunks)
 for nchunk in range(shape[0] // chunks[0]):
