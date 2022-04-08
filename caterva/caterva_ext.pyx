@@ -90,11 +90,11 @@ cdef extern from "blosc2.h":
 
     int blosc2_meta_exists(blosc2_schunk *schunk, const char *name)
     int blosc2_meta_add(blosc2_schunk *schunk, const char *name, uint8_t *content,
-                                 uint32_t content_len)
+                                 int32_t content_len)
     int blosc2_meta_update(blosc2_schunk *schunk, const char *name, uint8_t *content,
-                                    uint32_t content_len)
+                                    int32_t content_len)
     int blosc2_meta_get(blosc2_schunk *schunk, const char *name, uint8_t ** content,
-                    uint32_t *content_len)
+                    int32_t *content_len)
 
 
 
@@ -136,13 +136,13 @@ cdef extern from "caterva.h":
 
     ctypedef struct caterva_params_t:
         int64_t shape[CATERVA_MAX_DIM]
-        uint8_t ndim
+        int8_t ndim
         uint8_t itemsize
 
 
     cdef struct chunk_cache_s:
         uint8_t *data
-        int32_t nchunk
+        int64_t nchunk
 
     ctypedef struct caterva_array_t:
         blosc2_schunk *sc;
@@ -580,7 +580,7 @@ def meta__getitem__(self, name):
     cdef caterva_array_t *array = <caterva_array_t *><uintptr_t> self.c_array
     name = name.encode("utf-8") if isinstance(name, str) else name
     cdef uint8_t *content
-    cdef uint32_t content_len
+    cdef int32_t content_len
     n = blosc2_meta_get(array.sc, name, &content, &content_len)
     return PyBytes_FromStringAndSize(<char *> content, content_len)
 
