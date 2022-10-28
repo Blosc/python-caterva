@@ -4,8 +4,8 @@ Release notes
 Changes from 0.7.2 to 0.7.3
 ---------------------------
 
-XXX version-specific blurb XXX
-
+* Addapt to the latest version of Caterva 0.5.0
+* Drop support for Python 3.7 and add for Python 3.10 and 3.11
 
 Changes from 0.7.1 to 0.7.2
 ---------------------------

@@ -1,9 +1,10 @@
-# Announcing python-caterva 0.7.2
+# Announcing python-caterva 0.7.3
 
 
 ## What is new?
 
-In this release, the `resize` method has been implemented.
+In this release, support for Python 3.7 has been droped and replaced to 3.10
+and 3.11.
 
 For more info, you can have a look at the release notes in:
 
