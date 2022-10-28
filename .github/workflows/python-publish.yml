@@ -15,31 +15,32 @@ jobs:
         include:
           - name: Ubuntu
             os: ubuntu-latest
-            cibw_build: 'cp37-* cp38-* cp39-*'
+            cibw_build: 'cp38-* cp39-* cp310-* cp311-*'
             cibw_skip: '*-manylinux*_i686'
 
           - name: MacOS
             os: macos-latest
-            cibw_build: 'cp37-* cp38-* cp39-*'
+            cibw_build: 'cp38-* cp39-* cp310-* cp311-*'
 
           - name: Windows x86
             os: windows-latest
             arch: x86
-            cibw_build: 'cp37-win32 cp38-win32 cp39-win32'
+            cibw_build: 'cp38-win32 cp39-win32 cp310-win32 cp311-win32'
 
           - name: Windows amd64
             os: windows-latest
             arch: amd64
-            cibw_build: 'cp37-win_amd64 cp38-win_amd64 cp39-win_amd64'
+            cibw_build: 'cp38-win_amd64 cp39-win_amd64 cp310-win_amd64 
+                                     cp311-win_amd64'
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.8'
 
@@ -53,7 +54,7 @@ jobs:
           arch: ${{ matrix.arch }}
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v1.12.0
+        uses: pypa/cibuildwheel@v2.11.0
         with:
           output-dir: wheelhouse
         env:
@@ -65,7 +66,7 @@ jobs:
           CIBW_BUILD_VERBOSITY: 1
 
       - name: Upload wheels
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
 
@@ -75,11 +76,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           submodules: 'recursive'
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         name: Setup Python
         with:
           python-version: '3.8'
@@ -94,7 +95,7 @@ jobs:
           python -m build --sdist
 
       - name: Upload sdist package
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           path: dist/*.tar.gz
 
@@ -103,7 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.event.ref, 'refs/tags')
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: artifact
           path: dist
