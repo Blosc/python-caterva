@@ -1,3 +1,5 @@
+**Important:** All the features of Python-Caterva have been included in the [Python-Blosc2 NDArray object](https://www.blosc.org/python-blosc2/python-blosc2.html). As a result, this project is now obsolete.
+
 [![Python package](https://github.com/Blosc/python-caterva/actions/workflows/python-package.yml/badge.svg?branch=master)](https://github.com/Blosc/python-caterva/actions/workflows/python-package.yml)
 [![Documentation Status](https://readthedocs.org/projects/python-caterva/badge/?version=latest)](https://python-caterva.readthedocs.io/en/latest/?badge=latest)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg)](code_of_conduct.md)
